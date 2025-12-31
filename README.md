@@ -1,2 +1,93 @@
-# resume-tailor-saas
-A production-style Resume Tailoring SaaS built on a Google-only stack. Users upload a resume and a job description, and the system rewrites the resume to better match the role using AI, without inventing facts.
+# Resume Tailor SaaS
+
+A lightweight SaaS that rewrites resumes to better match a specific job description by highlighting existing skills and experience.  
+Built as a realistic production-style project using Google Cloud services.
+
+## Features
+
+- Upload resume (PDF or text)
+- Paste job description
+- AI-powered resume tailoring (no hallucinated facts)
+- Preview rewritten resume
+- Download final document
+- Firebase authentication
+
+## Tech Stack
+
+### Frontend
+
+- React + Vite
+- React Query (server state)
+- Zustand (UI state)
+- Firebase Hosting
+
+### Backend
+
+- Google Cloud Run (TypeScript)
+- Express/Fastify
+- Two services:
+  - documents-api (files, parsing, data)
+  - generate-api (AI generation)
+
+### Data & Infra
+
+- Firebase Authentication
+- Firestore (NoSQL)
+- Cloud Storage (PDF files)
+- Google Secret Manager
+- Mistral AI API
+
+## Architecture Overview
+
+- Frontend calls backend services directly
+- Services are stateless
+- Firestore is the shared source of truth
+- No direct service-to-service calls
+- Authentication via Firebase ID tokens
+
+## Services
+
+### documents-api
+
+- POST /documents
+- GET /documents/:id
+- GET /documents
+
+Handles:
+
+- Auth verification
+- PDF upload
+- Resume parsing
+- Firestore persistence
+
+### generate-api
+
+- POST /documents/:id/generate
+
+Handles:
+
+- Auth verification
+- Prompt building
+- AI generation
+- Saving final resume
+
+## Local Development
+
+- Frontend: Vite dev server
+- Backend: Node or Docker
+- Firebase Emulator Suite (Auth, Firestore, Storage)
+- AI can run in mock or real mode
+
+## Deployment
+
+- Frontend: Firebase Hosting
+- Backend: Docker images → Google Artifact Registry → Cloud Run
+- Each deploy creates a new Cloud Run revision
+
+## Purpose
+
+This project is built as:
+
+- a learning reference for serverless SaaS on GCP
+- a demo project for technical interviews
+- a realistic foundation for a B2C AI product
