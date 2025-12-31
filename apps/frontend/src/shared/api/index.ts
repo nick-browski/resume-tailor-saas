@@ -1,0 +1,12 @@
+export { documentsApi } from "./documents";
+export { generateApi } from "./generate";
+export { createApiClient } from "./client";
+export type {
+  Document,
+  DocumentStatus,
+  CreateDocumentRequest,
+  CreateDocumentResponse,
+  GenerateResumeRequest,
+  GenerateResumeResponse,
+  ApiError,
+} from "./types";
