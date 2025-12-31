@@ -1,13 +1,13 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QUERY_CONSTANTS } from "@/shared/lib/constants";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: QUERY_CONSTANTS.RETRY_COUNT,
+      staleTime: QUERY_CONSTANTS.STALE_TIME_MS,
     },
   },
 });
@@ -21,4 +21,3 @@ export function QueryProvider({ children }: QueryProviderProps) {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
-

@@ -6,19 +6,20 @@ import {
   PreviewStep,
 } from "@/features/wizard";
 import { useWizardStore } from "@/features/wizard/model/wizardStore";
+import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
 
 function App() {
   const { currentStep, nextStep, previousStep, reset } = useWizardStore();
 
-  const renderStep = () => {
+  const renderCurrentStep = (): React.ReactNode => {
     switch (currentStep) {
-      case 1:
+      case WIZARD_CONSTANTS.FIRST_STEP:
         return <UploadResumeStep onNext={nextStep} />;
       case 2:
         return (
           <JobDescriptionStep onNext={nextStep} onPrevious={previousStep} />
         );
-      case 3:
+      case WIZARD_CONSTANTS.LAST_STEP:
         return <PreviewStep onPrevious={previousStep} onReset={reset} />;
       default:
         return null;
@@ -27,8 +28,11 @@ function App() {
 
   return (
     <Layout>
-      <Wizard currentStep={currentStep} totalSteps={3}>
-        {renderStep()}
+      <Wizard
+        currentStep={currentStep}
+        totalSteps={WIZARD_CONSTANTS.TOTAL_STEPS}
+      >
+        {renderCurrentStep()}
       </Wizard>
     </Layout>
   );

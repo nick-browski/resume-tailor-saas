@@ -4,7 +4,9 @@ import App from "./App";
 import { AppProviders } from "./providers";
 import "./styles/index.css";
 
-const rootElement = document.getElementById("root");
+const ROOT_ELEMENT_ID = "root";
+
+const rootElement = document.getElementById(ROOT_ELEMENT_ID);
 if (!rootElement) {
   throw new Error("Root element not found");
 }

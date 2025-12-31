@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { TIMING_CONSTANTS, TEXTAREA_CONSTANTS } from "@/shared/lib/constants";
 
 interface JobDescriptionStepProps {
   onNext: () => void;
@@ -9,35 +10,34 @@ export function JobDescriptionStep({
   onNext,
   onPrevious,
 }: JobDescriptionStepProps) {
-  const [jobDescription, setJobDescription] = useState("");
+  const [jobDescriptionText, setJobDescriptionText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleTextChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setJobDescription(e.target.value);
+  const handleJobDescriptionTextChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setJobDescriptionText(event.target.value);
     },
     []
   );
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!jobDescription.trim()) return;
+  const handleFormSubmit = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      if (!jobDescriptionText.trim()) return;
 
       setIsGenerating(true);
 
-      // TODO: Implement actual API call to generate tailored resume
-      // For now, just proceed to next step
+      // TODO: Implement actual API call to generate tailored resume using generateApi
       setTimeout(() => {
         setIsGenerating(false);
         onNext();
-      }, 1000);
+      }, TIMING_CONSTANTS.GENERATION_DELAY_MS);
     },
-    [jobDescription, onNext]
+    [jobDescriptionText, onNext]
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
           Step 2: Paste Job Description
@@ -52,15 +52,15 @@ export function JobDescriptionStep({
           Job Description
         </label>
         <textarea
-          value={jobDescription}
-          onChange={handleTextChange}
-          rows={12}
+          value={jobDescriptionText}
+          onChange={handleJobDescriptionTextChange}
+          rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
           className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           placeholder="Paste the complete job description here, including requirements, responsibilities, and qualifications..."
           required
         />
         <p className="mt-2 text-xs sm:text-sm text-gray-500">
-          {jobDescription.length} characters
+          {jobDescriptionText.length} characters
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export function JobDescriptionStep({
         </button>
         <button
           type="submit"
-          disabled={!jobDescription.trim() || isGenerating}
+          disabled={!jobDescriptionText.trim() || isGenerating}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           {isGenerating ? "Generating..." : "Generate Tailored Resume"}
@@ -84,4 +84,3 @@ export function JobDescriptionStep({
     </form>
   );
 }
-

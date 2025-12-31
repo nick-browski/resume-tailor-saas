@@ -12,8 +12,6 @@ interface FirebaseConfig {
   appId: string;
 }
 
-// Firebase configuration
-// TODO: Replace with actual environment variables
 const firebaseConfig: FirebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
@@ -23,7 +21,6 @@ const firebaseConfig: FirebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
 };
 
-// Initialize Firebase (only if not already initialized)
 let app: FirebaseApp;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
@@ -31,7 +28,6 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-// Initialize Firebase services
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);

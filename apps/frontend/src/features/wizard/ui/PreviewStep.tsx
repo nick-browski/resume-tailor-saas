@@ -1,15 +1,13 @@
 import { useCallback, useState } from "react";
+import { FILE_CONSTANTS, TIMING_CONSTANTS } from "@/shared/lib/constants";
 
 interface PreviewStepProps {
   onPrevious: () => void;
   onReset: () => void;
 }
 
-export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  // TODO: Replace with actual data from API/store
-  const tailoredResume = `# John Doe
+// TODO: Replace with actual data from API/store (useDocumentById hook)
+const MOCK_TAILORED_RESUME = `# John Doe
 Software Engineer
 
 ## Experience
@@ -29,25 +27,29 @@ Software Engineer
 - Cloud platforms (AWS, GCP)
 - CI/CD, Docker, Kubernetes`;
 
-  const handleDownload = useCallback(async () => {
+export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleResumeDownload = useCallback(async () => {
     setIsDownloading(true);
 
-    // TODO: Implement actual download logic
-    // For now, create a blob and download
-    const blob = new Blob([tailoredResume], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "tailored-resume.md";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // TODO: Implement actual download logic using document.pdfResultPath or tailoredText
+    const resumeBlob = new Blob([MOCK_TAILORED_RESUME], {
+      type: FILE_CONSTANTS.MARKDOWN_MIME_TYPE,
+    });
+    const downloadUrl = URL.createObjectURL(resumeBlob);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = downloadUrl;
+    downloadLink.download = FILE_CONSTANTS.DEFAULT_FILENAME;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(downloadUrl);
 
     setTimeout(() => {
       setIsDownloading(false);
-    }, 500);
-  }, [tailoredResume]);
+    }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
+  }, []);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -67,7 +69,7 @@ Software Engineer
         </label>
         <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-80 sm:max-h-96 overflow-y-auto">
           <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-800">
-            {tailoredResume}
+            {MOCK_TAILORED_RESUME}
           </pre>
         </div>
       </div>
@@ -92,7 +94,7 @@ Software Engineer
         </div>
         <button
           type="button"
-          onClick={handleDownload}
+          onClick={handleResumeDownload}
           disabled={isDownloading}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
@@ -102,4 +104,3 @@ Software Engineer
     </div>
   );
 }
-

@@ -1,6 +1,10 @@
 import { auth } from "@/shared/config";
 import type { ApiError } from "./types";
 
+const CONTENT_TYPE_JSON = "application/json";
+const AUTHORIZATION_HEADER = "Authorization";
+const BEARER_PREFIX = "Bearer ";
+
 class ApiClient {
   private baseURL: string;
 
@@ -8,110 +12,116 @@ class ApiClient {
     this.baseURL = baseURL;
   }
 
-  private async getAuthToken(): Promise<string | null> {
+  private async getFirebaseAuthToken(): Promise<string | null> {
     try {
-      const user = auth.currentUser;
-      if (!user) {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
         return null;
       }
-      return await user.getIdToken();
+      return await currentUser.getIdToken();
     } catch (error) {
       console.error("Failed to get auth token:", error);
       return null;
     }
   }
 
-  private async request<T>(
+  private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = await this.getAuthToken();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
+    const authToken = await this.getFirebaseAuthToken();
+    const requestHeaders: Record<string, string> = {
+      "Content-Type": CONTENT_TYPE_JSON,
       ...(options.headers as Record<string, string>),
     };
 
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    if (authToken) {
+      requestHeaders[AUTHORIZATION_HEADER] = `${BEARER_PREFIX}${authToken}`;
     }
 
-    const url = `${this.baseURL}${endpoint}`;
-    const response = await fetch(url, {
+    const requestUrl = `${this.baseURL}${endpoint}`;
+    const httpResponse = await fetch(requestUrl, {
       ...options,
-      headers,
+      headers: requestHeaders,
     });
 
-    if (!response.ok) {
-      const error: ApiError = {
-        message: `HTTP error! status: ${response.status}`,
-        status: response.status,
+    if (!httpResponse.ok) {
+      const apiError: ApiError = {
+        message: `HTTP error! status: ${httpResponse.status}`,
+        status: httpResponse.status,
       };
 
       try {
-        const errorData = await response.json();
-        error.message = errorData.message || error.message;
-        error.code = errorData.code;
+        const errorResponseData = await httpResponse.json();
+        apiError.message = errorResponseData.message || apiError.message;
+        apiError.code = errorResponseData.code;
       } catch {
         // Non-JSON error response
       }
 
-      throw error;
+      throw apiError;
     }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      return await response.json();
+    const responseContentType = httpResponse.headers.get("content-type");
+    if (
+      responseContentType &&
+      responseContentType.includes(CONTENT_TYPE_JSON)
+    ) {
+      return await httpResponse.json();
     }
 
     return {} as T;
   }
 
   async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "GET" });
+    return this.makeRequest<T>(endpoint, { method: "GET" });
   }
 
   async post<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
+    return this.makeRequest<T>(endpoint, {
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
   async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-    const token = await this.getAuthToken();
-    const headers: Record<string, string> = {};
+    const authToken = await this.getFirebaseAuthToken();
+    const requestHeaders: Record<string, string> = {};
 
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    if (authToken) {
+      requestHeaders[AUTHORIZATION_HEADER] = `${BEARER_PREFIX}${authToken}`;
     }
 
-    const url = `${this.baseURL}${endpoint}`;
-    const response = await fetch(url, {
+    const requestUrl = `${this.baseURL}${endpoint}`;
+    const httpResponse = await fetch(requestUrl, {
       method: "POST",
-      headers,
+      headers: requestHeaders,
       body: formData,
     });
 
-    if (!response.ok) {
-      const error: ApiError = {
-        message: `HTTP error! status: ${response.status}`,
-        status: response.status,
+    if (!httpResponse.ok) {
+      const apiError: ApiError = {
+        message: `HTTP error! status: ${httpResponse.status}`,
+        status: httpResponse.status,
       };
 
       try {
-        const errorData = await response.json();
-        error.message = errorData.message || error.message;
-        error.code = errorData.code;
+        const errorResponseData = await httpResponse.json();
+        apiError.message = errorResponseData.message || apiError.message;
+        apiError.code = errorResponseData.code;
       } catch {
         // Non-JSON error response
       }
 
-      throw error;
+      throw apiError;
     }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      return await response.json();
+    const responseContentType = httpResponse.headers.get("content-type");
+    if (
+      responseContentType &&
+      responseContentType.includes(CONTENT_TYPE_JSON)
+    ) {
+      return await httpResponse.json();
     }
 
     return {} as T;

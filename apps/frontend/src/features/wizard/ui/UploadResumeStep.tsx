@@ -1,52 +1,60 @@
 import React, { useCallback, useState } from "react";
+import {
+  FILE_CONSTANTS,
+  TIMING_CONSTANTS,
+  TEXTAREA_CONSTANTS,
+} from "@/shared/lib/constants";
 
 interface UploadResumeStepProps {
   onNext: () => void;
 }
 
+type UploadMode = "file" | "text";
+
 export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [textResume, setTextResume] = useState("");
-  const [uploadMode, setUploadMode] = useState<"file" | "text">("file");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
+  const [uploadMode, setUploadMode] = useState<UploadMode>("file");
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0];
-      if (selectedFile) {
-        setFile(selectedFile);
+  const handleFileInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const fileFromInput = event.target.files?.[0];
+      if (fileFromInput) {
+        setSelectedFile(fileFromInput);
       }
     },
     []
   );
 
-  const handleTextChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setTextResume(e.target.value);
+  const handleResumeTextChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setResumeText(event.target.value);
     },
     []
   );
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleFormSubmit = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
       setIsUploading(true);
 
-      // TODO: Implement actual upload logic
-      // For now, just proceed to next step
+      // TODO: Implement actual upload logic with documentsApi.create()
       setTimeout(() => {
         setIsUploading(false);
         onNext();
-      }, 500);
+      }, TIMING_CONSTANTS.UPLOAD_DELAY_MS);
     },
     [onNext]
   );
 
-  const canProceed =
-    uploadMode === "file" ? file !== null : textResume.trim().length > 0;
+  const canProceedToNextStep =
+    uploadMode === "file"
+      ? selectedFile !== null
+      : resumeText.trim().length > 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
           Step 1: Upload Your Resume
@@ -110,17 +118,19 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
                   <input
                     type="file"
                     className="sr-only"
-                    accept=".pdf"
-                    onChange={handleFileChange}
+                    accept={FILE_CONSTANTS.ACCEPTED_TYPES}
+                    onChange={handleFileInputChange}
                   />
                 </label>
                 <p className="hidden sm:inline pl-1">or drag and drop</p>
                 <p className="sm:hidden text-xs">or drag and drop</p>
               </div>
-              <p className="text-xs text-gray-500">PDF up to 10MB</p>
-              {file && (
+              <p className="text-xs text-gray-500">
+                PDF up to {FILE_CONSTANTS.MAX_SIZE_MB}MB
+              </p>
+              {selectedFile && (
                 <p className="mt-2 text-xs sm:text-sm text-gray-900 font-medium break-words px-2">
-                  Selected: {file.name}
+                  Selected: {selectedFile.name}
                 </p>
               )}
             </div>
@@ -135,9 +145,9 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
             Resume Text
           </label>
           <textarea
-            value={textResume}
-            onChange={handleTextChange}
-            rows={10}
+            value={resumeText}
+            onChange={handleResumeTextChange}
+            rows={TEXTAREA_CONSTANTS.RESUME_ROWS}
             className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Paste your resume content here..."
           />
@@ -148,7 +158,7 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
       <div className="flex justify-end pt-2">
         <button
           type="submit"
-          disabled={!canProceed || isUploading}
+          disabled={!canProceedToNextStep || isUploading}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           {isUploading ? "Uploading..." : "Continue"}
@@ -157,4 +167,3 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
     </form>
   );
 }
-

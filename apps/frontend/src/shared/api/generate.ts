@@ -2,15 +2,13 @@ import { createApiClient } from "./client";
 import { API_CONFIG } from "@/shared/config";
 import type { GenerateResumeRequest, GenerateResumeResponse } from "./types";
 
-const client = createApiClient(API_CONFIG.generateApi);
+const generateApiClient = createApiClient(API_CONFIG.generateApi);
 
 export const generateApi = {
   async generate(
-    request: GenerateResumeRequest
+    generateRequest: GenerateResumeRequest
   ): Promise<GenerateResumeResponse> {
-    return client.post<GenerateResumeResponse>(
-      `/documents/${request.documentId}/generate`,
-      {}
-    );
+    const generateEndpoint = `/documents/${generateRequest.documentId}/generate`;
+    return generateApiClient.post<GenerateResumeResponse>(generateEndpoint, {});
   },
 };

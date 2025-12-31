@@ -2,29 +2,31 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { documentsApi } from "@/shared/api";
 import type { CreateDocumentRequest } from "@/shared/api";
 
+const DOCUMENTS_QUERY_KEY = "documents";
+
 export function useCreateDocument() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: CreateDocumentRequest) =>
-      documentsApi.create(request),
+    mutationFn: (createRequest: CreateDocumentRequest) =>
+      documentsApi.create(createRequest),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: [DOCUMENTS_QUERY_KEY] });
     },
   });
 }
 
-export function useDocumentById(id: string | null) {
+export function useDocumentById(documentId: string | null) {
   return useQuery({
-    queryKey: ["documents", id],
-    queryFn: () => documentsApi.getById(id!),
-    enabled: !!id,
+    queryKey: [DOCUMENTS_QUERY_KEY, documentId],
+    queryFn: () => documentsApi.getById(documentId!),
+    enabled: !!documentId,
   });
 }
 
 export function useAllDocuments() {
   return useQuery({
-    queryKey: ["documents"],
+    queryKey: [DOCUMENTS_QUERY_KEY],
     queryFn: () => documentsApi.getAll(),
   });
 }

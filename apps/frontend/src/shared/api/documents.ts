@@ -6,32 +6,39 @@ import type {
   CreateDocumentResponse,
 } from "./types";
 
-const client = createApiClient(API_CONFIG.documentsApi);
+const DOCUMENTS_ENDPOINT = "/documents";
+
+const documentsApiClient = createApiClient(API_CONFIG.documentsApi);
 
 export const documentsApi = {
   async create(
-    request: CreateDocumentRequest
+    createRequest: CreateDocumentRequest
   ): Promise<CreateDocumentResponse> {
-    const formData = new FormData();
+    const requestFormData = new FormData();
 
-    if (request.file) {
-      formData.append("file", request.file);
-    } else if (request.resumeText) {
-      formData.append("resumeText", request.resumeText);
+    if (createRequest.file) {
+      requestFormData.append("file", createRequest.file);
+    } else if (createRequest.resumeText) {
+      requestFormData.append("resumeText", createRequest.resumeText);
     }
 
-    if (request.jobText) {
-      formData.append("jobText", request.jobText);
+    if (createRequest.jobText) {
+      requestFormData.append("jobText", createRequest.jobText);
     }
 
-    return client.postFormData<CreateDocumentResponse>("/documents", formData);
+    return documentsApiClient.postFormData<CreateDocumentResponse>(
+      DOCUMENTS_ENDPOINT,
+      requestFormData
+    );
   },
 
-  async getById(id: string): Promise<Document> {
-    return client.get<Document>(`/documents/${id}`);
+  async getById(documentId: string): Promise<Document> {
+    return documentsApiClient.get<Document>(
+      `${DOCUMENTS_ENDPOINT}/${documentId}`
+    );
   },
 
   async getAll(): Promise<Document[]> {
-    return client.get<Document[]>("/documents");
+    return documentsApiClient.get<Document[]>(DOCUMENTS_ENDPOINT);
   },
 };
