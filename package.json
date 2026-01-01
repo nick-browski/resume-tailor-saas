@@ -4,11 +4,17 @@
   "private": true,
   "description": "A production-style Resume Tailoring SaaS built on a Google-only stack",
   "scripts": {
-    "dev": "pnpm --filter frontend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "./scripts/dev-backend.sh",
+    "dev:all": "./scripts/dev-all.sh",
+    "dev:documents-api": "pnpm --filter documents-api dev",
+    "dev:generate-api": "pnpm --filter generate-api dev",
+    "emulators": "firebase emulators:start --project demo-project --import ./firebase-data --export-on-exit ./firebase-data",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
+    "firebase-tools": "^13.0.0",
     "typescript": "^5.2.2"
   },
   "engines": {

@@ -73,10 +73,97 @@ Handles:
 
 ## Local Development
 
-- Frontend: Vite dev server
-- Backend: Node or Docker
-- Firebase Emulator Suite (Auth, Firestore, Storage)
-- AI can run in mock or real mode
+### Prerequisites
+
+- Node.js >= 18
+- pnpm >= 8
+- Firebase CLI (installed via pnpm)
+
+### Setup
+
+1. Install dependencies:
+
+```bash
+pnpm install
+```
+
+2. Start Firebase Emulators:
+
+```bash
+pnpm emulators
+```
+
+This will start:
+
+- Auth Emulator on port 9099
+- Firestore Emulator on port 8082
+- Storage Emulator on port 9199
+- Emulator UI on http://localhost:4000
+
+3. In separate terminals, start backend services:
+
+```bash
+# Terminal 2: Documents API
+FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099 \
+FIRESTORE_EMULATOR_HOST=localhost:8082 \
+FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199 \
+FIREBASE_PROJECT_ID=demo-project \
+pnpm dev:documents-api
+
+# Terminal 3: Generate API
+FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099 \
+FIRESTORE_EMULATOR_HOST=localhost:8082 \
+FIREBASE_PROJECT_ID=demo-project \
+OPENROUTER_API_KEY=your-key \
+pnpm dev:generate-api
+
+# Terminal 4: Frontend
+VITE_USE_FIREBASE_EMULATOR=true \
+VITE_FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099 \
+VITE_FIRESTORE_EMULATOR_HOST=localhost \
+VITE_FIRESTORE_EMULATOR_PORT=8082 \
+VITE_FIREBASE_STORAGE_EMULATOR_HOST=localhost \
+VITE_FIREBASE_STORAGE_EMULATOR_PORT=9199 \
+VITE_FIREBASE_PROJECT_ID=demo-project \
+pnpm dev
+```
+
+### Environment Variables
+
+#### Backend Services (documents-api, generate-api)
+
+For emulator mode:
+
+- `FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099`
+- `FIRESTORE_EMULATOR_HOST=localhost:8082`
+- `FIREBASE_STORAGE_EMULATOR_HOST=localhost:9199` (only for documents-api)
+- `FIREBASE_PROJECT_ID=demo-project`
+
+For production mode:
+
+- `FIREBASE_SERVICE_ACCOUNT_KEY` - JSON service account key
+- `OPENROUTER_API_KEY` - OpenRouter API key (only for generate-api)
+
+#### Frontend
+
+For emulator mode:
+
+- `VITE_USE_FIREBASE_EMULATOR=true`
+- `VITE_FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099`
+- `VITE_FIRESTORE_EMULATOR_HOST=localhost`
+- `VITE_FIRESTORE_EMULATOR_PORT=8082`
+- `VITE_FIREBASE_STORAGE_EMULATOR_HOST=localhost`
+- `VITE_FIREBASE_STORAGE_EMULATOR_PORT=9199`
+- `VITE_FIREBASE_PROJECT_ID=demo-project`
+
+For production mode:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
 
 ## Deployment
 
