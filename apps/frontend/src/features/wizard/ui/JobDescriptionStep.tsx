@@ -50,7 +50,14 @@ export function JobDescriptionStep({
         // TODO: Show error message to user
       }
     },
-    [jobDescriptionText, resumeData, createDocument, generateResume, setDocumentId, onNext]
+    [
+      jobDescriptionText,
+      resumeData,
+      createDocument,
+      generateResume,
+      setDocumentId,
+      onNext,
+    ]
   );
 
   return (
@@ -72,7 +79,7 @@ export function JobDescriptionStep({
           value={jobDescriptionText}
           onChange={handleJobDescriptionTextChange}
           rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none"
           placeholder="Paste the complete job description here, including requirements, responsibilities, and qualifications..."
           required
         />
@@ -92,10 +99,17 @@ export function JobDescriptionStep({
         </button>
         <button
           type="submit"
-          disabled={!jobDescriptionText.trim() || !resumeData || createDocument.isPending || generateResume.isPending}
+          disabled={
+            !jobDescriptionText.trim() ||
+            !resumeData ||
+            createDocument.isPending ||
+            generateResume.isPending
+          }
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
-          {createDocument.isPending || generateResume.isPending ? "Generating..." : "Generate Tailored Resume"}
+          {createDocument.isPending || generateResume.isPending
+            ? "Generating..."
+            : "Generate Tailored Resume"}
         </button>
       </div>
     </form>

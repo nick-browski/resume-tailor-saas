@@ -65,11 +65,11 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           Tailored Resume Preview
         </label>
         {isLoading ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[200px]">
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
             <p className="text-sm text-gray-600">Loading...</p>
           </div>
         ) : documentData?.status === "generating" ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[200px]">
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
             <p className="text-sm text-gray-600">Generating tailored resume... Please wait.</p>
           </div>
         ) : documentData?.status === "failed" ? (
@@ -79,7 +79,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
             </p>
           </div>
         ) : documentData?.tailoredText ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-80 sm:max-h-96 overflow-y-auto">
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
             <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-800">
               {documentData.tailoredText}
             </pre>

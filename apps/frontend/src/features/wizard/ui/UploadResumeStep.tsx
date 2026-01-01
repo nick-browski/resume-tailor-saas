@@ -144,7 +144,7 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
             value={resumeText}
             onChange={handleResumeTextChange}
             rows={TEXTAREA_CONSTANTS.RESUME_ROWS}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none"
             placeholder="Paste your resume content here..."
           />
         </div>
