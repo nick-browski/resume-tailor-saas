@@ -5,7 +5,11 @@ export type WizardStep = 1 | 2 | 3;
 
 interface WizardState {
   currentStep: WizardStep;
+  documentId: string | null;
+  resumeData: { file: File | null; text: string } | null;
   setStep: (step: WizardStep) => void;
+  setDocumentId: (documentId: string | null) => void;
+  setResumeData: (data: { file: File | null; text: string } | null) => void;
   nextStep: () => void;
   previousStep: () => void;
   reset: () => void;
@@ -13,6 +17,8 @@ interface WizardState {
 
 export const useWizardStore = create<WizardState>((set) => ({
   currentStep: WIZARD_CONSTANTS.FIRST_STEP,
+  documentId: null,
+  resumeData: null,
   setStep: (step: WizardStep) => {
     if (
       step >= WIZARD_CONSTANTS.FIRST_STEP &&
@@ -20,6 +26,12 @@ export const useWizardStore = create<WizardState>((set) => ({
     ) {
       set({ currentStep: step });
     }
+  },
+  setDocumentId: (documentId: string | null) => {
+    set({ documentId });
+  },
+  setResumeData: (data: { file: File | null; text: string } | null) => {
+    set({ resumeData: data });
   },
   nextStep: () =>
     set((state) => ({
@@ -35,5 +47,9 @@ export const useWizardStore = create<WizardState>((set) => ({
         WIZARD_CONSTANTS.FIRST_STEP
       ) as WizardStep,
     })),
-  reset: () => set({ currentStep: WIZARD_CONSTANTS.FIRST_STEP }),
+  reset: () => set({ 
+    currentStep: WIZARD_CONSTANTS.FIRST_STEP, 
+    documentId: null,
+    resumeData: null,
+  }),
 }));

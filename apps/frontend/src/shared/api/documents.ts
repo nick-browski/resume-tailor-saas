@@ -14,22 +14,25 @@ export const documentsApi = {
   async create(
     createRequest: CreateDocumentRequest
   ): Promise<CreateDocumentResponse> {
-    const requestFormData = new FormData();
-
     if (createRequest.file) {
+      const requestFormData = new FormData();
       requestFormData.append("file", createRequest.file);
-    } else if (createRequest.resumeText) {
-      requestFormData.append("resumeText", createRequest.resumeText);
+      if (createRequest.jobText) {
+        requestFormData.append("jobText", createRequest.jobText);
+      }
+      return documentsApiClient.postFormData<CreateDocumentResponse>(
+        DOCUMENTS_ENDPOINT,
+        requestFormData
+      );
+    } else {
+      return documentsApiClient.post<CreateDocumentResponse>(
+        DOCUMENTS_ENDPOINT,
+        {
+          resumeText: createRequest.resumeText,
+          jobText: createRequest.jobText,
+        }
+      );
     }
-
-    if (createRequest.jobText) {
-      requestFormData.append("jobText", createRequest.jobText);
-    }
-
-    return documentsApiClient.postFormData<CreateDocumentResponse>(
-      DOCUMENTS_ENDPOINT,
-      requestFormData
-    );
   },
 
   async getById(documentId: string): Promise<Document> {

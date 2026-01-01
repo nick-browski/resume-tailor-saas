@@ -1,9 +1,6 @@
 import React, { useCallback, useState } from "react";
-import {
-  FILE_CONSTANTS,
-  TIMING_CONSTANTS,
-  TEXTAREA_CONSTANTS,
-} from "@/shared/lib/constants";
+import { FILE_CONSTANTS, TEXTAREA_CONSTANTS } from "@/shared/lib/constants";
+import { useWizardStore } from "../model/wizardStore";
 
 interface UploadResumeStepProps {
   onNext: () => void;
@@ -15,7 +12,7 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState("");
   const [uploadMode, setUploadMode] = useState<UploadMode>("file");
-  const [isUploading, setIsUploading] = useState(false);
+  const setResumeData = useWizardStore((state) => state.setResumeData);
 
   const handleFileInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,15 +34,14 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
   const handleFormSubmit = useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
-      setIsUploading(true);
 
-      // TODO: Implement actual upload logic with documentsApi.create()
-      setTimeout(() => {
-        setIsUploading(false);
-        onNext();
-      }, TIMING_CONSTANTS.UPLOAD_DELAY_MS);
+      setResumeData({
+        file: uploadMode === "file" ? selectedFile : null,
+        text: uploadMode === "text" ? resumeText : "",
+      });
+      onNext();
     },
-    [onNext]
+    [uploadMode, selectedFile, resumeText, setResumeData, onNext]
   );
 
   const canProceedToNextStep =
@@ -158,10 +154,10 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
       <div className="flex justify-end pt-2">
         <button
           type="submit"
-          disabled={!canProceedToNextStep || isUploading}
+          disabled={!canProceedToNextStep}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
-          {isUploading ? "Uploading..." : "Continue"}
+          Continue
         </button>
       </div>
     </form>

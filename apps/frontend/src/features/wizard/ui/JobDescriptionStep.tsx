@@ -1,5 +1,8 @@
 import React, { useCallback, useState } from "react";
-import { TIMING_CONSTANTS, TEXTAREA_CONSTANTS } from "@/shared/lib/constants";
+import { TEXTAREA_CONSTANTS } from "@/shared/lib/constants";
+import { useGenerateResume } from "../api/useGenerate";
+import { useCreateDocument } from "../api/useDocuments";
+import { useWizardStore } from "../model/wizardStore";
 
 interface JobDescriptionStepProps {
   onNext: () => void;
@@ -11,7 +14,10 @@ export function JobDescriptionStep({
   onPrevious,
 }: JobDescriptionStepProps) {
   const [jobDescriptionText, setJobDescriptionText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const resumeData = useWizardStore((state) => state.resumeData);
+  const setDocumentId = useWizardStore((state) => state.setDocumentId);
+  const createDocument = useCreateDocument();
+  const generateResume = useGenerateResume();
 
   const handleJobDescriptionTextChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -23,17 +29,28 @@ export function JobDescriptionStep({
   const handleFormSubmit = useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
-      if (!jobDescriptionText.trim()) return;
+      if (!jobDescriptionText.trim() || !resumeData) return;
 
-      setIsGenerating(true);
+      try {
+        // Create document with resume and job description
+        const createResponse = await createDocument.mutateAsync({
+          file: resumeData.file || undefined,
+          resumeText: resumeData.text || undefined,
+          jobText: jobDescriptionText,
+        });
 
-      // TODO: Implement actual API call to generate tailored resume using generateApi
-      setTimeout(() => {
-        setIsGenerating(false);
+        const documentId = createResponse.id;
+        setDocumentId(documentId);
+
+        // Start generation
+        await generateResume.mutateAsync({ documentId });
         onNext();
-      }, TIMING_CONSTANTS.GENERATION_DELAY_MS);
+      } catch (error) {
+        console.error("Failed to create document or generate resume:", error);
+        // TODO: Show error message to user
+      }
     },
-    [jobDescriptionText, onNext]
+    [jobDescriptionText, resumeData, createDocument, generateResume, setDocumentId, onNext]
   );
 
   return (
@@ -75,10 +92,10 @@ export function JobDescriptionStep({
         </button>
         <button
           type="submit"
-          disabled={!jobDescriptionText.trim() || isGenerating}
+          disabled={!jobDescriptionText.trim() || !resumeData || createDocument.isPending || generateResume.isPending}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
-          {isGenerating ? "Generating..." : "Generate Tailored Resume"}
+          {createDocument.isPending || generateResume.isPending ? "Generating..." : "Generate Tailored Resume"}
         </button>
       </div>
     </form>

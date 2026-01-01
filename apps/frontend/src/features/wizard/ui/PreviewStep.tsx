@@ -1,40 +1,37 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { FILE_CONSTANTS, TIMING_CONSTANTS } from "@/shared/lib/constants";
+import { useDocumentById } from "../api/useDocuments";
+import { useWizardStore } from "../model/wizardStore";
 
 interface PreviewStepProps {
   onPrevious: () => void;
   onReset: () => void;
 }
 
-// TODO: Replace with actual data from API/store (useDocumentById hook)
-const MOCK_TAILORED_RESUME = `# John Doe
-Software Engineer
-
-## Experience
-
-### Senior Software Engineer | Tech Company Inc. | 2020 - Present
-- Led development of scalable microservices architecture using React and Node.js
-- Implemented CI/CD pipelines reducing deployment time by 40%
-- Collaborated with cross-functional teams to deliver high-quality software solutions
-
-### Software Engineer | Startup Co. | 2018 - 2020
-- Developed responsive web applications using modern JavaScript frameworks
-- Optimized database queries improving application performance by 30%
-- Participated in agile development processes and code reviews
-
-## Skills
-- React, TypeScript, Node.js
-- Cloud platforms (AWS, GCP)
-- CI/CD, Docker, Kubernetes`;
-
 export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const documentId = useWizardStore((state) => state.documentId);
+  const { data: documentData, isLoading, refetch } = useDocumentById(documentId);
+
+  // Poll for document updates while generating
+  useEffect(() => {
+    if (!documentId || !documentData) return;
+
+    if (documentData.status === "generating") {
+      const interval = setInterval(() => {
+        refetch();
+      }, 2000); // Poll every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [documentId, documentData?.status, refetch]);
 
   const handleResumeDownload = useCallback(async () => {
+    if (!documentData?.tailoredText) return;
+
     setIsDownloading(true);
 
-    // TODO: Implement actual download logic using document.pdfResultPath or tailoredText
-    const resumeBlob = new Blob([MOCK_TAILORED_RESUME], {
+    const resumeBlob = new Blob([documentData.tailoredText], {
       type: FILE_CONSTANTS.MARKDOWN_MIME_TYPE,
     });
     const downloadUrl = URL.createObjectURL(resumeBlob);
@@ -49,7 +46,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     setTimeout(() => {
       setIsDownloading(false);
     }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
-  }, []);
+  }, [documentData]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -67,11 +64,31 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Tailored Resume Preview
         </label>
-        <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-80 sm:max-h-96 overflow-y-auto">
-          <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-800">
-            {MOCK_TAILORED_RESUME}
-          </pre>
-        </div>
+        {isLoading ? (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[200px]">
+            <p className="text-sm text-gray-600">Loading...</p>
+          </div>
+        ) : documentData?.status === "generating" ? (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[200px]">
+            <p className="text-sm text-gray-600">Generating tailored resume... Please wait.</p>
+          </div>
+        ) : documentData?.status === "failed" ? (
+          <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
+            <p className="text-sm text-red-600">
+              Generation failed: {documentData.error || "Unknown error"}
+            </p>
+          </div>
+        ) : documentData?.tailoredText ? (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-80 sm:max-h-96 overflow-y-auto">
+            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-800">
+              {documentData.tailoredText}
+            </pre>
+          </div>
+        ) : (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50">
+            <p className="text-sm text-gray-600">No resume available yet.</p>
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -95,7 +112,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         <button
           type="button"
           onClick={handleResumeDownload}
-          disabled={isDownloading}
+          disabled={isDownloading || !documentData?.tailoredText || documentData?.status !== "generated"}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           {isDownloading ? "Downloading..." : "Download Resume"}

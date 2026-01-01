@@ -39,16 +39,48 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const storage: FirebaseStorage = getStorage(app);
-
 // Connect to emulators in development mode
 const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === "true";
 
+// Create auth instance
+export const auth: Auth = getAuth(app);
+
+// Setup emulator connection
 if (useEmulator) {
   const authEmulatorHost =
-    import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST || "http://localhost:9099";
+    import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST || "localhost:9099";
+  const authEmulatorHostFormatted = authEmulatorHost.replace(
+    /^https?:\/\//,
+    ""
+  );
+  const authEmulatorHostWithProtocol = `http://${authEmulatorHostFormatted}`;
+
+  try {
+    connectAuthEmulator(auth, authEmulatorHostWithProtocol, {
+      disableWarnings: true,
+    });
+  } catch (errorWithProtocol) {
+    try {
+      connectAuthEmulator(auth, authEmulatorHostFormatted, {
+        disableWarnings: true,
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        !error.message.includes("already connected")
+      ) {
+        console.warn("Failed to connect Auth emulator:", error);
+      }
+    }
+  }
+}
+
+// Create other services
+export const db: Firestore = getFirestore(app);
+export const storage: FirebaseStorage = getStorage(app);
+
+// Connect other emulators
+if (useEmulator) {
   const firestoreEmulatorHost =
     import.meta.env.VITE_FIRESTORE_EMULATOR_HOST || "localhost";
   const firestoreEmulatorPort = parseInt(
@@ -61,17 +93,6 @@ if (useEmulator) {
     import.meta.env.VITE_FIREBASE_STORAGE_EMULATOR_PORT || "9199",
     10
   );
-
-  try {
-    connectAuthEmulator(auth, authEmulatorHost, { disableWarnings: true });
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      !error.message.includes("already connected")
-    ) {
-      console.warn("Failed to connect Auth emulator:", error);
-    }
-  }
 
   try {
     connectFirestoreEmulator(db, firestoreEmulatorHost, firestoreEmulatorPort);
