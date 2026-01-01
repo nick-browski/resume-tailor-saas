@@ -1,12 +1,52 @@
 import { getDb } from "../config/firebase-admin.js";
 import { generateTailoredResume } from "./openRouterService.js";
-import { FIREBASE_CONFIG, DOCUMENT_STATUS, ERROR_MESSAGES } from "../config/constants.js";
+import {
+  FIREBASE_CONFIG,
+  DOCUMENT_STATUS,
+  ERROR_MESSAGES,
+} from "../config/constants.js";
 
 const DOCUMENTS_COLLECTION_NAME = FIREBASE_CONFIG.DOCUMENTS_COLLECTION_NAME;
 const EXPECTED_STATUS_FOR_GENERATION = DOCUMENT_STATUS.PARSED;
 
-// Generates a tailored resume for a document and updates its status
-export async function generateResumeForDocument(
+// Processes generation asynchronously in the background
+async function processGeneration(
+  documentId: string,
+  resumeText: string,
+  jobText: string
+): Promise<void> {
+  const database = getDb();
+  const documentReference = database
+    .collection(DOCUMENTS_COLLECTION_NAME)
+    .doc(documentId);
+
+  try {
+    const tailoredResumeText = await generateTailoredResume(
+      resumeText,
+      jobText
+    );
+
+    await documentReference.update({
+      status: DOCUMENT_STATUS.GENERATED,
+      tailoredText: tailoredResumeText,
+      error: null,
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    await documentReference.update({
+      status: DOCUMENT_STATUS.FAILED,
+      error: errorMessage,
+    });
+    console.error(
+      `Error processing generation for document ${documentId}:`,
+      error
+    );
+  }
+}
+
+// Starts generation and returns immediately
+export async function startGeneration(
   documentId: string,
   ownerId: string
 ): Promise<{ status: string }> {
@@ -38,26 +78,16 @@ export async function generateResumeForDocument(
     error: null,
   });
 
-  try {
-    const tailoredResumeText = await generateTailoredResume(
-      documentData.resumeText,
-      documentData.jobText
+  processGeneration(
+    documentId,
+    documentData.resumeText,
+    documentData.jobText
+  ).catch((error) => {
+    console.error(
+      `Failed to start background generation for document ${documentId}:`,
+      error
     );
+  });
 
-    await documentReference.update({
-      status: DOCUMENT_STATUS.GENERATED,
-      tailoredText: tailoredResumeText,
-      error: null,
-    });
-
-    return { status: DOCUMENT_STATUS.GENERATED };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    await documentReference.update({
-      status: DOCUMENT_STATUS.FAILED,
-      error: errorMessage,
-    });
-    throw error;
-  }
+  return { status: DOCUMENT_STATUS.GENERATING };
 }

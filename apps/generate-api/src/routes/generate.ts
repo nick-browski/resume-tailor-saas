@@ -3,7 +3,7 @@ import {
   verifyFirebaseToken,
   AuthenticatedRequest,
 } from "../middleware/auth.js";
-import { generateResumeForDocument } from "../services/generateService.js";
+import { startGeneration } from "../services/generateService.js";
 import { initializeFirebaseAdmin } from "../config/firebase-admin.js";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../config/constants.js";
 
@@ -11,7 +11,7 @@ initializeFirebaseAdmin();
 
 export const generateRouter = express.Router();
 
-// Generates a tailored resume for a specific document
+// Starts generation process and returns immediately
 generateRouter.post(
   "/:id/generate",
   verifyFirebaseToken,
@@ -20,14 +20,11 @@ generateRouter.post(
       const userId = request.userId!;
       const documentId = request.params.id;
 
-      const generationResult = await generateResumeForDocument(
-        documentId,
-        userId
-      );
+      const generationResult = await startGeneration(documentId, userId);
 
       response.json(generationResult);
     } catch (error) {
-      console.error("Error generating resume:", error);
+      console.error("Error starting generation:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
