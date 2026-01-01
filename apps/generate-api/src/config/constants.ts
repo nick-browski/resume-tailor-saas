@@ -42,7 +42,7 @@ export const REQUEST_HEADERS = {
 // OpenRouter Configuration
 export const OPENROUTER_CONFIG = {
   API_URL: "https://openrouter.ai/api/v1/chat/completions",
-  DEFAULT_MODEL: "mistralai/devstral-2512:free",
+  DEFAULT_MODEL: "google/gemini-flash-1.5:free",
   MAX_TOKENS: 4096,
   APPLICATION_TITLE: "Resume Tailor SaaS",
 } as const;
@@ -58,4 +58,9 @@ export const DOCUMENT_STATUS = {
 // HTTP Methods
 export const HTTP_METHODS = {
   POST: "POST",
+} as const;
+
+// CORS Configuration
+export const CORS_CONFIG = {
+  DEFAULT_ORIGIN: "http://localhost:3000",
 } as const;

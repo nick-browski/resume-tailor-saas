@@ -13,6 +13,22 @@ if ! command -v java &> /dev/null; then
   fi
 fi
 
+# Load .env file if it exists (from project root or generate-api directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  echo "📄 Loading .env from project root..."
+  set -a
+  source "$PROJECT_ROOT/.env"
+  set +a
+elif [ -f "$PROJECT_ROOT/apps/generate-api/.env" ]; then
+  echo "📄 Loading .env from apps/generate-api..."
+  set -a
+  source "$PROJECT_ROOT/apps/generate-api/.env"
+  set +a
+fi
+
 # Set environment variables for emulator mode
 export FIREBASE_AUTH_EMULATOR_HOST="localhost:9099"
 export FIRESTORE_EMULATOR_HOST="localhost:8082"
@@ -36,7 +52,7 @@ pnpm dev:documents-api &
 FIREBASE_AUTH_EMULATOR_HOST="localhost:9099" \
 FIRESTORE_EMULATOR_HOST="localhost:8082" \
 FIREBASE_PROJECT_ID="demo-project" \
-OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}" \
+OPENROUTER_API_KEY="${OPENROUTER_API_KEY}" \
 pnpm dev:generate-api &
 
 # Wait for both processes

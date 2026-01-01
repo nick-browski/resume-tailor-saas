@@ -27,7 +27,7 @@ documentsRouter.post(
   "/",
   verifyFirebaseToken,
   uploadMiddleware.single(FILE_FIELD_NAME),
-  async (request: AuthenticatedRequest, response) => {
+  async (request: AuthenticatedRequest, response: express.Response) => {
     try {
       const userId = request.userId!;
       const uploadedFile = request.file;

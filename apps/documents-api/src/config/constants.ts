@@ -46,3 +46,8 @@ export const REQUEST_HEADERS = {
 export const DOCUMENT_STATUS = {
   PARSED: "parsed",
 } as const;
+
+// CORS Configuration
+export const CORS_CONFIG = {
+  DEFAULT_ORIGIN: "http://localhost:3000",
+} as const;

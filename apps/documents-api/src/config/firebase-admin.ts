@@ -25,8 +25,11 @@ export function initializeFirebaseAdmin() {
 
   if (isEmulatorMode) {
     if (getApps().length === 0) {
+      const projectId =
+        process.env.FIREBASE_PROJECT_ID || FIREBASE_CONFIG.DEFAULT_PROJECT_ID;
       app = initializeApp({
-        projectId: process.env.FIREBASE_PROJECT_ID || FIREBASE_CONFIG.DEFAULT_PROJECT_ID,
+        projectId,
+        storageBucket: `${projectId}.appspot.com`,
       });
     } else {
       app = getApps()[0];

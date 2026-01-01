@@ -1,12 +1,19 @@
 import express from "express";
+import cors from "cors";
 import { generateRouter } from "./routes/generate.js";
-import { SUCCESS_MESSAGES } from "./config/constants.js";
+import { SUCCESS_MESSAGES, CORS_CONFIG } from "./config/constants.js";
 
 const DEFAULT_PORT = 8081;
 const PORT = Number(process.env.PORT) || DEFAULT_PORT;
 
 const app = express();
 
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || CORS_CONFIG.DEFAULT_ORIGIN,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use("/documents", generateRouter);
