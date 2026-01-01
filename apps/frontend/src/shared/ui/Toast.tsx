@@ -16,7 +16,9 @@ interface ToastItemProps {
 
 function ToastItem({ toast, onRemove }: ToastItemProps) {
   useEffect(() => {
-    if (toast.type === "loading") return;
+    if (toast.type === "loading") {
+      return;
+    }
 
     const duration = toast.duration ?? 5000;
     const timer = setTimeout(() => {
@@ -114,7 +116,9 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
 
   return (
     <div
-      className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-sm min-w-[300px] max-w-md animate-in`}
+      className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-sm min-w-[300px] max-w-md ${
+        toast.type === "loading" ? "" : "animate-in"
+      }`}
     >
       <div className={`flex-shrink-0 ${getStyles().split(" ")[2]}`}>
         {getIcon()}

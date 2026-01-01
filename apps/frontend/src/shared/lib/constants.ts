@@ -23,6 +23,7 @@ export const TIMING_CONSTANTS = {
   GENERATION_DELAY_MS: 1000,
   DOWNLOAD_DELAY_MS: 500,
   DOCUMENT_POLL_INTERVAL_MS: 2000,
+  DOCUMENT_POLL_TIMEOUT_MS: 5 * 60 * 1000, // 5 minutes
 } as const;
 
 export const QUERY_CONSTANTS = {
@@ -43,6 +44,8 @@ export const TOAST_MESSAGES = {
   STARTING_RESUME_GENERATION: "Starting resume generation...",
   CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED:
     "Failed to create document or generate resume",
+  RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
+  RESUME_DOWNLOAD_FAILED: "Failed to download resume",
 } as const;
 
 export const UI_TEXT = {
@@ -79,10 +82,24 @@ export const UI_TEXT = {
   BACK_BUTTON: "Back",
   GENERATING_BUTTON: "Generating...",
   GENERATE_TAILORED_RESUME_BUTTON: "Generate Tailored Resume",
+  PREVIEW_STEP_TITLE: "Step 3: Preview & Download",
+  PREVIEW_STEP_DESCRIPTION:
+    "Review your tailored resume and download it when ready.",
+  TAILORED_RESUME_PREVIEW_LABEL: "Tailored Resume Preview",
+  LOADING_TEXT: "Loading...",
+  LOADING_DOCUMENT_TEXT: "Loading document...",
+  GENERATING_TAILORED_RESUME_TEXT: "Generating tailored resume... Please wait.",
+  GENERATION_FAILED_PREFIX: "Generation failed:",
+  UNKNOWN_ERROR_TEXT: "Unknown error",
+  NO_RESUME_AVAILABLE_TEXT: "No resume available yet.",
+  START_OVER_BUTTON: "Start Over",
+  DOWNLOADING_TEXT: "Downloading...",
+  DOWNLOAD_RESUME_BUTTON: "Download Resume",
 } as const;
 
 export const QUERY_KEYS = {
   DOCUMENTS: "documents",
+  DOCUMENT: "document",
 } as const;
 
 export const DOCUMENT_STATUS = {

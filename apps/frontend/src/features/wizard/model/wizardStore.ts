@@ -4,6 +4,7 @@ import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
 export type WizardStep = 1 | 2 | 3;
 
 const STEP_QUERY_PARAM = "step";
+const DOCUMENT_ID_QUERY_PARAM = "docId";
 
 // Reads step from URL query parameters
 export function getStepFromUrl(): WizardStep {
@@ -26,6 +27,16 @@ export function getStepFromUrl(): WizardStep {
   return WIZARD_CONSTANTS.FIRST_STEP;
 }
 
+// Reads documentId from URL query parameters
+export function getDocumentIdFromUrl(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(DOCUMENT_ID_QUERY_PARAM);
+}
+
 // Updates URL query parameter with current step
 function updateUrlStep(step: WizardStep): void {
   if (typeof window === "undefined") return;
@@ -40,6 +51,20 @@ function updateUrlStep(step: WizardStep): void {
   window.history.pushState({}, "", url.toString());
 }
 
+// Updates URL query parameter with documentId
+function updateUrlDocumentId(documentId: string | null): void {
+  if (typeof window === "undefined") return;
+
+  const url = new URL(window.location.href);
+  if (documentId) {
+    url.searchParams.set(DOCUMENT_ID_QUERY_PARAM, documentId);
+  } else {
+    url.searchParams.delete(DOCUMENT_ID_QUERY_PARAM);
+  }
+
+  window.history.pushState({}, "", url.toString());
+}
+
 interface WizardState {
   currentStep: WizardStep;
   maxReachedStep: WizardStep;
@@ -47,12 +72,14 @@ interface WizardState {
   resumeData: { file: File | null; text: string } | null;
   jobDescriptionText: string;
   uploadMode: "file" | "text";
+  generationToastId: string | null;
   setStep: (step: WizardStep) => void;
   setDocumentId: (documentId: string | null) => void;
   setResumeData: (data: { file: File | null; text: string } | null) => void;
   setJobDescriptionText: (text: string) => void;
   setUploadMode: (mode: "file" | "text") => void;
   setMaxReachedStep: (step: WizardStep) => void;
+  setGenerationToastId: (toastId: string | null) => void;
   nextStep: () => void;
   previousStep: () => void;
   reset: () => void;
@@ -61,10 +88,11 @@ interface WizardState {
 export const useWizardStore = create<WizardState>((set) => ({
   currentStep: getStepFromUrl(),
   maxReachedStep: getStepFromUrl(),
-  documentId: null,
+  documentId: getDocumentIdFromUrl(),
   resumeData: null,
   jobDescriptionText: "",
   uploadMode: "file",
+  generationToastId: null,
   setStep: (step: WizardStep) => {
     if (
       step >= WIZARD_CONSTANTS.FIRST_STEP &&
@@ -81,6 +109,7 @@ export const useWizardStore = create<WizardState>((set) => ({
     }
   },
   setDocumentId: (documentId: string | null) => {
+    updateUrlDocumentId(documentId);
     set({ documentId });
   },
   setResumeData: (data: { file: File | null; text: string } | null) => {
@@ -99,6 +128,9 @@ export const useWizardStore = create<WizardState>((set) => ({
     ) {
       set({ maxReachedStep: step });
     }
+  },
+  setGenerationToastId: (toastId: string | null) => {
+    set({ generationToastId: toastId });
   },
   nextStep: () =>
     set((state) => {
@@ -123,6 +155,7 @@ export const useWizardStore = create<WizardState>((set) => ({
     }),
   reset: () => {
     updateUrlStep(WIZARD_CONSTANTS.FIRST_STEP);
+    updateUrlDocumentId(null);
     set({
       currentStep: WIZARD_CONSTANTS.FIRST_STEP,
       maxReachedStep: WIZARD_CONSTANTS.FIRST_STEP,
@@ -130,6 +163,7 @@ export const useWizardStore = create<WizardState>((set) => ({
       resumeData: null,
       jobDescriptionText: "",
       uploadMode: "file",
+      generationToastId: null,
     });
   },
 }));

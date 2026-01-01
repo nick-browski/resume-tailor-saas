@@ -35,9 +35,7 @@ function App() {
       case WIZARD_CONSTANTS.FIRST_STEP:
         return <UploadResumeStep onNext={nextStep} />;
       case 2:
-        return (
-          <JobDescriptionStep onNext={nextStep} onPrevious={previousStep} />
-        );
+        return <JobDescriptionStep onPrevious={previousStep} />;
       case WIZARD_CONSTANTS.LAST_STEP:
         return <PreviewStep onPrevious={previousStep} onReset={reset} />;
       default:

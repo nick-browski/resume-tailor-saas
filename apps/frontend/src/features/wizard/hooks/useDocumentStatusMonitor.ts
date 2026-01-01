@@ -8,56 +8,154 @@ import {
   DOCUMENT_STATUS,
 } from "@/shared/lib/constants";
 
-// Monitors document status changes and shows toast notifications
-// Updates maxReachedStep when generation completes
 export function useDocumentStatusMonitor() {
   const documentId = useWizardStore((state) => state.documentId);
+  const generationToastId = useWizardStore((state) => state.generationToastId);
+  const setGenerationToastId = useWizardStore(
+    (state) => state.setGenerationToastId
+  );
+  const setResumeData = useWizardStore((state) => state.setResumeData);
+  const setJobDescriptionText = useWizardStore(
+    (state) => state.setJobDescriptionText
+  );
+  const currentStep = useWizardStore((state) => state.currentStep);
   const maxReachedStep = useWizardStore((state) => state.maxReachedStep);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
-  const { data: documentData, error } = useDocumentById(documentId);
+  const nextStep = useWizardStore((state) => state.nextStep);
+
+  const { data: documentDataSnapshot, error: documentError } =
+    useDocumentById(documentId);
+
   const toast = useToastContext();
-  const previousStatusRef = useRef<string | undefined>(undefined);
-  const errorShownRef = useRef(false);
+  const processedDocumentIdRef = useRef<string | null>(null);
+  const processedStatusRef = useRef<string | null>(null);
 
-  // Shows toast notifications on status changes and updates maxReachedStep
+  // Restore state on page refresh, navigate when generation completes
   useEffect(() => {
-    if (!documentData) return;
+    if (
+      !documentDataSnapshot ||
+      documentDataSnapshot.status !== DOCUMENT_STATUS.GENERATED
+    ) {
+      return;
+    }
 
-    const currentStatus = documentData.status;
-    const previousStatus = previousStatusRef.current;
+    const isNewDocument =
+      processedDocumentIdRef.current !== documentDataSnapshot.id;
+    const hasTailoredText = !!documentDataSnapshot.tailoredText;
+    const isOnStep2 = currentStep === WIZARD_CONSTANTS.LAST_STEP - 1;
 
-    if (previousStatus === currentStatus) return;
+    if (isNewDocument) {
+      if (documentDataSnapshot.resumeText) {
+        setResumeData({ file: null, text: documentDataSnapshot.resumeText });
+      }
+      if (documentDataSnapshot.jobText) {
+        setJobDescriptionText(documentDataSnapshot.jobText);
+      }
+      if (maxReachedStep < WIZARD_CONSTANTS.LAST_STEP) {
+        setMaxReachedStep(WIZARD_CONSTANTS.LAST_STEP);
+      }
+      processedDocumentIdRef.current = documentDataSnapshot.id;
+    }
+
+    if (hasTailoredText && isOnStep2) {
+      nextStep();
+    } else if (currentStep !== WIZARD_CONSTANTS.LAST_STEP && !isOnStep2) {
+      nextStep();
+    }
+  }, [
+    documentDataSnapshot,
+    currentStep,
+    maxReachedStep,
+    setResumeData,
+    setJobDescriptionText,
+    setMaxReachedStep,
+    nextStep,
+  ]);
+
+  // Show loading toast on page refresh during active generation
+  useEffect(() => {
+    if (
+      documentId &&
+      !generationToastId &&
+      documentDataSnapshot &&
+      (documentDataSnapshot.status === DOCUMENT_STATUS.PARSED ||
+        documentDataSnapshot.status === DOCUMENT_STATUS.GENERATING)
+    ) {
+      const loadingToastId = toast.showLoading(
+        TOAST_MESSAGES.STARTING_RESUME_GENERATION
+      );
+      setGenerationToastId(loadingToastId);
+    }
+  }, [
+    documentId,
+    generationToastId,
+    documentDataSnapshot,
+    setGenerationToastId,
+    toast,
+  ]);
+
+  // Handle final status: dismiss loading toast, show result, prevent duplicates
+  useEffect(() => {
+    if (!documentDataSnapshot || !generationToastId) {
+      return;
+    }
+
+    const documentStatus = documentDataSnapshot.status;
+    const isFinalStatus =
+      documentStatus === DOCUMENT_STATUS.GENERATED ||
+      documentStatus === DOCUMENT_STATUS.FAILED;
+
+    if (!isFinalStatus) {
+      return;
+    }
 
     if (
-      currentStatus === DOCUMENT_STATUS.GENERATED &&
-      documentData.tailoredText
+      processedDocumentIdRef.current === documentDataSnapshot.id &&
+      processedStatusRef.current === documentStatus
     ) {
+      return;
+    }
+
+    processedDocumentIdRef.current = documentDataSnapshot.id;
+    processedStatusRef.current = documentStatus;
+    toast.dismissLoading(generationToastId);
+    setGenerationToastId(null);
+
+    if (documentStatus === DOCUMENT_STATUS.GENERATED) {
       toast.showSuccess(TOAST_MESSAGES.RESUME_GENERATED_SUCCESS);
       if (maxReachedStep < WIZARD_CONSTANTS.LAST_STEP) {
         setMaxReachedStep(WIZARD_CONSTANTS.LAST_STEP);
       }
-    } else if (currentStatus === DOCUMENT_STATUS.FAILED) {
+    } else if (documentStatus === DOCUMENT_STATUS.FAILED) {
       const errorMessage =
-        documentData.error || TOAST_MESSAGES.RESUME_GENERATION_FAILED;
+        documentDataSnapshot.error || TOAST_MESSAGES.RESUME_GENERATION_FAILED;
       toast.showError(errorMessage);
     }
+  }, [
+    documentDataSnapshot,
+    generationToastId,
+    setGenerationToastId,
+    maxReachedStep,
+    setMaxReachedStep,
+    toast,
+  ]);
 
-    previousStatusRef.current = currentStatus;
-  }, [documentData, toast, maxReachedStep, setMaxReachedStep]);
-
-  // Resets status tracking when documentId changes
+  // Reset tracking on new generation
   useEffect(() => {
-    previousStatusRef.current = undefined;
-    errorShownRef.current = false;
+    if (!documentId) {
+      processedDocumentIdRef.current = null;
+      processedStatusRef.current = null;
+    }
   }, [documentId]);
 
-  // Shows error toast when document query fails
+  // Handle fetch errors
   useEffect(() => {
-    if (error && !errorShownRef.current) {
+    if (
+      documentError &&
+      processedDocumentIdRef.current !== documentId &&
+      documentId
+    ) {
       toast.showError(TOAST_MESSAGES.DOCUMENT_LOAD_FAILED);
-      errorShownRef.current = true;
-    } else if (!error) {
-      errorShownRef.current = false;
     }
-  }, [error, toast]);
+  }, [documentError, documentId, toast]);
 }

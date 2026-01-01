@@ -34,7 +34,6 @@ export interface GenerateResumeRequest {
 }
 
 export interface GenerateResumeResponse {
-  documentId: string;
   status: DocumentStatus;
 }
 

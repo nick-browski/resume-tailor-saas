@@ -43,7 +43,7 @@ export const REQUEST_HEADERS = {
 export const OPENROUTER_CONFIG = {
   API_URL: "https://openrouter.ai/api/v1/chat/completions",
   DEFAULT_MODEL: "google/gemini-flash-1.5:free",
-  MAX_TOKENS: 4096,
+  MAX_TOKENS: 1024,
   APPLICATION_TITLE: "Resume Tailor SaaS",
 } as const;
 

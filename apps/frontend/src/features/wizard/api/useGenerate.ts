@@ -1,20 +1,23 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateApi } from "@/shared/api";
 import type { GenerateResumeRequest } from "@/shared/api";
-
-const DOCUMENTS_QUERY_KEY = "documents";
+import { QUERY_KEYS } from "@/shared/lib/constants";
 
 export function useGenerateResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (generateRequest: GenerateResumeRequest) =>
-      generateApi.generate(generateRequest),
-    onSuccess: (generateResponse) => {
+    mutationFn: (generateResumeRequest: GenerateResumeRequest) =>
+      generateApi.generate(generateResumeRequest),
+    onSuccess: (_unusedGenerateResponseData, generateRequestVariables) => {
       queryClient.invalidateQueries({
-        queryKey: [DOCUMENTS_QUERY_KEY, generateResponse.documentId],
+        queryKey: [
+          QUERY_KEYS.DOCUMENTS,
+          QUERY_KEYS.DOCUMENT,
+          generateRequestVariables.documentId,
+        ],
       });
-      queryClient.invalidateQueries({ queryKey: [DOCUMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DOCUMENTS] });
     },
   });
 }

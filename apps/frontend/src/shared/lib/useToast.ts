@@ -14,14 +14,22 @@ export function useToast() {
     (message: string, type: ToastType = "info", duration?: number) => {
       const id = generateToastId();
       const newToast: Toast = { id, message, type, duration };
-      setToasts((prev) => [...prev, newToast]);
+
+      setToasts((previousToasts) => {
+        if (previousToasts.some((toast) => toast.id === id)) {
+          return previousToasts;
+        }
+        return [...previousToasts, newToast];
+      });
       return id;
     },
     []
   );
 
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  const removeToast = useCallback((toastId: string) => {
+    setToasts((previousToasts) =>
+      previousToasts.filter((toast) => toast.id !== toastId)
+    );
   }, []);
 
   const showSuccess = useCallback(
@@ -52,12 +60,17 @@ export function useToast() {
     [showToast]
   );
 
-  const dismissLoading = useCallback(
-    (id: string) => {
-      removeToast(id);
-    },
-    [removeToast]
-  );
+  const dismissLoading = useCallback((toastId: string) => {
+    setToasts((previousToasts) => {
+      const toastToDismiss = previousToasts.find(
+        (toast) => toast.id === toastId
+      );
+      if (!toastToDismiss) {
+        return previousToasts;
+      }
+      return previousToasts.filter((toast) => toast.id !== toastId);
+    });
+  }, []);
 
   return {
     toasts,
