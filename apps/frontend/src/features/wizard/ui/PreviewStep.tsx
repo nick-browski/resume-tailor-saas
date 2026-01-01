@@ -1,7 +1,13 @@
-import { useCallback, useState, useEffect } from "react";
-import { FILE_CONSTANTS, TIMING_CONSTANTS } from "@/shared/lib/constants";
+import { useCallback, useState } from "react";
+import {
+  FILE_CONSTANTS,
+  TIMING_CONSTANTS,
+  DOCUMENT_STATUS,
+} from "@/shared/lib/constants";
 import { useDocumentById } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
+import { useToastContext } from "@/app/providers/ToastProvider";
+import { Loader, LoaderOverlay } from "@/shared/ui";
 
 interface PreviewStepProps {
   onPrevious: () => void;
@@ -11,42 +17,37 @@ interface PreviewStepProps {
 export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
-  const { data: documentData, isLoading, refetch } = useDocumentById(documentId);
-
-  // Poll for document updates while generating
-  useEffect(() => {
-    if (!documentId || !documentData) return;
-
-    if (documentData.status === "generating") {
-      const interval = setInterval(() => {
-        refetch();
-      }, 2000); // Poll every 2 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [documentId, documentData?.status, refetch]);
+  const { data: documentData, isLoading } = useDocumentById(documentId);
+  const toast = useToastContext();
 
   const handleResumeDownload = useCallback(async () => {
     if (!documentData?.tailoredText) return;
 
     setIsDownloading(true);
 
-    const resumeBlob = new Blob([documentData.tailoredText], {
-      type: FILE_CONSTANTS.MARKDOWN_MIME_TYPE,
-    });
-    const downloadUrl = URL.createObjectURL(resumeBlob);
-    const downloadLink = document.createElement("a");
-    downloadLink.href = downloadUrl;
-    downloadLink.download = FILE_CONSTANTS.DEFAULT_FILENAME;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(downloadUrl);
+    try {
+      const resumeBlob = new Blob([documentData.tailoredText], {
+        type: FILE_CONSTANTS.MARKDOWN_MIME_TYPE,
+      });
+      const downloadUrl = URL.createObjectURL(resumeBlob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = downloadUrl;
+      downloadLink.download = FILE_CONSTANTS.DEFAULT_FILENAME;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadUrl);
 
-    setTimeout(() => {
-      setIsDownloading(false);
-    }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
-  }, [documentData]);
+      toast.showSuccess("Resume downloaded successfully");
+    } catch (error) {
+      toast.showError("Failed to download resume");
+      console.error("Download error:", error);
+    } finally {
+      setTimeout(() => {
+        setIsDownloading(false);
+      }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
+    }
+  }, [documentData, toast]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -64,15 +65,19 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Tailored Resume Preview
         </label>
-        {isLoading ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
+        {isLoading || (documentId && !documentData) ? (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+            <LoaderOverlay message="Loading document..." />
             <p className="text-sm text-gray-600">Loading...</p>
           </div>
-        ) : documentData?.status === "generating" ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
-            <p className="text-sm text-gray-600">Generating tailored resume... Please wait.</p>
+        ) : documentData?.status === DOCUMENT_STATUS.GENERATING ? (
+          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+            <LoaderOverlay message="Generating tailored resume... Please wait." />
+            <p className="text-sm text-gray-600">
+              Generating tailored resume... Please wait.
+            </p>
           </div>
-        ) : documentData?.status === "failed" ? (
+        ) : documentData?.status === DOCUMENT_STATUS.FAILED ? (
           <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
             <p className="text-sm text-red-600">
               Generation failed: {documentData.error || "Unknown error"}
@@ -112,9 +117,14 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         <button
           type="button"
           onClick={handleResumeDownload}
-          disabled={isDownloading || !documentData?.tailoredText || documentData?.status !== "generated"}
-          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+          disabled={
+            isDownloading ||
+            !documentData?.tailoredText ||
+            documentData?.status !== DOCUMENT_STATUS.GENERATED
+          }
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
         >
+          {isDownloading && <Loader size="sm" />}
           {isDownloading ? "Downloading..." : "Download Resume"}
         </button>
       </div>

@@ -42,11 +42,17 @@ function updateUrlStep(step: WizardStep): void {
 
 interface WizardState {
   currentStep: WizardStep;
+  maxReachedStep: WizardStep;
   documentId: string | null;
   resumeData: { file: File | null; text: string } | null;
+  jobDescriptionText: string;
+  uploadMode: "file" | "text";
   setStep: (step: WizardStep) => void;
   setDocumentId: (documentId: string | null) => void;
   setResumeData: (data: { file: File | null; text: string } | null) => void;
+  setJobDescriptionText: (text: string) => void;
+  setUploadMode: (mode: "file" | "text") => void;
+  setMaxReachedStep: (step: WizardStep) => void;
   nextStep: () => void;
   previousStep: () => void;
   reset: () => void;
@@ -54,15 +60,24 @@ interface WizardState {
 
 export const useWizardStore = create<WizardState>((set) => ({
   currentStep: getStepFromUrl(),
+  maxReachedStep: getStepFromUrl(),
   documentId: null,
   resumeData: null,
+  jobDescriptionText: "",
+  uploadMode: "file",
   setStep: (step: WizardStep) => {
     if (
       step >= WIZARD_CONSTANTS.FIRST_STEP &&
       step <= WIZARD_CONSTANTS.LAST_STEP
     ) {
-      set({ currentStep: step });
-      updateUrlStep(step);
+      set((state) => {
+        // Allow navigation to any step that has been reached
+        if (step <= state.maxReachedStep) {
+          updateUrlStep(step);
+          return { currentStep: step };
+        }
+        return state;
+      });
     }
   },
   setDocumentId: (documentId: string | null) => {
@@ -71,6 +86,20 @@ export const useWizardStore = create<WizardState>((set) => ({
   setResumeData: (data: { file: File | null; text: string } | null) => {
     set({ resumeData: data });
   },
+  setJobDescriptionText: (text: string) => {
+    set({ jobDescriptionText: text });
+  },
+  setUploadMode: (mode: "file" | "text") => {
+    set({ uploadMode: mode });
+  },
+  setMaxReachedStep: (step: WizardStep) => {
+    if (
+      step >= WIZARD_CONSTANTS.FIRST_STEP &&
+      step <= WIZARD_CONSTANTS.LAST_STEP
+    ) {
+      set({ maxReachedStep: step });
+    }
+  },
   nextStep: () =>
     set((state) => {
       const newStep = Math.min(
@@ -78,7 +107,10 @@ export const useWizardStore = create<WizardState>((set) => ({
         WIZARD_CONSTANTS.LAST_STEP
       ) as WizardStep;
       updateUrlStep(newStep);
-      return { currentStep: newStep };
+      return {
+        currentStep: newStep,
+        maxReachedStep: Math.max(state.maxReachedStep, newStep) as WizardStep,
+      };
     }),
   previousStep: () =>
     set((state) => {
@@ -93,8 +125,11 @@ export const useWizardStore = create<WizardState>((set) => ({
     updateUrlStep(WIZARD_CONSTANTS.FIRST_STEP);
     set({
       currentStep: WIZARD_CONSTANTS.FIRST_STEP,
+      maxReachedStep: WIZARD_CONSTANTS.FIRST_STEP,
       documentId: null,
       resumeData: null,
+      jobDescriptionText: "",
+      uploadMode: "file",
     });
   },
 }));

@@ -10,11 +10,15 @@ import {
   useWizardStore,
   getStepFromUrl,
 } from "@/features/wizard/model/wizardStore";
+import { useDocumentStatusMonitor } from "@/features/wizard/hooks/useDocumentStatusMonitor";
 import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
 
 function App() {
   const { currentStep, nextStep, previousStep, reset, setStep } =
     useWizardStore();
+
+  // Monitors document status changes and shows toast notifications
+  useDocumentStatusMonitor();
 
   // Sync step with URL on browser back/forward
   useEffect(() => {

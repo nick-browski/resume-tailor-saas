@@ -1,8 +1,18 @@
-import React, { useCallback, useState } from "react";
-import { TEXTAREA_CONSTANTS } from "@/shared/lib/constants";
+import { useCallback } from "react";
+import {
+  TEXTAREA_CONSTANTS,
+  DOCUMENT_STATUS,
+  WIZARD_CONSTANTS,
+  TOAST_MESSAGES,
+  UI_TEXT,
+  QUERY_KEYS,
+} from "@/shared/lib/constants";
 import { useGenerateResume } from "../api/useGenerate";
-import { useCreateDocument } from "../api/useDocuments";
+import { useCreateDocument, useDocumentById } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
+import { useToastContext } from "@/app/providers/ToastProvider";
+import { Loader } from "@/shared/ui";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface JobDescriptionStepProps {
   onNext: () => void;
@@ -13,41 +23,87 @@ export function JobDescriptionStep({
   onNext,
   onPrevious,
 }: JobDescriptionStepProps) {
-  const [jobDescriptionText, setJobDescriptionText] = useState("");
+  const jobDescriptionText = useWizardStore(
+    (state) => state.jobDescriptionText
+  );
+  const setJobDescriptionText = useWizardStore(
+    (state) => state.setJobDescriptionText
+  );
   const resumeData = useWizardStore((state) => state.resumeData);
+  const documentId = useWizardStore((state) => state.documentId);
   const setDocumentId = useWizardStore((state) => state.setDocumentId);
-  const createDocument = useCreateDocument();
-  const generateResume = useGenerateResume();
+  const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
+  const { mutateAsync: createDocument, isPending: isCreatingDocument } =
+    useCreateDocument();
+  const { mutateAsync: generateResume, isPending: isStartingGeneration } =
+    useGenerateResume();
+  const toast = useToastContext();
+  const queryClient = useQueryClient();
+  const { data: documentData } = useDocumentById(documentId);
+
+  const isGenerationInProgress =
+    documentId !== null &&
+    documentData?.status !== undefined &&
+    documentData.status !== DOCUMENT_STATUS.GENERATED &&
+    documentData.status !== DOCUMENT_STATUS.FAILED;
 
   const handleJobDescriptionTextChange = useCallback(
-    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setJobDescriptionText(event.target.value);
+    (changeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (isGenerationInProgress) return;
+      setJobDescriptionText(changeEvent.target.value);
     },
-    []
+    [isGenerationInProgress, setJobDescriptionText]
   );
 
   const handleFormSubmit = useCallback(
-    async (event: React.FormEvent) => {
-      event.preventDefault();
-      if (!jobDescriptionText.trim() || !resumeData) return;
+    async (formSubmitEvent: React.FormEvent) => {
+      formSubmitEvent.preventDefault();
+      if (!jobDescriptionText.trim() || !resumeData || isGenerationInProgress)
+        return;
 
       try {
-        // Create document with resume and job description
-        const createResponse = await createDocument.mutateAsync({
+        const createDocumentToastId = toast.showLoading(
+          TOAST_MESSAGES.CREATING_DOCUMENT
+        );
+        const createDocumentResponse = await createDocument({
           file: resumeData.file || undefined,
           resumeText: resumeData.text || undefined,
           jobText: jobDescriptionText,
         });
+        toast.dismissLoading(createDocumentToastId);
 
-        const documentId = createResponse.id;
-        setDocumentId(documentId);
+        const previousDocumentId = documentId;
+        const createdDocumentId = createDocumentResponse.id;
 
-        // Start generation
-        await generateResume.mutateAsync({ documentId });
-        onNext();
-      } catch (error) {
-        console.error("Failed to create document or generate resume:", error);
-        // TODO: Show error message to user
+        if (previousDocumentId && previousDocumentId !== createdDocumentId) {
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.DOCUMENTS, previousDocumentId],
+          });
+        }
+
+        setDocumentId(createdDocumentId);
+        setMaxReachedStep(2 as 1 | 2 | 3);
+
+        const generateResumeToastId = toast.showLoading(
+          TOAST_MESSAGES.STARTING_RESUME_GENERATION
+        );
+        await generateResume({ documentId: createdDocumentId });
+        toast.dismissLoading(generateResumeToastId);
+
+        const currentStepAtNavigation = useWizardStore.getState().currentStep;
+        if (currentStepAtNavigation === WIZARD_CONSTANTS.LAST_STEP - 1) {
+          onNext();
+        }
+      } catch (generationError) {
+        const errorMessage =
+          generationError instanceof Error
+            ? generationError.message
+            : TOAST_MESSAGES.CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED;
+        toast.showError(errorMessage);
+        console.error(
+          TOAST_MESSAGES.CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED,
+          generationError
+        );
       }
     },
     [
@@ -56,7 +112,12 @@ export function JobDescriptionStep({
       createDocument,
       generateResume,
       setDocumentId,
+      setMaxReachedStep,
       onNext,
+      toast,
+      isGenerationInProgress,
+      documentId,
+      queryClient,
     ]
   );
 
@@ -64,52 +125,60 @@ export function JobDescriptionStep({
     <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
-          Step 2: Paste Job Description
+          {UI_TEXT.JOB_DESCRIPTION_STEP_TITLE}
         </h2>
         <p className="text-sm sm:text-base text-gray-600">
-          Paste the job description you want to tailor your resume for.
+          {UI_TEXT.JOB_DESCRIPTION_STEP_DESCRIPTION}
         </p>
       </div>
 
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
-          Job Description
+          {UI_TEXT.JOB_DESCRIPTION_LABEL}
         </label>
         <textarea
           value={jobDescriptionText}
           onChange={handleJobDescriptionTextChange}
           rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none"
-          placeholder="Paste the complete job description here, including requirements, responsibilities, and qualifications..."
+          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+          placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
           required
+          disabled={
+            isCreatingDocument || isStartingGeneration || isGenerationInProgress
+          }
         />
         <p className="mt-2 text-xs sm:text-sm text-gray-500">
-          {jobDescriptionText.length} characters
+          {jobDescriptionText.length} {UI_TEXT.CHARACTERS_LABEL}
         </p>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-0 pt-2">
         <button
           type="button"
           onClick={onPrevious}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
         >
-          Back
+          {UI_TEXT.BACK_BUTTON}
         </button>
         <button
           type="submit"
           disabled={
             !jobDescriptionText.trim() ||
             !resumeData ||
-            createDocument.isPending ||
-            generateResume.isPending
+            isCreatingDocument ||
+            isStartingGeneration ||
+            isGenerationInProgress
           }
-          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
         >
-          {createDocument.isPending || generateResume.isPending
-            ? "Generating..."
-            : "Generate Tailored Resume"}
+          {(isCreatingDocument ||
+            isStartingGeneration ||
+            isGenerationInProgress) && (
+            <Loader size="sm" className="text-white" />
+          )}
+          {isCreatingDocument || isStartingGeneration || isGenerationInProgress
+            ? UI_TEXT.GENERATING_BUTTON
+            : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
         </button>
       </div>
     </form>
