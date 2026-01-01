@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Layout } from "@/widgets/layout";
 import {
   Wizard,
@@ -5,11 +6,25 @@ import {
   JobDescriptionStep,
   PreviewStep,
 } from "@/features/wizard";
-import { useWizardStore } from "@/features/wizard/model/wizardStore";
+import {
+  useWizardStore,
+  getStepFromUrl,
+} from "@/features/wizard/model/wizardStore";
 import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
 
 function App() {
-  const { currentStep, nextStep, previousStep, reset } = useWizardStore();
+  const { currentStep, nextStep, previousStep, reset, setStep } =
+    useWizardStore();
+
+  // Sync step with URL on browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      setStep(getStepFromUrl());
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setStep]);
 
   const renderCurrentStep = (): React.ReactNode => {
     switch (currentStep) {
