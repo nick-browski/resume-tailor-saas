@@ -11,6 +11,7 @@
     "dev:generate-api": "pnpm --filter generate-api dev",
     "emulators": "firebase emulators:start --project demo-project --import ./firebase-data --export-on-exit ./firebase-data",
     "build": "pnpm -r build",
+    "build:all": "pnpm -r build",
     "build:frontend": "pnpm --filter frontend build",
     "deploy:frontend": "pnpm build:frontend && firebase deploy --only hosting",
     "setup:backend": "./scripts/setup-backend-secrets.sh",

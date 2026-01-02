@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useEffect } from "react";
 import { documentsApi } from "@/shared/api";
 import type { CreateDocumentRequest } from "@/shared/api";
-import type { ResumeData } from "@/shared/api/types";
 import {
   TIMING_CONSTANTS,
   DOCUMENT_STATUS,
