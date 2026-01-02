@@ -154,7 +154,7 @@ gcloud run deploy generate-api \
   --region ${REGION} \
   --allow-unauthenticated \
   --service-account ${SERVICE_ACCOUNT_EMAIL} \
-  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free \
+  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free,FIREBASE_STORAGE_BUCKET=resume-tailor-saas.firebasestorage.app \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest \
   --memory 1Gi \
   --cpu 1 \
