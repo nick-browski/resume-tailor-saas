@@ -48,6 +48,11 @@ export const TOAST_MESSAGES = {
   RESUME_DOWNLOAD_FAILED: "Failed to download resume",
 } as const;
 
+export const ERROR_MESSAGES = {
+  USER_NOT_AUTHENTICATED: "User not authenticated",
+  FAILED_TO_DOWNLOAD_PDF: "Failed to download PDF",
+} as const;
+
 export const UI_TEXT = {
   UPLOAD_RESUME_STEP_TITLE: "Step 1: Upload Your Resume",
   UPLOAD_RESUME_STEP_DESCRIPTION:
@@ -92,6 +97,9 @@ export const UI_TEXT = {
   GENERATION_FAILED_PREFIX: "Generation failed:",
   UNKNOWN_ERROR_TEXT: "Unknown error",
   NO_RESUME_AVAILABLE_TEXT: "No resume available yet.",
+  PDF_READY_TEXT: "Your tailored resume PDF is ready for download.",
+  CLICK_DOWNLOAD_BUTTON_TEXT:
+    "Click the download button below to get your PDF.",
   START_OVER_BUTTON: "Start Over",
   DOWNLOADING_TEXT: "Downloading...",
   DOWNLOAD_RESUME_BUTTON: "Download Resume",

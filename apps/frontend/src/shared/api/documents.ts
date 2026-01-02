@@ -1,5 +1,7 @@
 import { createApiClient } from "./client";
 import { API_CONFIG } from "@/shared/config";
+import { auth } from "@/shared/config";
+import { ERROR_MESSAGES } from "@/shared/lib/constants";
 import type {
   Document,
   CreateDocumentRequest,
@@ -43,5 +45,29 @@ export const documentsApi = {
 
   async getAll(): Promise<Document[]> {
     return documentsApiClient.get<Document[]>(DOCUMENTS_ENDPOINT);
+  },
+
+  async downloadPDF(documentId: string): Promise<Blob> {
+    const authenticatedUser = auth.currentUser;
+    if (!authenticatedUser) {
+      throw new Error(ERROR_MESSAGES.USER_NOT_AUTHENTICATED);
+    }
+
+    const authenticationToken = await authenticatedUser.getIdToken();
+    const pdfDownloadResponse = await fetch(
+      `${API_CONFIG.documentsApi}${DOCUMENTS_ENDPOINT}/${documentId}/pdf`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authenticationToken}`,
+        },
+      }
+    );
+
+    if (!pdfDownloadResponse.ok) {
+      throw new Error(ERROR_MESSAGES.FAILED_TO_DOWNLOAD_PDF);
+    }
+
+    return pdfDownloadResponse.blob();
   },
 };

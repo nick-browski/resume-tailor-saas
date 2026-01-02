@@ -18,7 +18,6 @@ export function useDocumentStatusMonitor() {
   const setJobDescriptionText = useWizardStore(
     (state) => state.setJobDescriptionText
   );
-  const currentStep = useWizardStore((state) => state.currentStep);
   const maxReachedStep = useWizardStore((state) => state.maxReachedStep);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
   const nextStep = useWizardStore((state) => state.nextStep);
@@ -41,8 +40,6 @@ export function useDocumentStatusMonitor() {
 
     const isNewDocument =
       processedDocumentIdRef.current !== documentDataSnapshot.id;
-    const hasTailoredText = !!documentDataSnapshot.tailoredText;
-    const isOnStep2 = currentStep === WIZARD_CONSTANTS.LAST_STEP - 1;
 
     if (isNewDocument) {
       if (documentDataSnapshot.resumeText) {
@@ -55,16 +52,19 @@ export function useDocumentStatusMonitor() {
         setMaxReachedStep(WIZARD_CONSTANTS.LAST_STEP);
       }
       processedDocumentIdRef.current = documentDataSnapshot.id;
-    }
 
-    if (hasTailoredText && isOnStep2) {
-      nextStep();
-    } else if (currentStep !== WIZARD_CONSTANTS.LAST_STEP && !isOnStep2) {
-      nextStep();
+      // Navigate to preview step when generation completes
+      const currentStepSnapshot = useWizardStore.getState().currentStep;
+      const isOnPreviewStep =
+        currentStepSnapshot === WIZARD_CONSTANTS.LAST_STEP;
+      const hasPdfReady = !!documentDataSnapshot.pdfResultPath;
+
+      if (hasPdfReady && !isOnPreviewStep) {
+        nextStep();
+      }
     }
   }, [
     documentDataSnapshot,
-    currentStep,
     maxReachedStep,
     setResumeData,
     setJobDescriptionText,

@@ -1,6 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
-  FILE_CONSTANTS,
   TIMING_CONSTANTS,
   DOCUMENT_STATUS,
   UI_TEXT,
@@ -9,6 +8,7 @@ import {
 import { useDocumentById } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
+import { documentsApi } from "@/shared/api";
 import { Loader, LoaderOverlay } from "@/shared/ui";
 
 interface PreviewStepProps {
@@ -18,6 +18,7 @@ interface PreviewStepProps {
 
 export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const documentId = useWizardStore((state) => state.documentId);
 
   // Poll documentId to track status and get resume
@@ -25,19 +26,53 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
 
   const toast = useToastContext();
 
+  // Load PDF for preview when document is ready
+  useEffect(() => {
+    const isDocumentReady =
+      documentData?.pdfResultPath &&
+      documentData?.status === DOCUMENT_STATUS.GENERATED &&
+      documentId;
+
+    if (!isDocumentReady) {
+      setPdfPreviewUrl(null);
+      return;
+    }
+
+    let blobUrl: string | null = null;
+
+    const loadPDFPreview = async () => {
+      try {
+        const pdfBlob = await documentsApi.downloadPDF(documentId);
+        blobUrl = URL.createObjectURL(pdfBlob);
+        setPdfPreviewUrl(blobUrl);
+      } catch (error) {
+        console.error("Error loading PDF preview:", error);
+        setPdfPreviewUrl(null);
+      }
+    };
+
+    loadPDFPreview();
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+      setPdfPreviewUrl(null);
+    };
+  }, [documentData?.pdfResultPath, documentData?.status, documentId]);
+
   const handleResumeDownload = useCallback(async () => {
-    if (!documentData?.tailoredText) return;
+    if (!documentData?.pdfResultPath || !documentId) return;
 
     setIsDownloading(true);
 
     try {
-      const resumeBlob = new Blob([documentData.tailoredText], {
-        type: FILE_CONSTANTS.MARKDOWN_MIME_TYPE,
-      });
-      const downloadUrl = URL.createObjectURL(resumeBlob);
+      const pdfBlob = await documentsApi.downloadPDF(documentId);
+      const downloadUrl = URL.createObjectURL(pdfBlob);
       const downloadLink = document.createElement("a");
       downloadLink.href = downloadUrl;
-      downloadLink.download = FILE_CONSTANTS.DEFAULT_FILENAME;
+      downloadLink.download = "tailored-resume.pdf";
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -52,7 +87,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         setIsDownloading(false);
       }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
     }
-  }, [documentData, toast]);
+  }, [documentData?.pdfResultPath, documentId, toast]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -90,12 +125,36 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
               {documentData.error || UI_TEXT.UNKNOWN_ERROR_TEXT}
             </p>
           </div>
-        ) : documentData.tailoredText ? (
-          <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
-            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-gray-800">
-              {documentData.tailoredText}
-            </pre>
-          </div>
+        ) : documentData.pdfResultPath &&
+          documentData.status === DOCUMENT_STATUS.GENERATED ? (
+          pdfPreviewUrl ? (
+            <div className="flex justify-center">
+              <div className="w-full max-w-4xl">
+                <div className="bg-gray-100 p-4 sm:p-6 rounded-lg shadow-sm">
+                  <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                    <div className="relative bg-white">
+                      <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+                      <div className="relative overflow-hidden">
+                        <iframe
+                          src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                          className="w-full h-[600px] sm:h-[800px] border-0"
+                          title="Resume Preview"
+                          style={{ display: "block" }}
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                      </div>
+                      <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
+              <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
+              <p className="text-sm text-gray-600">{UI_TEXT.LOADING_TEXT}</p>
+            </div>
+          )
         ) : (
           <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50">
             <p className="text-sm text-gray-600">
@@ -128,7 +187,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           onClick={handleResumeDownload}
           disabled={
             isDownloading ||
-            !documentData?.tailoredText ||
+            !documentData?.pdfResultPath ||
             documentData?.status !== DOCUMENT_STATUS.GENERATED
           }
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
