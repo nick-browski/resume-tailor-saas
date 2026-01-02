@@ -5,12 +5,9 @@ import {
 } from "../middleware/auth.js";
 import { startGeneration } from "../services/generateService.js";
 import { parseResumeToStructure } from "../services/openRouterService.js";
-import { initializeFirebaseAdmin } from "../config/firebase-admin.js";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../config/constants.js";
 import { getDb } from "../config/firebase-admin.js";
 import { FIREBASE_CONFIG } from "../config/constants.js";
-
-initializeFirebaseAdmin();
 
 export const generateRouter: express.Router = express.Router();
 

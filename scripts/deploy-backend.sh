@@ -156,9 +156,9 @@ gcloud run deploy generate-api \
   --service-account ${SERVICE_ACCOUNT_EMAIL} \
   --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free,FIREBASE_STORAGE_BUCKET=resume-tailor-saas.firebasestorage.app \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest \
-  --memory 1Gi \
-  --cpu 1 \
-  --timeout 300 \
+  --memory 4Gi \
+  --cpu 4 \
+  --timeout 600 \
   --max-instances 10 \
   --min-instances 0 \
   --concurrency 80 \

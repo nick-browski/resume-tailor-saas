@@ -1,10 +1,14 @@
 import express from "express";
 import cors from "cors";
 import { generateRouter } from "./routes/generate.js";
+import { initializeFirebaseAdmin } from "./config/firebase-admin.js";
 import { SUCCESS_MESSAGES, CORS_CONFIG } from "./config/constants.js";
 
 const DEFAULT_PORT = 8081;
 const PORT = Number(process.env.PORT) || DEFAULT_PORT;
+
+// Initialize Firebase Admin on startup
+initializeFirebaseAdmin();
 
 const app = express();
 
@@ -18,7 +22,6 @@ app.use(express.json());
 
 app.use("/documents", generateRouter);
 
-// Health check endpoint
 app.get("/health", (request, response) => {
   response.json({ status: SUCCESS_MESSAGES.HEALTH_CHECK });
 });

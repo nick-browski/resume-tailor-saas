@@ -86,4 +86,12 @@ export const PDF_CONFIG = {
   MIN_SCALE: 0.7,
   INITIAL_SCALE: 1.0,
   A4_HEIGHT_PX: 1123,
+  // Chromium launch arguments for Cloud Run compatibility
+  CHROMIUM_ARGS: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--single-process",
+  ],
 };

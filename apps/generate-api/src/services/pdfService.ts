@@ -303,12 +303,9 @@ ${sections.join("\n")}
 
 // Launches Chromium browser instance
 async function launchBrowser(): Promise<Browser> {
-  const chromiumExecutablePath = process.env.CHROMIUM_PATH;
   return await chromium.launch({
     headless: true,
-    ...(chromiumExecutablePath
-      ? { executablePath: chromiumExecutablePath }
-      : {}),
+    args: PDF_CONFIG.CHROMIUM_ARGS,
   });
 }
 
@@ -327,34 +324,6 @@ async function getContentHeight(browserPage: Page): Promise<number> {
       docElement.offsetHeight
     );
   });
-}
-
-// Generates PDF buffer from HTML content using Playwright with scale
-async function generatePDFFromHTML(
-  htmlContent: string,
-  scale: number = 1.0
-): Promise<Buffer> {
-  const browserInstance = await launchBrowser();
-
-  try {
-    const browserPage: Page = await browserInstance.newPage();
-    await browserPage.setContent(htmlContent, { waitUntil: "networkidle" });
-
-    const pdfBuffer = await browserPage.pdf({
-      format: PDF_CONFIG.FORMAT,
-      printBackground: true,
-      margin: {
-        top: PDF_CONFIG.MARGIN_MM,
-        right: PDF_CONFIG.MARGIN_MM,
-        bottom: PDF_CONFIG.MARGIN_MM,
-        left: PDF_CONFIG.MARGIN_MM,
-      },
-    });
-
-    return pdfBuffer;
-  } finally {
-    await browserInstance.close();
-  }
 }
 
 // Generates PDF with automatic scaling to fit one page
