@@ -1,5 +1,6 @@
 import { getDb } from "../config/firebase-admin.js";
 import { generateTailoredResume } from "./openRouterService.js";
+import { generatePDFFromResumeData } from "./pdfService.js";
 import {
   FIREBASE_CONFIG,
   DOCUMENT_STATUS,
@@ -13,7 +14,8 @@ const EXPECTED_STATUS_FOR_GENERATION = DOCUMENT_STATUS.PARSED;
 async function processGeneration(
   documentId: string,
   resumeText: string,
-  jobText: string
+  jobText: string,
+  ownerId: string
 ): Promise<void> {
   const database = getDb();
   const documentReference = database
@@ -21,14 +23,20 @@ async function processGeneration(
     .doc(documentId);
 
   try {
-    const tailoredResumeText = await generateTailoredResume(
-      resumeText,
-      jobText
+    // Get JSON resume data from AI
+    const resumeData = await generateTailoredResume(resumeText, jobText);
+
+    // Generate PDF from JSON
+    const pdfPath = await generatePDFFromResumeData(
+      resumeData,
+      ownerId,
+      documentId
     );
 
     await documentReference.update({
       status: DOCUMENT_STATUS.GENERATED,
-      tailoredText: tailoredResumeText,
+      tailoredText: JSON.stringify(resumeData),
+      pdfResultPath: pdfPath,
       error: null,
     });
   } catch (error) {
@@ -81,7 +89,8 @@ export async function startGeneration(
   processGeneration(
     documentId,
     documentData.resumeText,
-    documentData.jobText
+    documentData.jobText,
+    ownerId
   ).catch((error) => {
     console.error(
       `Failed to start background generation for document ${documentId}:`,

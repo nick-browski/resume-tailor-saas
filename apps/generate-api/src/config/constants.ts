@@ -64,3 +64,17 @@ export const HTTP_METHODS = {
 export const CORS_CONFIG = {
   DEFAULT_ORIGIN: "http://localhost:3000",
 } as const;
+
+// Storage Configuration
+export const STORAGE_CONFIG = {
+  RESUMES_FOLDER: "resumes",
+  PDF_CONTENT_TYPE: "application/pdf",
+} as const;
+
+// PDF Generation Configuration
+export const PDF_CONFIG = {
+  FORMAT: "A4" as const,
+  MARGIN_MM: "20mm",
+  HTML_TITLE: "Resume",
+  HTML_LANG: "en",
+} as const;
