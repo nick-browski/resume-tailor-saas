@@ -165,9 +165,18 @@ gcloud run deploy generate-api \
   --port 8081 \
   --quiet
 
-# Get generate-api URL
+# Get generate-api URL and set SERVICE_URL env var
 GENERATE_API_URL=$(gcloud run services describe generate-api --region=${REGION} --format='value(status.url)')
 echo -e "${GREEN}✓ generate-api deployed: ${GENERATE_API_URL}${NC}"
+
+# Set SERVICE_URL env var with the actual Cloud Run service URL
+# This is required for Cloud Tasks target URL and OIDC audience
+echo -e "\n${BLUE}🔧 Setting SERVICE_URL environment variable...${NC}"
+gcloud run services update generate-api \
+  --region=${REGION} \
+  --update-env-vars "SERVICE_URL=${GENERATE_API_URL}" \
+  --quiet
+echo -e "${GREEN}✓ SERVICE_URL set to ${GENERATE_API_URL}${NC}"
 
 echo -e "\n${GREEN}✅ Production backend deployment complete!${NC}\n"
 echo -e "${BLUE}📋 Deployment Summary:${NC}"

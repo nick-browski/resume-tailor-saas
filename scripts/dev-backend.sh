@@ -53,6 +53,8 @@ FIREBASE_AUTH_EMULATOR_HOST="localhost:9099" \
 FIRESTORE_EMULATOR_HOST="localhost:8082" \
 FIREBASE_STORAGE_EMULATOR_HOST="localhost:9199" \
 FIREBASE_PROJECT_ID="demo-project" \
+SERVICE_URL="http://localhost:8081" \
+GENERATE_API_URL="http://localhost:8081" \
 OPENROUTER_API_KEY="${OPENROUTER_API_KEY}" \
 pnpm dev:generate-api &
 
