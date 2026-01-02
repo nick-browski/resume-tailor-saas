@@ -69,6 +69,8 @@ gcloud services enable cloudbuild.googleapis.com --quiet
 gcloud services enable run.googleapis.com --quiet
 gcloud services enable artifactregistry.googleapis.com --quiet
 gcloud services enable secretmanager.googleapis.com --quiet
+gcloud services enable firestore.googleapis.com --quiet
+gcloud services enable storage-component.googleapis.com --quiet
 
 # Create Artifact Registry repository if it doesn't exist
 echo -e "${BLUE}📦 Checking Artifact Registry repository...${NC}"
@@ -129,7 +131,7 @@ gcloud run deploy documents-api \
   --region ${REGION} \
   --allow-unauthenticated \
   --service-account ${SERVICE_ACCOUNT_EMAIL} \
-  --set-env-vars CORS_ORIGIN=${FRONTEND_URL} \
+  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},FIREBASE_STORAGE_BUCKET=resume-tailor-saas.firebasestorage.app \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest \
   --memory 512Mi \
   --cpu 1 \
@@ -152,7 +154,7 @@ gcloud run deploy generate-api \
   --region ${REGION} \
   --allow-unauthenticated \
   --service-account ${SERVICE_ACCOUNT_EMAIL} \
-  --set-env-vars CORS_ORIGIN=${FRONTEND_URL} \
+  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest \
   --memory 1Gi \
   --cpu 1 \
