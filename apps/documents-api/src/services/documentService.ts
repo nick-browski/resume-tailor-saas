@@ -3,10 +3,7 @@ import { getDb, getStorage } from "../config/firebase-admin.js";
 import pdfParse from "pdf-parse";
 import type { Document } from "../types/document.js";
 import type { Timestamp } from "firebase-admin/firestore";
-import { 
-  FIREBASE_CONFIG, 
-  STORAGE_CONFIG 
-} from "../config/constants.js";
+import { FIREBASE_CONFIG, STORAGE_CONFIG } from "../config/constants.js";
 
 const DOCUMENTS_COLLECTION_NAME = FIREBASE_CONFIG.DOCUMENTS_COLLECTION_NAME;
 const EMPTY_STRING = "";
@@ -35,7 +32,7 @@ export async function createDocument(
     const timestamp = Date.now();
     const storageFilePath = `${STORAGE_CONFIG.RESUMES_FOLDER}/${ownerId}/${timestamp}-${pdfFileName}`;
     const storageFile = storageBucket.file(storageFilePath);
-    
+
     await storageFile.save(pdfBuffer, {
       contentType: STORAGE_CONFIG.PDF_CONTENT_TYPE,
     });
@@ -46,7 +43,9 @@ export async function createDocument(
     ownerId,
     jobText: jobText || DEFAULT_JOB_TEXT,
     resumeText: finalResumeText,
+    originalResumeData: null,
     tailoredText: null,
+    tailoredResumeData: null,
     status: "parsed" as const,
     pdfOriginalPath: originalPdfPath || DEFAULT_PDF_PATH,
     pdfResultPath: null,
@@ -87,7 +86,9 @@ export async function getDocumentById(
     ownerId: documentData.ownerId,
     jobText: documentData.jobText,
     resumeText: documentData.resumeText,
+    originalResumeData: documentData.originalResumeData || null,
     tailoredText: documentData.tailoredText,
+    tailoredResumeData: documentData.tailoredResumeData || null,
     status: documentData.status,
     pdfOriginalPath: documentData.pdfOriginalPath,
     pdfResultPath: documentData.pdfResultPath,
@@ -113,7 +114,9 @@ export async function getAllDocuments(ownerId: string): Promise<Document[]> {
       ownerId: documentData.ownerId,
       jobText: documentData.jobText,
       resumeText: documentData.resumeText,
+      originalResumeData: documentData.originalResumeData || null,
       tailoredText: documentData.tailoredText,
+      tailoredResumeData: documentData.tailoredResumeData || null,
       status: documentData.status,
       pdfOriginalPath: documentData.pdfOriginalPath,
       pdfResultPath: documentData.pdfResultPath,
@@ -121,4 +124,16 @@ export async function getAllDocuments(ownerId: string): Promise<Document[]> {
       error: documentData.error,
     };
   });
+}
+
+// Updates document fields
+export async function updateDocument(
+  documentId: string,
+  updates: Partial<Omit<Document, "id" | "createdAt" | "ownerId">>
+): Promise<void> {
+  const database = getDb();
+  const documentReference = database
+    .collection(DOCUMENTS_COLLECTION_NAME)
+    .doc(documentId);
+  await documentReference.update(updates);
 }

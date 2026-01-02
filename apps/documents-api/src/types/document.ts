@@ -10,7 +10,9 @@ export interface Document {
   ownerId: string;
   jobText: string;
   resumeText: string;
+  originalResumeData: string | null;
   tailoredText: string | null;
+  tailoredResumeData: string | null;
   status: DocumentStatus;
   pdfOriginalPath: string;
   pdfResultPath: string | null;
