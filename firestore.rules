@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Documents collection
+    match /documents/{documentId} {
+      // SECURITY: Clients can ONLY read documents they own
+      // All create/update operations go through backend API (Admin SDK bypasses rules)
+      // This prevents clients from:
+      // - Creating documents directly (must use POST /documents API)
+      // - Updating documents directly (must use backend API)
+      // - Reading documents they don't own
+      
+      // Allow read if user is authenticated and owns the document
+      allow read: if request.auth != null 
+        && request.auth.uid != null
+        && resource.data != null
+        && resource.data.ownerId != null
+        && request.auth.uid == resource.data.ownerId;
+      
+      // SECURITY: Deny all write operations from clients
+      // Backend services (documents-api, generate-api) use Admin SDK
+      // which bypasses these rules, so they can create/update any document
+      // Clients must use backend API endpoints, not direct Firestore writes
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
+
