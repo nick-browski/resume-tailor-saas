@@ -20,7 +20,7 @@ initializeFirebaseAdmin();
 
 const FILE_FIELD_NAME = "file";
 const uploadMiddleware = multer({ storage: multer.memoryStorage() });
-export const documentsRouter = express.Router();
+export const documentsRouter: express.Router = express.Router();
 
 // Creates a new document from uploaded file or text
 documentsRouter.post(

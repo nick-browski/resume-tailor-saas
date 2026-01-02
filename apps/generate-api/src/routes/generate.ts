@@ -9,7 +9,7 @@ import { HTTP_STATUS, ERROR_MESSAGES } from "../config/constants.js";
 
 initializeFirebaseAdmin();
 
-export const generateRouter = express.Router();
+export const generateRouter: express.Router = express.Router();
 
 // Starts generation process and returns immediately
 generateRouter.post(
