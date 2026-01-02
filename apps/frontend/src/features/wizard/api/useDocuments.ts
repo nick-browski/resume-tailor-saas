@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useEffect } from "react";
-import { documentsApi } from "@/shared/api";
-import type { CreateDocumentRequest } from "@/shared/api";
-import {
-  TIMING_CONSTANTS,
-  DOCUMENT_STATUS,
-  QUERY_KEYS,
-} from "@/shared/lib/constants";
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "@/shared/config/firebase";
+import { useAuthReady } from "@/shared/config/auth";
+import { documentsApi, convertFirestoreSnapshotToDocument } from "@/shared/api";
+import type { CreateDocumentRequest, Document } from "@/shared/api";
+import { QUERY_KEYS } from "@/shared/lib/constants";
 
 export function useCreateDocument() {
   const queryClient = useQueryClient();
@@ -20,62 +19,55 @@ export function useCreateDocument() {
   });
 }
 
-// Polls document by id until GENERATED/FAILED or timeout
-// Stops polling when generation completes or fails to prevent infinite requests
 export function useDocumentById(documentId: string | null) {
-  const pollingStartTimeRef = useRef<number | null>(null);
+  const { user, isReady } = useAuthReady();
+  const [documentData, setDocumentData] = useState<Document | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    pollingStartTimeRef.current = documentId ? Date.now() : null;
-  }, [documentId]);
+    if (!isReady || !user) {
+      setIsLoading(true);
+      return;
+    }
 
-  return useQuery({
-    queryKey: [QUERY_KEYS.DOCUMENTS, QUERY_KEYS.DOCUMENT, documentId],
-    queryFn: () => documentsApi.getById(documentId!),
-    enabled: !!documentId,
-    refetchInterval: (queryStateSnapshot) => {
-      const documentDataSnapshot = queryStateSnapshot.state.data;
-      const pollingStartTime = pollingStartTimeRef.current;
+    if (!documentId) {
+      setDocumentData(null);
+      setIsLoading(false);
+      return;
+    }
 
-      // Stop polling after timeout to prevent infinite requests
-      if (
-        pollingStartTime !== null &&
-        Date.now() - pollingStartTime >
-          TIMING_CONSTANTS.DOCUMENT_POLL_TIMEOUT_MS
-      ) {
-        return false;
+    setIsLoading(true);
+    const documentRef = doc(db, "documents", documentId);
+
+    const unsubscribe = onSnapshot(
+      documentRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setDocumentData(null);
+          setIsLoading(false);
+          return;
+        }
+
+        const doc = convertFirestoreSnapshotToDocument(snapshot);
+        setDocumentData(doc);
+        setIsLoading(false);
+      },
+      (error) => {
+        if (error?.code !== "permission-denied") {
+          setIsLoading(false);
+        }
       }
+    );
 
-      if (!documentDataSnapshot) {
-        return TIMING_CONSTANTS.DOCUMENT_POLL_INTERVAL_MS;
-      }
+    return () => unsubscribe();
+  }, [isReady, user, documentId]);
 
-      // Stop polling when generation reaches final state (success or failure)
-      const isFinalStatus =
-        documentDataSnapshot.status === DOCUMENT_STATUS.GENERATED ||
-        documentDataSnapshot.status === DOCUMENT_STATUS.FAILED;
-
-      return isFinalStatus ? false : TIMING_CONSTANTS.DOCUMENT_POLL_INTERVAL_MS;
-    },
-  });
+  return { data: documentData, isLoading };
 }
 
 export function useAllDocuments() {
   return useQuery({
     queryKey: [QUERY_KEYS.DOCUMENTS],
     queryFn: () => documentsApi.getAll(),
-  });
-}
-
-// Parses original resume into structured JSON format
-export function useParseOriginalResume(
-  documentId: string | null,
-  enabled: boolean = false
-) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.DOCUMENTS, "parseOriginal", documentId],
-    queryFn: () => documentsApi.parseOriginalResume(documentId!),
-    enabled: enabled && !!documentId,
-    staleTime: Infinity,
   });
 }

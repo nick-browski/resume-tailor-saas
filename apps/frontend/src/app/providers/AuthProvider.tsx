@@ -15,8 +15,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Auto-sign in anonymously if no user
         try {
           await signInAnonymously(auth);
+          return;
         } catch (error) {
           console.error("Failed to sign in anonymously:", error);
+          setIsInitialized(true);
+          return;
         }
       }
       setIsInitialized(true);

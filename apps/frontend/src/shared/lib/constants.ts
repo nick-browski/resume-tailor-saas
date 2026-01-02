@@ -116,3 +116,9 @@ export const DOCUMENT_STATUS = {
   GENERATED: "generated",
   FAILED: "failed",
 } as const;
+
+export const ORIGINAL_PARSE_STATUS = {
+  PARSING: "parsing",
+  PARSED: "parsed",
+  FAILED: "failed",
+} as const;

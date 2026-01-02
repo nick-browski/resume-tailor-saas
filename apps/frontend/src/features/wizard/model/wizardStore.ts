@@ -73,6 +73,7 @@ interface WizardState {
   jobDescriptionText: string;
   uploadMode: "file" | "text";
   generationToastId: string | null;
+  parseToastId: string | null;
   setStep: (step: WizardStep) => void;
   setDocumentId: (documentId: string | null) => void;
   setResumeData: (data: { file: File | null; text: string } | null) => void;
@@ -80,6 +81,7 @@ interface WizardState {
   setUploadMode: (mode: "file" | "text") => void;
   setMaxReachedStep: (step: WizardStep) => void;
   setGenerationToastId: (toastId: string | null) => void;
+  setParseToastId: (toastId: string | null) => void;
   nextStep: () => void;
   previousStep: () => void;
   reset: () => void;
@@ -93,6 +95,7 @@ export const useWizardStore = create<WizardState>((set) => ({
   jobDescriptionText: "",
   uploadMode: "file",
   generationToastId: null,
+  parseToastId: null,
   setStep: (step: WizardStep) => {
     if (
       step >= WIZARD_CONSTANTS.FIRST_STEP &&
@@ -132,6 +135,9 @@ export const useWizardStore = create<WizardState>((set) => ({
   setGenerationToastId: (toastId: string | null) => {
     set({ generationToastId: toastId });
   },
+  setParseToastId: (toastId: string | null) => {
+    set({ parseToastId: toastId });
+  },
   nextStep: () =>
     set((state) => {
       const newStep = Math.min(
@@ -164,6 +170,7 @@ export const useWizardStore = create<WizardState>((set) => ({
       jobDescriptionText: "",
       uploadMode: "file",
       generationToastId: null,
+      parseToastId: null,
     });
   },
 }));

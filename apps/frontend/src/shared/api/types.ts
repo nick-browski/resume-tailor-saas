@@ -4,6 +4,7 @@ export interface Document {
   jobText: string;
   resumeText: string;
   originalResumeData: string | null;
+  originalParseStatus?: "parsing" | "parsed" | "failed" | null;
   tailoredText: string | null;
   tailoredResumeData: string | null;
   status: DocumentStatus;

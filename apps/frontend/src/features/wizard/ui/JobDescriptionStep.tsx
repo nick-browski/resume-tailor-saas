@@ -137,7 +137,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
           placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
           required
-          disabled={isCreatingDocument || isStartingGeneration}
+          disabled={isCreatingDocument || isStartingGeneration || !!generationToastId}
         />
         <p className="mt-2 text-xs sm:text-sm text-gray-500">
           {jobDescriptionText.length} {UI_TEXT.CHARACTERS_LABEL}
@@ -158,14 +158,15 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
             !jobDescriptionText.trim() ||
             !resumeData ||
             isCreatingDocument ||
-            isStartingGeneration
+            isStartingGeneration ||
+            !!generationToastId
           }
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
         >
-          {(isCreatingDocument || isStartingGeneration) && (
+          {(isCreatingDocument || isStartingGeneration || generationToastId) && (
             <Loader size="sm" className="text-white" />
           )}
-          {isCreatingDocument || isStartingGeneration
+          {isCreatingDocument || isStartingGeneration || generationToastId
             ? UI_TEXT.GENERATING_BUTTON
             : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
         </button>

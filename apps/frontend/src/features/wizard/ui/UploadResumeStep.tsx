@@ -20,14 +20,19 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
   const setResumeData = useWizardStore((state) => state.setResumeData);
   const setUploadMode = useWizardStore((state) => state.setUploadMode);
   const documentId = useWizardStore((state) => state.documentId);
+  const generationToastId = useWizardStore((state) => state.generationToastId);
   const { data: currentDocument } = useDocumentById(documentId);
   const toast = useToastContext();
 
+  // Generation is in progress if:
+  // 1. generationToastId exists (toast is visible) OR
+  // 2. document exists and status is not final (GENERATED or FAILED)
   const isGenerationInProgress =
-    documentId !== null &&
-    currentDocument?.status !== undefined &&
-    currentDocument.status !== DOCUMENT_STATUS.GENERATED &&
-    currentDocument.status !== DOCUMENT_STATUS.FAILED;
+    !!generationToastId ||
+    (documentId !== null &&
+      currentDocument?.status !== undefined &&
+      currentDocument.status !== DOCUMENT_STATUS.GENERATED &&
+      currentDocument.status !== DOCUMENT_STATUS.FAILED);
 
   const resumeTextContent =
     uploadMode === UPLOAD_MODE.TEXT ? resumeData?.text || "" : "";

@@ -1,7 +1,5 @@
 import { createApiClient } from "./client";
 import { API_CONFIG } from "@/shared/config";
-import { auth } from "@/shared/config";
-import { ERROR_MESSAGES } from "@/shared/lib/constants";
 import type {
   Document,
   CreateDocumentRequest,
@@ -12,6 +10,7 @@ import type {
 const DOCUMENTS_ENDPOINT = "/documents";
 
 const documentsApiClient = createApiClient(API_CONFIG.documentsApi);
+const generateApiClient = createApiClient(API_CONFIG.generateApi);
 
 export const documentsApi = {
   async create(
@@ -49,53 +48,15 @@ export const documentsApi = {
   },
 
   async downloadPDF(documentId: string): Promise<Blob> {
-    const authenticatedUser = auth.currentUser;
-    if (!authenticatedUser) {
-      throw new Error(ERROR_MESSAGES.USER_NOT_AUTHENTICATED);
-    }
-
-    const authenticationToken = await authenticatedUser.getIdToken();
-    const pdfDownloadResponse = await fetch(
-      `${API_CONFIG.documentsApi}${DOCUMENTS_ENDPOINT}/${documentId}/pdf`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authenticationToken}`,
-        },
-      }
-    );
-
-    if (!pdfDownloadResponse.ok) {
-      throw new Error(ERROR_MESSAGES.FAILED_TO_DOWNLOAD_PDF);
-    }
-
-    return pdfDownloadResponse.blob();
+    const endpoint = `${DOCUMENTS_ENDPOINT}/${documentId}/pdf`;
+    return documentsApiClient.get<Blob>(endpoint);
   },
 
   async parseOriginalResume(documentId: string): Promise<ResumeData> {
-    const authenticatedUser = auth.currentUser;
-    if (!authenticatedUser) {
-      throw new Error(ERROR_MESSAGES.USER_NOT_AUTHENTICATED);
-    }
-
-    const authenticationToken = await authenticatedUser.getIdToken();
-    const parseResponse = await fetch(
-      `${API_CONFIG.generateApi}/documents/${documentId}/parse-original`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authenticationToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!parseResponse.ok) {
-      const errorText = await parseResponse.text();
-      throw new Error(`Failed to parse original resume: ${errorText}`);
-    }
-
-    const data = await parseResponse.json();
+    const endpoint = `/documents/${documentId}/parse-original`;
+    const data = await generateApiClient.post<{
+      originalResumeData: ResumeData;
+    }>(endpoint);
     return data.originalResumeData;
   },
 };

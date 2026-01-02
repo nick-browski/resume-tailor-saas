@@ -2,8 +2,10 @@ import { auth } from "@/shared/config";
 import type { ApiError } from "./types";
 
 const CONTENT_TYPE_JSON = "application/json";
-const AUTHORIZATION_HEADER = "Authorization";
 const BEARER_PREFIX = "Bearer ";
+
+// Safe diagnostics flag (only in development)
+const ENABLE_AUTH_LOGS = import.meta.env.DEV;
 
 class ApiClient {
   private baseURL: string;
@@ -12,38 +14,88 @@ class ApiClient {
     this.baseURL = baseURL;
   }
 
-  private async getFirebaseAuthToken(): Promise<string | null> {
+  /**
+   * Gets Firebase ID token with force refresh and returns auth header.
+   * Throws error if user is not authenticated.
+   */
+  private async getFirebaseAuthHeader(): Promise<{ Authorization: string }> {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error("AUTH_REQUIRED");
+    }
+
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        return null;
-      }
-      return await currentUser.getIdToken();
+      // Force refresh to ensure fresh token
+      const token = await currentUser.getIdToken(true);
+
+      return { Authorization: `${BEARER_PREFIX}${token}` };
     } catch (error) {
       console.error("Failed to get auth token:", error);
-      return null;
+      throw new Error("AUTH_TOKEN_FETCH_FAILED");
     }
   }
 
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryOn401 = true
   ): Promise<T> {
-    const authToken = await this.getFirebaseAuthToken();
+    // Get auth header (throws if user not authenticated)
+    let authHeader: { Authorization: string };
+    try {
+      authHeader = await this.getFirebaseAuthHeader();
+    } catch (error) {
+      if (ENABLE_AUTH_LOGS) {
+        console.warn("[API_AUTH_MISSING_USER]", { endpoint });
+      }
+      throw error;
+    }
+
     const requestHeaders: Record<string, string> = {
-      "Content-Type": CONTENT_TYPE_JSON,
+      ...authHeader,
       ...(options.headers as Record<string, string>),
     };
 
-    if (authToken) {
-      requestHeaders[AUTHORIZATION_HEADER] = `${BEARER_PREFIX}${authToken}`;
+    // Only set Content-Type for non-FormData requests
+    if (!(options.body instanceof FormData)) {
+      requestHeaders["Content-Type"] = CONTENT_TYPE_JSON;
     }
 
     const requestUrl = `${this.baseURL}${endpoint}`;
-    const httpResponse = await fetch(requestUrl, {
+
+    let httpResponse = await fetch(requestUrl, {
       ...options,
       headers: requestHeaders,
     });
+
+    // Retry once on 401 with fresh token
+    if (httpResponse.status === 401 && retryOn401) {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        if (ENABLE_AUTH_LOGS) {
+          console.info("[API_AUTH_RETRY]", { endpoint, reason: "401" });
+        }
+
+        try {
+          // Force refresh token and retry once
+          const freshToken = await currentUser.getIdToken(true);
+          const retryHeaders: Record<string, string> = {
+            ...requestHeaders,
+            Authorization: `${BEARER_PREFIX}${freshToken}`,
+          };
+
+          httpResponse = await fetch(requestUrl, {
+            ...options,
+            headers: retryHeaders,
+          });
+        } catch (retryError) {
+          // If retry token fetch fails, continue with original 401 response
+          if (ENABLE_AUTH_LOGS) {
+            console.warn("[API_AUTH_RETRY_FAILED]", { endpoint });
+          }
+        }
+      }
+    }
 
     if (!httpResponse.ok) {
       const apiError: ApiError = {
@@ -63,10 +115,17 @@ class ApiClient {
     }
 
     const responseContentType = httpResponse.headers.get("content-type");
+
+    // Handle blob responses (e.g., PDF)
     if (
-      responseContentType &&
-      responseContentType.includes(CONTENT_TYPE_JSON)
+      responseContentType?.includes("application/pdf") ||
+      responseContentType?.includes("application/octet-stream")
     ) {
+      return (await httpResponse.blob()) as T;
+    }
+
+    // Handle JSON responses
+    if (responseContentType?.includes(CONTENT_TYPE_JSON)) {
       return await httpResponse.json();
     }
 
@@ -85,46 +144,10 @@ class ApiClient {
   }
 
   async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-    const authToken = await this.getFirebaseAuthToken();
-    const requestHeaders: Record<string, string> = {};
-
-    if (authToken) {
-      requestHeaders[AUTHORIZATION_HEADER] = `${BEARER_PREFIX}${authToken}`;
-    }
-
-    const requestUrl = `${this.baseURL}${endpoint}`;
-    const httpResponse = await fetch(requestUrl, {
+    return this.makeRequest<T>(endpoint, {
       method: "POST",
-      headers: requestHeaders,
       body: formData,
     });
-
-    if (!httpResponse.ok) {
-      const apiError: ApiError = {
-        message: `HTTP error! status: ${httpResponse.status}`,
-        status: httpResponse.status,
-      };
-
-      try {
-        const errorResponseData = await httpResponse.json();
-        apiError.message = errorResponseData.message || apiError.message;
-        apiError.code = errorResponseData.code;
-      } catch {
-        // Non-JSON error response
-      }
-
-      throw apiError;
-    }
-
-    const responseContentType = httpResponse.headers.get("content-type");
-    if (
-      responseContentType &&
-      responseContentType.includes(CONTENT_TYPE_JSON)
-    ) {
-      return await httpResponse.json();
-    }
-
-    return {} as T;
   }
 }
 

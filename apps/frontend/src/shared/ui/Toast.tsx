@@ -37,7 +37,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       case "info":
         return "bg-blue-50 border-blue-200 text-blue-800";
       case "loading":
-        return "bg-gray-50 border-gray-200 text-gray-800";
+        return "bg-green-50 border-green-200 text-green-800";
       default:
         return "bg-gray-50 border-gray-200 text-gray-800";
     }

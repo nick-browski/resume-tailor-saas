@@ -2,10 +2,11 @@ import { useCallback, useState, useEffect } from "react";
 import {
   TIMING_CONSTANTS,
   DOCUMENT_STATUS,
+  ORIGINAL_PARSE_STATUS,
   UI_TEXT,
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
-import { useDocumentById, useParseOriginalResume } from "../api/useDocuments";
+import { useDocumentById } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi } from "@/shared/api";
@@ -22,23 +23,92 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [isParsingLocal, setIsParsingLocal] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
-
-  // Poll documentId to track status and get resume
+  const parseToastId = useWizardStore((state) => state.parseToastId);
+  const setParseToastId = useWizardStore((state) => state.setParseToastId);
   const { data: documentData, isLoading } = useDocumentById(documentId);
-
-  // Parse original resume only when user clicks "Show Changes"
-  const { data: originalResumeData, isLoading: isParsingOriginal } =
-    useParseOriginalResume(documentId, showDiff);
 
   const toast = useToastContext();
 
-  // Get tailored resume data from document
   const tailoredResumeData: ResumeData | null = documentData?.tailoredResumeData
     ? JSON.parse(documentData.tailoredResumeData)
     : null;
 
-  // Load PDF for preview when document is ready
+  const originalResumeData: ResumeData | null = documentData?.originalResumeData
+    ? JSON.parse(documentData.originalResumeData)
+    : null;
+
+  const handleShowChanges = useCallback(async () => {
+    setShowDiff(true);
+    setIsParsingLocal(true);
+
+    if (originalResumeData) {
+      setIsParsingLocal(false);
+      return;
+    }
+
+    if (documentData?.originalParseStatus === ORIGINAL_PARSE_STATUS.PARSING) {
+      return;
+    }
+
+    const toastId = toast.showLoading("Parsing original resume...");
+    setParseToastId(toastId);
+
+    try {
+      await documentsApi.parseOriginalResume(documentId!);
+    } catch (error) {
+      toast.dismissLoading(toastId);
+      setParseToastId(null);
+      setIsParsingLocal(false);
+      toast.showError("Failed to parse original resume");
+    }
+  }, [
+    documentId,
+    documentData?.originalParseStatus,
+    originalResumeData,
+    toast,
+    setParseToastId,
+  ]);
+
+  useEffect(() => {
+    if (!parseToastId) {
+      return;
+    }
+
+    if (originalResumeData) {
+      toast.dismissLoading(parseToastId);
+      setParseToastId(null);
+      setIsParsingLocal(false);
+      return;
+    }
+
+    if (
+      documentData?.originalParseStatus &&
+      documentData.originalParseStatus !== ORIGINAL_PARSE_STATUS.PARSING
+    ) {
+      toast.dismissLoading(parseToastId);
+      setParseToastId(null);
+      setIsParsingLocal(false);
+
+      if (documentData.originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
+        toast.showError("Failed to parse original resume");
+      }
+    }
+  }, [
+    parseToastId,
+    originalResumeData,
+    documentData?.originalParseStatus,
+    toast,
+    setParseToastId,
+  ]);
+
+  const isGenerating = documentData?.status === DOCUMENT_STATUS.GENERATING;
+  const isParsingOriginal =
+    isParsingLocal ||
+    documentData?.originalParseStatus === ORIGINAL_PARSE_STATUS.PARSING;
+  const isDocumentLoading = isLoading || !documentData;
+
   useEffect(() => {
     const isDocumentReady =
       documentData?.pdfResultPath &&
@@ -65,7 +135,6 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
 
     loadPDFPreview();
 
-    // Cleanup on unmount or when dependencies change
     return () => {
       if (blobUrl) {
         URL.revokeObjectURL(blobUrl);
@@ -128,7 +197,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           </button>
           <button
             type="button"
-            onClick={() => setShowDiff(true)}
+            onClick={handleShowChanges}
             className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors touch-manipulation ${
               showDiff
                 ? "bg-blue-600 text-white"
@@ -146,12 +215,9 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           {showDiff ? "Resume Changes" : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
         </label>
         {showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED ? (
-          isParsingOriginal ? (
-            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
-              <LoaderOverlay message="Parsing original resume..." />
-              <p className="text-sm text-gray-600">
-                Parsing original resume...
-              </p>
+          isParsingOriginal && !originalResumeData ? (
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+              <LoaderOverlay />
             </div>
           ) : originalResumeData && tailoredResumeData ? (
             <div className="border border-gray-300 rounded-md p-3 sm:p-4 md:p-6 bg-white overflow-x-hidden">
@@ -170,15 +236,10 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         ) : isLoading || !documentData ? (
           <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
             <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
-            <p className="text-sm text-gray-600">{UI_TEXT.LOADING_TEXT}</p>
           </div>
-        ) : documentData.status === DOCUMENT_STATUS.GENERATING ||
-          documentData.status === DOCUMENT_STATUS.PARSED ? (
+        ) : isGenerating ? (
           <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
             <LoaderOverlay message={UI_TEXT.GENERATING_TAILORED_RESUME_TEXT} />
-            <p className="text-sm text-gray-600">
-              {UI_TEXT.GENERATING_TAILORED_RESUME_TEXT}
-            </p>
           </div>
         ) : documentData.status === DOCUMENT_STATUS.FAILED ? (
           <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
@@ -212,9 +273,8 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
               </div>
             </div>
           ) : (
-            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
               <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
-              <p className="text-sm text-gray-600">{UI_TEXT.LOADING_TEXT}</p>
             </div>
           )
         ) : (
@@ -248,7 +308,9 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           type="button"
           onClick={handleResumeDownload}
           disabled={
+            isDocumentLoading ||
             isDownloading ||
+            isParsingOriginal ||
             !documentData?.pdfResultPath ||
             documentData?.status !== DOCUMENT_STATUS.GENERATED
           }
