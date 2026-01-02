@@ -9,11 +9,16 @@ import {
   getDocumentById,
   getAllDocuments,
 } from "../services/documentService.js";
-import { initializeFirebaseAdmin } from "../config/firebase-admin.js";
+import {
+  initializeFirebaseAdmin,
+  getStorage,
+} from "../config/firebase-admin.js";
 import {
   HTTP_STATUS,
   ERROR_MESSAGES,
   DOCUMENT_STATUS,
+  STORAGE_CONFIG,
+  STORAGE_ERROR_PATTERNS,
 } from "../config/constants.js";
 
 initializeFirebaseAdmin();
@@ -86,22 +91,79 @@ documentsRouter.get(
   verifyFirebaseToken,
   async (request: AuthenticatedRequest, response) => {
     try {
-      const userId = request.userId!;
-      const documentId = request.params.id;
-      const document = await getDocumentById(documentId, userId);
+      const authenticatedUserId = request.userId!;
+      const requestedDocumentId = request.params.id;
+      const foundDocument = await getDocumentById(
+        requestedDocumentId,
+        authenticatedUserId
+      );
 
-      if (!document) {
+      if (!foundDocument) {
         response.status(HTTP_STATUS.NOT_FOUND).json({
           error: ERROR_MESSAGES.DOCUMENT_NOT_FOUND,
         });
         return;
       }
 
-      response.json(document);
-    } catch (error) {
-      console.error("Error fetching document:", error);
+      response.json(foundDocument);
+    } catch (fetchError) {
+      console.error("Error fetching document:", fetchError);
       response.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         error: ERROR_MESSAGES.FAILED_TO_FETCH_DOCUMENT,
+      });
+    }
+  }
+);
+
+// Downloads PDF file for a specific document
+documentsRouter.get(
+  "/:id/pdf",
+  verifyFirebaseToken,
+  async (request: AuthenticatedRequest, response: express.Response) => {
+    try {
+      const authenticatedUserId = request.userId!;
+      const requestedDocumentId = request.params.id;
+      const foundDocument = await getDocumentById(
+        requestedDocumentId,
+        authenticatedUserId
+      );
+
+      if (!foundDocument?.pdfResultPath) {
+        response.status(HTTP_STATUS.NOT_FOUND).json({
+          error: ERROR_MESSAGES.DOCUMENT_NOT_FOUND,
+        });
+        return;
+      }
+
+      const storageBucket = getStorage().bucket();
+      const pdfStorageFile = storageBucket.file(foundDocument.pdfResultPath);
+      const [pdfFileBuffer] = await pdfStorageFile.download();
+
+      response.setHeader("Content-Type", STORAGE_CONFIG.PDF_CONTENT_TYPE);
+      response.setHeader(
+        "Content-Disposition",
+        `${STORAGE_CONFIG.PDF_CONTENT_DISPOSITION_ATTACHMENT}; filename="${STORAGE_CONFIG.PDF_DOWNLOAD_FILENAME}"`
+      );
+      response.send(pdfFileBuffer);
+    } catch (downloadError) {
+      console.error("Error downloading PDF:", downloadError);
+
+      // Handle file not found errors from Storage
+      if (
+        downloadError instanceof Error &&
+        (downloadError.message.includes(
+          STORAGE_ERROR_PATTERNS.FILE_DOES_NOT_EXIST
+        ) ||
+          downloadError.message.includes(STORAGE_ERROR_PATTERNS.NO_SUCH_OBJECT))
+      ) {
+        response.status(HTTP_STATUS.NOT_FOUND).json({
+          error: ERROR_MESSAGES.PDF_FILE_NOT_FOUND,
+        });
+        return;
+      }
+
+      response.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        error: ERROR_MESSAGES.FAILED_TO_DOWNLOAD_PDF,
       });
     }
   }

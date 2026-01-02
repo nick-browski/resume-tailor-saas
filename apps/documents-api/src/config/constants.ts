@@ -16,6 +16,8 @@ export const ERROR_MESSAGES = {
   FAILED_TO_CREATE_DOCUMENT: "Failed to create document",
   FAILED_TO_FETCH_DOCUMENTS: "Failed to fetch documents",
   FAILED_TO_FETCH_DOCUMENT: "Failed to fetch document",
+  PDF_FILE_NOT_FOUND: "PDF file not found",
+  FAILED_TO_DOWNLOAD_PDF: "Failed to download PDF",
   SERVICE_ACCOUNT_KEY_REQUIRED:
     "FIREBASE_SERVICE_ACCOUNT_KEY environment variable is required",
 } as const;
@@ -35,6 +37,14 @@ export const FIREBASE_CONFIG = {
 export const STORAGE_CONFIG = {
   RESUMES_FOLDER: "resumes",
   PDF_CONTENT_TYPE: "application/pdf",
+  PDF_DOWNLOAD_FILENAME: "tailored-resume.pdf",
+  PDF_CONTENT_DISPOSITION_ATTACHMENT: "attachment",
+} as const;
+
+// Storage Error Messages (for error detection)
+export const STORAGE_ERROR_PATTERNS = {
+  FILE_DOES_NOT_EXIST: "does not exist",
+  NO_SUCH_OBJECT: "No such object",
 } as const;
 
 // Request Headers
