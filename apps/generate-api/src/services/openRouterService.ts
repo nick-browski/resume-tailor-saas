@@ -5,6 +5,11 @@ import {
   HTTP_METHODS,
 } from "../config/constants.js";
 
+// Delays execution for retry logic
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_MODEL =
   process.env.OPENROUTER_MODEL || OPENROUTER_CONFIG.DEFAULT_MODEL;
@@ -126,7 +131,73 @@ Job Description:
 
 CRITICAL: Return ONLY the JSON object, nothing else. No markdown, no code blocks, no explanations. Start with { and end with }.`;
 
-// Generates a tailored resume using OpenRouter API based on resume text and job description
+// Extracts JSON object from AI response, handling markdown code blocks
+function extractJsonFromResponse(responseText: string): string {
+  let cleanedText = responseText.trim();
+
+  // Remove markdown code block markers
+  cleanedText = cleanedText.replace(/^```json\s*/i, "");
+  cleanedText = cleanedText.replace(/^```\s*/, "");
+  cleanedText = cleanedText.replace(/\s*```\s*$/, "");
+
+  // Extract JSON object from first { to last }
+  const firstBraceIndex = cleanedText.indexOf("{");
+  const lastBraceIndex = cleanedText.lastIndexOf("}");
+
+  if (
+    firstBraceIndex !== -1 &&
+    lastBraceIndex !== -1 &&
+    lastBraceIndex > firstBraceIndex
+  ) {
+    return cleanedText.substring(firstBraceIndex, lastBraceIndex + 1);
+  }
+
+  return cleanedText;
+}
+
+// Makes API request with automatic retry for transient errors
+async function makeOpenRouterRequest(
+  requestBody: OpenRouterRequest,
+  attemptNumber: number = 1
+): Promise<Response> {
+  const httpReferer = process.env.OPENROUTER_HTTP_REFERER || "";
+  const apiResponse = await fetch(OPENROUTER_API_URL, {
+    method: HTTP_METHODS.POST,
+    headers: {
+      Authorization: `${REQUEST_HEADERS.AUTHORIZATION_PREFIX}${OPENROUTER_API_KEY}`,
+      "Content-Type": REQUEST_HEADERS.CONTENT_TYPE_JSON,
+      [REQUEST_HEADERS.HTTP_REFERER]: httpReferer,
+      [REQUEST_HEADERS.X_TITLE]: OPENROUTER_CONFIG.APPLICATION_TITLE,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (apiResponse.ok) {
+    return apiResponse;
+  }
+
+  const isRetriableError = (
+    OPENROUTER_CONFIG.RETRIABLE_STATUS_CODES as readonly number[]
+  ).includes(apiResponse.status);
+  const hasRetriesLeft = attemptNumber < OPENROUTER_CONFIG.MAX_RETRIES;
+
+  if (isRetriableError && hasRetriesLeft) {
+    const retryDelayMs = OPENROUTER_CONFIG.RETRY_DELAY_MS * attemptNumber;
+    console.warn(
+      `OpenRouter API error ${apiResponse.status}, retrying in ${retryDelayMs}ms (attempt ${attemptNumber}/${OPENROUTER_CONFIG.MAX_RETRIES})`
+    );
+    await delay(retryDelayMs);
+    return makeOpenRouterRequest(requestBody, attemptNumber + 1);
+  }
+
+  const errorText = await apiResponse.text();
+  const errorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
+    "{status}",
+    apiResponse.status.toString()
+  ).replace("{errorText}", errorText);
+  throw new Error(errorMessage);
+}
+
 export async function generateTailoredResume(
   resumeText: string,
   jobDescription: string
@@ -140,78 +211,34 @@ export async function generateTailoredResume(
     jobDescription
   );
 
-  try {
-    const requestBody: OpenRouterRequest = {
-      model: OPENROUTER_MODEL,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_tokens: MAX_TOKENS,
-    };
-
-    const httpReferer = process.env.OPENROUTER_HTTP_REFERER || "";
-    const apiResponse = await fetch(OPENROUTER_API_URL, {
-      method: HTTP_METHODS.POST,
-      headers: {
-        Authorization: `${REQUEST_HEADERS.AUTHORIZATION_PREFIX}${OPENROUTER_API_KEY}`,
-        "Content-Type": REQUEST_HEADERS.CONTENT_TYPE_JSON,
-        [REQUEST_HEADERS.HTTP_REFERER]: httpReferer,
-        [REQUEST_HEADERS.X_TITLE]: OPENROUTER_CONFIG.APPLICATION_TITLE,
+  const requestBody: OpenRouterRequest = {
+    model: OPENROUTER_MODEL,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
       },
-      body: JSON.stringify(requestBody),
-    });
+    ],
+    max_tokens: MAX_TOKENS,
+  };
 
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text();
-      const errorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
-        "{status}",
-        apiResponse.status.toString()
-      ).replace("{errorText}", errorText);
-      throw new Error(errorMessage);
-    }
-
+  try {
+    const apiResponse = await makeOpenRouterRequest(requestBody);
     const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
     const firstChoice = chatResponse.choices[0];
-    const tailoredResume = firstChoice?.message?.content;
+    const responseContent = firstChoice?.message?.content;
 
-    if (!tailoredResume) {
+    if (!responseContent) {
       throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
     }
 
-    // Remove markdown code blocks and extract JSON object
-    let cleanedJsonString = tailoredResume.trim();
-
-    // Remove opening markdown code blocks
-    cleanedJsonString = cleanedJsonString.replace(/^```json\s*/i, "");
-    cleanedJsonString = cleanedJsonString.replace(/^```\s*/, "");
-
-    // Extract JSON object (from first { to last })
-    const firstBraceIndex = cleanedJsonString.indexOf("{");
-    const lastBraceIndex = cleanedJsonString.lastIndexOf("}");
-
-    if (
-      firstBraceIndex !== -1 &&
-      lastBraceIndex !== -1 &&
-      lastBraceIndex > firstBraceIndex
-    ) {
-      cleanedJsonString = cleanedJsonString.substring(
-        firstBraceIndex,
-        lastBraceIndex + 1
-      );
-    } else {
-      // Fallback: remove closing code blocks if JSON extraction failed
-      cleanedJsonString = cleanedJsonString.replace(/\s*```\s*$/, "").trim();
-    }
+    const extractedJsonString = extractJsonFromResponse(responseContent);
 
     try {
-      const parsedResumeData: ResumeData = JSON.parse(cleanedJsonString);
-      return parsedResumeData;
+      return JSON.parse(extractedJsonString) as ResumeData;
     } catch (jsonParseError) {
       console.error("Failed to parse JSON response:", jsonParseError);
-      console.error("Response content:", cleanedJsonString);
+      console.error("Response content:", extractedJsonString);
       const errorMessage =
         jsonParseError instanceof Error
           ? jsonParseError.message
