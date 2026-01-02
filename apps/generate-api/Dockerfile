@@ -7,7 +7,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/generate-api/package.json ./apps/generate-api/
 
 # Install dependencies
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
+RUN corepack enable pnpm && corepack prepare pnpm@10.15.1 --activate && pnpm install --frozen-lockfile
 
 # Copy source code
 COPY apps/generate-api ./apps/generate-api
@@ -25,7 +25,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/generate-api/package.json ./apps/generate-api/
 
 # Install production dependencies
-RUN corepack enable pnpm && pnpm install --prod --frozen-lockfile
+RUN corepack enable pnpm && corepack prepare pnpm@10.15.1 --activate && pnpm install --prod --frozen-lockfile
 
 # Copy built files from builder
 COPY --from=builder /app/apps/generate-api/dist ./apps/generate-api/dist

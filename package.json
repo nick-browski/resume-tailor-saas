@@ -13,6 +13,8 @@
     "build": "pnpm -r build",
     "build:frontend": "pnpm --filter frontend build",
     "deploy:frontend": "pnpm build:frontend && firebase deploy --only hosting",
+    "setup:backend": "./scripts/setup-backend-secrets.sh",
+    "deploy:backend": "./scripts/deploy-backend.sh",
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
