@@ -3,12 +3,45 @@ export interface Document {
   ownerId: string;
   jobText: string;
   resumeText: string;
+  originalResumeData: string | null;
   tailoredText: string | null;
+  tailoredResumeData: string | null;
   status: DocumentStatus;
   pdfOriginalPath: string;
   pdfResultPath: string | null;
   createdAt: string;
   error: string | null;
+}
+
+export interface ResumeData {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedIn?: string;
+    website?: string;
+  };
+  summary: string;
+  experience: Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate: string | "Present";
+    description: string[];
+  }>;
+  education: Array<{
+    institution: string;
+    degree: string;
+    field?: string;
+    graduationDate: string;
+  }>;
+  skills: string[];
+  certifications?: Array<{
+    name: string;
+    issuer: string;
+    date?: string;
+  }>;
 }
 
 export type DocumentStatus =

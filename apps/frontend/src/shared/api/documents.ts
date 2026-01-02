@@ -6,6 +6,7 @@ import type {
   Document,
   CreateDocumentRequest,
   CreateDocumentResponse,
+  ResumeData,
 } from "./types";
 
 const DOCUMENTS_ENDPOINT = "/documents";
@@ -69,5 +70,32 @@ export const documentsApi = {
     }
 
     return pdfDownloadResponse.blob();
+  },
+
+  async parseOriginalResume(documentId: string): Promise<ResumeData> {
+    const authenticatedUser = auth.currentUser;
+    if (!authenticatedUser) {
+      throw new Error(ERROR_MESSAGES.USER_NOT_AUTHENTICATED);
+    }
+
+    const authenticationToken = await authenticatedUser.getIdToken();
+    const parseResponse = await fetch(
+      `${API_CONFIG.generateApi}/documents/${documentId}/parse-original`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authenticationToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!parseResponse.ok) {
+      const errorText = await parseResponse.text();
+      throw new Error(`Failed to parse original resume: ${errorText}`);
+    }
+
+    const data = await parseResponse.json();
+    return data.originalResumeData;
   },
 };

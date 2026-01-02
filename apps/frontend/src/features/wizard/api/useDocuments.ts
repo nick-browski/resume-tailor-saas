@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useEffect } from "react";
 import { documentsApi } from "@/shared/api";
 import type { CreateDocumentRequest } from "@/shared/api";
+import type { ResumeData } from "@/shared/api/types";
 import {
   TIMING_CONSTANTS,
   DOCUMENT_STATUS,
@@ -64,5 +65,18 @@ export function useAllDocuments() {
   return useQuery({
     queryKey: [QUERY_KEYS.DOCUMENTS],
     queryFn: () => documentsApi.getAll(),
+  });
+}
+
+// Parses original resume into structured JSON format
+export function useParseOriginalResume(
+  documentId: string | null,
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.DOCUMENTS, "parseOriginal", documentId],
+    queryFn: () => documentsApi.parseOriginalResume(documentId!),
+    enabled: enabled && !!documentId,
+    staleTime: Infinity,
   });
 }

@@ -5,11 +5,13 @@ import {
   UI_TEXT,
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
-import { useDocumentById } from "../api/useDocuments";
+import { useDocumentById, useParseOriginalResume } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi } from "@/shared/api";
 import { Loader, LoaderOverlay } from "@/shared/ui";
+import { ResumeDiff } from "./ResumeDiff";
+import type { ResumeData } from "@/shared/api/types";
 
 interface PreviewStepProps {
   onPrevious: () => void;
@@ -19,12 +21,22 @@ interface PreviewStepProps {
 export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
 
   // Poll documentId to track status and get resume
   const { data: documentData, isLoading } = useDocumentById(documentId);
 
+  // Parse original resume only when user clicks "Show Changes"
+  const { data: originalResumeData, isLoading: isParsingOriginal } =
+    useParseOriginalResume(documentId, showDiff);
+
   const toast = useToastContext();
+
+  // Get tailored resume data from document
+  const tailoredResumeData: ResumeData | null = documentData?.tailoredResumeData
+    ? JSON.parse(documentData.tailoredResumeData)
+    : null;
 
   // Load PDF for preview when document is ready
   useEffect(() => {
@@ -100,12 +112,62 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         </p>
       </div>
 
-      {/* Preview */}
+      {/* Toggle buttons */}
+      {documentData?.status === DOCUMENT_STATUS.GENERATED && (
+        <div className="flex gap-2 sm:gap-3 border-b pb-3 sm:pb-4">
+          <button
+            type="button"
+            onClick={() => setShowDiff(false)}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors touch-manipulation ${
+              !showDiff
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 active:bg-gray-200"
+            }`}
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowDiff(true)}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors touch-manipulation ${
+              showDiff
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 active:bg-gray-200"
+            }`}
+          >
+            Show Changes
+          </button>
+        </div>
+      )}
+
+      {/* Preview or Diff */}
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
-          {UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
+          {showDiff ? "Resume Changes" : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
         </label>
-        {isLoading || !documentData ? (
+        {showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED ? (
+          isParsingOriginal ? (
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
+              <LoaderOverlay message="Parsing original resume..." />
+              <p className="text-sm text-gray-600">
+                Parsing original resume...
+              </p>
+            </div>
+          ) : originalResumeData && tailoredResumeData ? (
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 md:p-6 bg-white overflow-x-hidden">
+              <ResumeDiff
+                original={originalResumeData}
+                tailored={tailoredResumeData}
+              />
+            </div>
+          ) : (
+            <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50">
+              <p className="text-sm text-gray-600">
+                No data available for comparison
+              </p>
+            </div>
+          )
+        ) : isLoading || !documentData ? (
           <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
             <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
             <p className="text-sm text-gray-600">{UI_TEXT.LOADING_TEXT}</p>

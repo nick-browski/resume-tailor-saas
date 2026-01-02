@@ -9,4 +9,5 @@ export type {
   GenerateResumeRequest,
   GenerateResumeResponse,
   ApiError,
+  ResumeData,
 } from "./types";
