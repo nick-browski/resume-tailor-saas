@@ -3,69 +3,119 @@ import { getStorage } from "../config/firebase-admin.js";
 import { STORAGE_CONFIG, PDF_CONFIG } from "../config/constants.js";
 import type { ResumeData } from "./openRouterService.js";
 
-// CSS styles for resume HTML
-const RESUME_CSS_STYLES = `
+// Generates CSS styles with dynamic scale for single-page optimization
+function generateResumeCSS(scale: number = 1.0): string {
+  // Base sizes (will be scaled proportionally to maintain aspect ratio)
+  const baseSizes = {
+    h1: 22,
+    h2: 16,
+    h3: 14,
+    body: 11,
+    meta: 10,
+    skill: 10,
+    padding: 10,
+    marginSection: 12,
+    marginItem: 8,
+    gap: 8,
+  };
+
+  // Scale all sizes proportionally
+  const sizes = {
+    h1: Math.round(baseSizes.h1 * scale),
+    h2: Math.round(baseSizes.h2 * scale),
+    h3: Math.round(baseSizes.h3 * scale),
+    body: Math.round(baseSizes.body * scale),
+    meta: Math.round(baseSizes.meta * scale),
+    skill: Math.round(baseSizes.skill * scale),
+    padding: Math.round(baseSizes.padding * scale),
+    marginSection: Math.round(baseSizes.marginSection * scale),
+    marginItem: Math.round(baseSizes.marginItem * scale),
+    gap: Math.round(baseSizes.gap * scale),
+  };
+
+  return `
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Arial', sans-serif;
       max-width: 800px;
       margin: 0 auto;
-      padding: 20px;
-      line-height: 1.6;
+      padding: ${sizes.padding}px;
+      line-height: 1.4;
       color: #333;
+      font-size: ${sizes.body}px;
     }
     .header {
       border-bottom: 2px solid #333;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      padding-bottom: ${sizes.gap}px;
+      margin-bottom: ${sizes.marginSection}px;
     }
     .header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: ${sizes.h1}px;
+      line-height: 1.2;
     }
     .contact-info {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 10px;
-      font-size: 14px;
+      gap: ${sizes.gap}px;
+      margin-top: ${sizes.gap}px;
+      font-size: ${sizes.body}px;
     }
     .section {
-      margin-bottom: 25px;
+      margin-bottom: ${sizes.marginSection}px;
+      page-break-inside: avoid;
     }
     .section h2 {
       border-bottom: 1px solid #ccc;
-      padding-bottom: 5px;
-      margin-bottom: 15px;
-      font-size: 20px;
+      padding-bottom: 4px;
+      margin-bottom: ${sizes.gap}px;
+      font-size: ${sizes.h2}px;
+      line-height: 1.3;
     }
     .experience-item, .education-item {
-      margin-bottom: 15px;
+      margin-bottom: ${sizes.marginItem}px;
+      page-break-inside: avoid;
     }
     .experience-item h3, .education-item h3 {
       margin: 0;
-      font-size: 16px;
+      font-size: ${sizes.h3}px;
+      line-height: 1.3;
     }
     .experience-item .meta {
       color: #666;
-      font-size: 14px;
-      margin: 5px 0;
+      font-size: ${sizes.meta}px;
+      margin: 3px 0;
+      line-height: 1.4;
     }
     .experience-item ul {
-      margin: 10px 0;
-      padding-left: 20px;
+      margin: ${sizes.gap}px 0;
+      padding-left: 18px;
+    }
+    .experience-item li {
+      font-size: ${sizes.meta}px;
+      margin-bottom: 2px;
+      line-height: 1.4;
     }
     .skills {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: ${sizes.gap}px;
     }
     .skill-tag {
       background: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 14px;
+      padding: 3px ${sizes.gap}px;
+      border-radius: 3px;
+      font-size: ${sizes.skill}px;
+      line-height: 1.4;
     }
-`;
+    p {
+      margin: 0 0 ${sizes.gap}px 0;
+      line-height: 1.4;
+    }
+  `;
+}
 
 // Escapes HTML to prevent XSS
 function escapeHtml(text: string): string {
@@ -223,8 +273,11 @@ function generateCertificationsSection(
   </div>`;
 }
 
-// Generates complete HTML document from resume data
-function generateResumeHTML(resumeData: ResumeData): string {
+// Generates complete HTML document from resume data with scale
+function generateResumeHTML(
+  resumeData: ResumeData,
+  scale: number = 1.0
+): string {
   const sections = [
     generateHeaderSection(resumeData.personalInfo),
     resumeData.summary ? generateSummarySection(resumeData.summary) : "",
@@ -240,7 +293,7 @@ function generateResumeHTML(resumeData: ResumeData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${PDF_CONFIG.HTML_TITLE}</title>
-  <style>${RESUME_CSS_STYLES}</style>
+  <style>${generateResumeCSS(scale)}</style>
 </head>
 <body>
 ${sections.join("\n")}
@@ -259,8 +312,28 @@ async function launchBrowser(): Promise<Browser> {
   });
 }
 
-// Generates PDF buffer from HTML content using Playwright
-async function generatePDFFromHTML(htmlContent: string): Promise<Buffer> {
+// Gets content height in pixels from browser page
+async function getContentHeight(browserPage: Page): Promise<number> {
+  return await browserPage.evaluate(() => {
+    // @ts-ignore - document is available in browser context
+    const bodyElement = document.body;
+    // @ts-ignore - document is available in browser context
+    const docElement = document.documentElement;
+    return Math.max(
+      bodyElement.scrollHeight,
+      bodyElement.offsetHeight,
+      docElement.clientHeight,
+      docElement.scrollHeight,
+      docElement.offsetHeight
+    );
+  });
+}
+
+// Generates PDF buffer from HTML content using Playwright with scale
+async function generatePDFFromHTML(
+  htmlContent: string,
+  scale: number = 1.0
+): Promise<Buffer> {
   const browserInstance = await launchBrowser();
 
   try {
@@ -277,6 +350,55 @@ async function generatePDFFromHTML(htmlContent: string): Promise<Buffer> {
         left: PDF_CONFIG.MARGIN_MM,
       },
     });
+
+    return pdfBuffer;
+  } finally {
+    await browserInstance.close();
+  }
+}
+
+// Generates PDF with automatic scaling to fit one page
+async function generateSinglePagePDF(resumeData: ResumeData): Promise<Buffer> {
+  let currentScale = PDF_CONFIG.INITIAL_SCALE;
+  let pdfBuffer: Buffer | null = null;
+  const browserInstance = await launchBrowser();
+
+  try {
+    do {
+      const resumeHtml = generateResumeHTML(resumeData, currentScale);
+      const browserPage: Page = await browserInstance.newPage();
+      await browserPage.setContent(resumeHtml, { waitUntil: "networkidle" });
+
+      const contentHeight = await getContentHeight(browserPage);
+      const maxHeight = PDF_CONFIG.A4_HEIGHT_PX * currentScale;
+
+      if (contentHeight > maxHeight && currentScale > PDF_CONFIG.MIN_SCALE) {
+        await browserPage.close();
+        currentScale = Math.max(
+          currentScale - PDF_CONFIG.SCALE_STEP,
+          PDF_CONFIG.MIN_SCALE
+        );
+        continue;
+      }
+
+      pdfBuffer = await browserPage.pdf({
+        format: PDF_CONFIG.FORMAT,
+        printBackground: true,
+        margin: {
+          top: PDF_CONFIG.MARGIN_MM,
+          right: PDF_CONFIG.MARGIN_MM,
+          bottom: PDF_CONFIG.MARGIN_MM,
+          left: PDF_CONFIG.MARGIN_MM,
+        },
+      });
+
+      await browserPage.close();
+      break;
+    } while (currentScale > PDF_CONFIG.MIN_SCALE);
+
+    if (!pdfBuffer) {
+      throw new Error("Failed to generate PDF within scale limits");
+    }
 
     return pdfBuffer;
   } finally {
@@ -309,8 +431,7 @@ export async function generatePDFFromResumeData(
   documentId: string
 ): Promise<string> {
   try {
-    const resumeHtml = generateResumeHTML(resumeData);
-    const pdfBuffer = await generatePDFFromHTML(resumeHtml);
+    const pdfBuffer = await generateSinglePagePDF(resumeData);
     const storageFilePath = await savePDFToStorage(
       pdfBuffer,
       ownerId,

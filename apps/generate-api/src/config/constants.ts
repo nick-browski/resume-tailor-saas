@@ -45,6 +45,9 @@ export const OPENROUTER_CONFIG = {
   DEFAULT_MODEL: "mistralai/devstral-2512:free",
   MAX_TOKENS: 1024,
   APPLICATION_TITLE: "Resume Tailor SaaS",
+  MAX_RETRIES: 3,
+  RETRY_DELAY_MS: 1000,
+  RETRIABLE_STATUS_CODES: [429, 500, 502, 503, 504],
 } as const;
 
 // Document Status
@@ -74,7 +77,12 @@ export const STORAGE_CONFIG = {
 // PDF Generation Configuration
 export const PDF_CONFIG = {
   FORMAT: "A4" as const,
-  MARGIN_MM: "20mm",
+  MARGIN_MM: "10mm",
   HTML_TITLE: "Resume",
   HTML_LANG: "en",
-} as const;
+  MAX_PAGES: 1 as number,
+  SCALE_STEP: 0.05,
+  MIN_SCALE: 0.7,
+  INITIAL_SCALE: 1.0,
+  A4_HEIGHT_PX: 1123,
+};
