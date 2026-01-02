@@ -79,3 +79,14 @@ export function getStorage(): Storage {
   }
   return storageInstance!;
 }
+
+// Returns Firebase App instance, initializes if needed
+export function getApp(): App {
+  if (!app) {
+    initializeFirebaseAdmin();
+  }
+  if (!app) {
+    throw new Error("Failed to initialize Firebase Admin");
+  }
+  return app;
+}

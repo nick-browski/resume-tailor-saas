@@ -1,6 +1,17 @@
+// Determine if running in Cloud Run (K_SERVICE is set automatically by Cloud Run)
+export const IS_CLOUD_RUN = !!process.env.K_SERVICE;
+
+// Environment: dev, staging, prod (defaults to "dev" if not set)
+export const APP_ENV = process.env.APP_ENV || "dev";
+
+// Development mode: only when explicitly "dev" and not in Cloud Run
+export const IS_DEV = APP_ENV === "dev" && !IS_CLOUD_RUN;
+
 // HTTP Status Codes
 export const HTTP_STATUS = {
   OK: 200,
+  ACCEPTED: 202,
+  BAD_REQUEST: 400,
   NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   INTERNAL_SERVER_ERROR: 500,
@@ -19,6 +30,24 @@ export const ERROR_MESSAGES = {
   FAILED_TO_GENERATE_RESUME: "Failed to generate resume",
   SERVICE_ACCOUNT_KEY_REQUIRED:
     "FIREBASE_SERVICE_ACCOUNT_KEY environment variable is required",
+  DOCUMENT_HAS_NO_RESUME_TEXT: "Document has no resume text to parse",
+  FAILED_TO_ENQUEUE_GENERATION_TASK: "Failed to enqueue generation task",
+  SERVICE_URL_NOT_CONFIGURED:
+    "SERVICE_URL or GENERATE_API_URL environment variable is required",
+  SERVICE_URL_NOT_CONFIGURED_CLOUD_RUN:
+    "SERVICE_URL environment variable is required. It should be set by the deployment script using the actual Cloud Run service URL.",
+  MISSING_REQUIRED_FIELDS_GENERATION:
+    "Missing required fields: documentId, resumeText, jobText, ownerId",
+  MISSING_REQUIRED_FIELDS_PARSE:
+    "Missing required fields: documentId, resumeText, ownerId",
+  FAILED_TO_PROCESS_GENERATION: "Failed to process generation",
+  FAILED_TO_UPDATE_STATUS_TO_FAILED:
+    "Failed to update status to FAILED for document",
+  FAILED_TO_UPDATE_PARSE_STATUS_TO_FAILED:
+    "Failed to update originalParseStatus to FAILED for document",
+  ERROR_PROCESSING_GENERATION: "Error processing generation for document",
+  ERROR_PARSING_ORIGINAL_RESUME: "Error parsing original resume for document",
+  UNKNOWN_ERROR: "Unknown error",
 } as const;
 
 // Success Messages
@@ -59,6 +88,13 @@ export const DOCUMENT_STATUS = {
   FAILED: "failed",
 } as const;
 
+// Original Parse Status (for Firestore document field)
+export const FIRESTORE_PARSE_STATUS = {
+  PARSING: "parsing",
+  PARSED: "parsed",
+  FAILED: "failed",
+} as const;
+
 // HTTP Methods
 export const HTTP_METHODS = {
   POST: "POST",
@@ -67,6 +103,28 @@ export const HTTP_METHODS = {
 // CORS Configuration
 export const CORS_CONFIG = {
   DEFAULT_ORIGIN: "http://localhost:3000",
+} as const;
+
+// API Routes
+export const API_ROUTES = {
+  DOCUMENTS: "/documents",
+  TASKS_PROCESS_GENERATION: "/tasks/process-generation",
+  TASKS_PROCESS_PARSE_ORIGINAL: "/tasks/process-parse-original",
+  HEALTH: "/health",
+} as const;
+
+// Server Configuration
+export const SERVER_CONFIG = {
+  DEFAULT_PORT: 8081,
+  LOCALHOST_IP: "127.0.0.1",
+  ALL_INTERFACES_IP: "0.0.0.0",
+} as const;
+
+// Parse Original API Response Status
+export const PARSE_RESPONSE_STATUS = {
+  CACHED: "cached",
+  PARSED: "parsed",
+  QUEUED: "queued",
 } as const;
 
 // Storage Configuration
