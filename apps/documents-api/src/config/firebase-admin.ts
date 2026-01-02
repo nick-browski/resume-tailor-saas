@@ -48,8 +48,14 @@ export function initializeFirebaseAdmin() {
         throw new Error(ERROR_MESSAGES.SERVICE_ACCOUNT_KEY_REQUIRED);
       }
 
+      const projectId = serviceAccountKey.project_id;
+      const storageBucket =
+        process.env.FIREBASE_STORAGE_BUCKET ||
+        `${projectId}.firebasestorage.app`;
+
       app = initializeApp({
         credential: cert(serviceAccountKey),
+        storageBucket,
       });
     } else {
       app = getApps()[0];
