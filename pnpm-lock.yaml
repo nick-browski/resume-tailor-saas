@@ -127,6 +127,9 @@ importers:
 
   apps/generate-api:
     dependencies:
+      '@google-cloud/tasks':
+        specifier: ^5.0.0
+        version: 5.5.2(encoding@0.1.13)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -136,6 +139,9 @@ importers:
       firebase-admin:
         specifier: ^12.0.0
         version: 12.7.0(encoding@0.1.13)
+      google-auth-library:
+        specifier: ^9.0.0
+        version: 9.15.1(encoding@0.1.13)
       playwright:
         specifier: ^1.57.0
         version: 1.57.0
@@ -811,6 +817,10 @@ packages:
   '@google-cloud/storage@7.18.0':
     resolution: {integrity: sha512-r3ZwDMiz4nwW6R922Z1pwpePxyRwE5GdevYX63hRmAQUkUQJcBH/79EnQPDv5cOv1mFBgevdNWQfi3tie3dHrQ==}
     engines: {node: '>=14'}
+
+  '@google-cloud/tasks@5.5.2':
+    resolution: {integrity: sha512-F934h4rI3OLlEVgzthDzE5RDQqT2brlq+BeD15eHNBi4sGMTdaz/b4y3eMFxJvB2hZk5mEKlLnsb9Pt2EcmNSQ==}
+    engines: {node: '>=v14'}
 
   '@googleapis/sqladmin@31.1.0':
     resolution: {integrity: sha512-k4lXSFCFuZmWtYuW/OH/PcHimZP5P/uDLK0+ACbgoZFB8qmlgcyF0531aJt6JHIdBwCRlHXZlMW4LDC5Gqra5w==}
@@ -5091,6 +5101,13 @@ snapshots:
       - encoding
       - supports-color
     optional: true
+
+  '@google-cloud/tasks@5.5.2(encoding@0.1.13)':
+    dependencies:
+      google-gax: 4.6.1(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
 
   '@googleapis/sqladmin@31.1.0':
     dependencies:
