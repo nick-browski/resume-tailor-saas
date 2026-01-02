@@ -26,6 +26,10 @@ PROJECT_ID="resume-tailor-saas"
 REGION="us-central1"
 ARTIFACT_REGISTRY_REPO="resume-tailor-saas"
 SERVICE_ACCOUNT_EMAIL="resume-tailor-saas@${PROJECT_ID}.iam.gserviceaccount.com"
+CLOUD_TASKS_LOCATION="${CLOUD_TASKS_LOCATION:-us-central1}"
+CLOUD_TASKS_QUEUE_NAME="${CLOUD_TASKS_QUEUE_NAME:-resume-generation}"
+# Cloud Tasks service account for OIDC authentication (use same SA as Cloud Run by default)
+CLOUD_TASKS_SERVICE_ACCOUNT="${CLOUD_TASKS_SERVICE_ACCOUNT:-${SERVICE_ACCOUNT_EMAIL}}"
 
 # Frontend URL for CORS (update this after frontend deployment)
 FRONTEND_URL="${FRONTEND_URL:-https://resume-tailor-saas.web.app}"
@@ -45,7 +49,34 @@ echo -e "${BLUE}📋 Configuration:${NC}"
 echo -e "  Project ID: ${PROJECT_ID}"
 echo -e "  Region: ${REGION}"
 echo -e "  Image Version: ${IMAGE_VERSION}"
-echo -e "  Frontend URL: ${FRONTEND_URL}\n"
+echo -e "  Frontend URL: ${FRONTEND_URL}"
+echo -e "  Cloud Tasks Location: ${CLOUD_TASKS_LOCATION}"
+echo -e "  Cloud Tasks Queue: ${CLOUD_TASKS_QUEUE_NAME}"
+echo -e "  Cloud Tasks Service Account: ${CLOUD_TASKS_SERVICE_ACCOUNT}\n"
+
+# Validate Cloud Tasks queue exists
+echo -e "${BLUE}🔍 Validating Cloud Tasks queue...${NC}"
+if ! gcloud tasks queues describe ${CLOUD_TASKS_QUEUE_NAME} \
+  --location=${CLOUD_TASKS_LOCATION} \
+  --project=${PROJECT_ID} &>/dev/null; then
+  echo -e "${RED}❌ Cloud Tasks queue '${CLOUD_TASKS_QUEUE_NAME}' not found in ${CLOUD_TASKS_LOCATION}${NC}"
+  echo -e "${YELLOW}💡 Create it with:${NC}"
+  echo -e "   gcloud tasks queues create ${CLOUD_TASKS_QUEUE_NAME} --location=${CLOUD_TASKS_LOCATION} --project=${PROJECT_ID}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Cloud Tasks queue exists${NC}"
+
+# Validate Cloud Tasks service account exists
+echo -e "${BLUE}🔍 Validating Cloud Tasks service account...${NC}"
+if ! gcloud iam service-accounts describe ${CLOUD_TASKS_SERVICE_ACCOUNT} \
+  --project=${PROJECT_ID} &>/dev/null; then
+  echo -e "${RED}❌ Service account '${CLOUD_TASKS_SERVICE_ACCOUNT}' not found${NC}"
+  echo -e "${YELLOW}💡 Create it with:${NC}"
+  echo -e "   gcloud iam service-accounts create cloud-tasks-sa --display-name='Cloud Tasks Service Account' --project=${PROJECT_ID}"
+  echo -e "${YELLOW}   Then set CLOUD_TASKS_SERVICE_ACCOUNT env var to the created SA email${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Cloud Tasks service account exists${NC}\n"
 
 # Validation
 if ! command -v gcloud &> /dev/null; then
@@ -154,7 +185,7 @@ gcloud run deploy generate-api \
   --region ${REGION} \
   --allow-unauthenticated \
   --service-account ${SERVICE_ACCOUNT_EMAIL} \
-  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free,FIREBASE_STORAGE_BUCKET=resume-tailor-saas.firebasestorage.app \
+  --set-env-vars CORS_ORIGIN=${FRONTEND_URL},OPENROUTER_MODEL=mistralai/devstral-2512:free,FIREBASE_STORAGE_BUCKET=resume-tailor-saas.firebasestorage.app,CLOUD_TASKS_SERVICE_ACCOUNT=${CLOUD_TASKS_SERVICE_ACCOUNT},CLOUD_TASKS_LOCATION=${CLOUD_TASKS_LOCATION},CLOUD_TASKS_QUEUE_NAME=${CLOUD_TASKS_QUEUE_NAME} \
   --set-secrets FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest \
   --memory 4Gi \
   --cpu 4 \
@@ -169,14 +200,18 @@ gcloud run deploy generate-api \
 GENERATE_API_URL=$(gcloud run services describe generate-api --region=${REGION} --format='value(status.url)')
 echo -e "${GREEN}✓ generate-api deployed: ${GENERATE_API_URL}${NC}"
 
-# Set SERVICE_URL env var with the actual Cloud Run service URL
+# Set SERVICE_URL and Cloud Tasks env vars with the actual Cloud Run service URL
 # This is required for Cloud Tasks target URL and OIDC audience
-echo -e "\n${BLUE}🔧 Setting SERVICE_URL environment variable...${NC}"
+echo -e "\n${BLUE}🔧 Setting environment variables...${NC}"
 gcloud run services update generate-api \
   --region=${REGION} \
-  --update-env-vars "SERVICE_URL=${GENERATE_API_URL}" \
+  --update-env-vars "SERVICE_URL=${GENERATE_API_URL},CLOUD_TASKS_SERVICE_ACCOUNT=${CLOUD_TASKS_SERVICE_ACCOUNT},CLOUD_TASKS_LOCATION=${CLOUD_TASKS_LOCATION},CLOUD_TASKS_QUEUE_NAME=${CLOUD_TASKS_QUEUE_NAME}" \
   --quiet
-echo -e "${GREEN}✓ SERVICE_URL set to ${GENERATE_API_URL}${NC}"
+echo -e "${GREEN}✓ Environment variables set:${NC}"
+echo -e "  SERVICE_URL=${GENERATE_API_URL}"
+echo -e "  CLOUD_TASKS_SERVICE_ACCOUNT=${CLOUD_TASKS_SERVICE_ACCOUNT}"
+echo -e "  CLOUD_TASKS_LOCATION=${CLOUD_TASKS_LOCATION}"
+echo -e "  CLOUD_TASKS_QUEUE_NAME=${CLOUD_TASKS_QUEUE_NAME}"
 
 echo -e "\n${GREEN}✅ Production backend deployment complete!${NC}\n"
 echo -e "${BLUE}📋 Deployment Summary:${NC}"
