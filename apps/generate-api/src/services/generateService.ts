@@ -36,6 +36,7 @@ async function processGeneration(
     await documentReference.update({
       status: DOCUMENT_STATUS.GENERATED,
       tailoredText: JSON.stringify(resumeData),
+      tailoredResumeData: JSON.stringify(resumeData),
       pdfResultPath: pdfPath,
       error: null,
     });

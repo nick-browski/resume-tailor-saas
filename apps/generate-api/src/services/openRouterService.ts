@@ -131,6 +131,57 @@ Job Description:
 
 CRITICAL: Return ONLY the JSON object, nothing else. No markdown, no code blocks, no explanations. Start with { and end with }.`;
 
+const PARSE_RESUME_PROMPT = `You are a professional resume parser. Your task is to extract structured data from a resume text.
+
+IMPORTANT RULES:
+1. Extract ONLY information that is explicitly stated in the resume
+2. DO NOT invent or add any information
+3. If information is missing, use empty strings or empty arrays
+4. Return ONLY valid JSON, no markdown, no explanations
+
+REQUIRED JSON STRUCTURE:
+{
+  "personalInfo": {
+    "fullName": "string",
+    "email": "string",
+    "phone": "string",
+    "location": "string",
+    "linkedIn": "string (optional)",
+    "website": "string (optional)"
+  },
+  "summary": "string",
+  "experience": [
+    {
+      "company": "string",
+      "position": "string",
+      "startDate": "string",
+      "endDate": "string | 'Present'",
+      "description": ["string"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "string",
+      "degree": "string",
+      "field": "string (optional)",
+      "graduationDate": "string"
+    }
+  ],
+  "skills": ["string"],
+  "certifications": [
+    {
+      "name": "string",
+      "issuer": "string",
+      "date": "string (optional)"
+    }
+  ]
+}
+
+Resume Text:
+{resumeText}
+
+CRITICAL: Return ONLY the JSON object, nothing else. No markdown, no code blocks, no explanations. Start with { and end with }.`;
+
 // Extracts JSON object from AI response, handling markdown code blocks
 function extractJsonFromResponse(responseText: string): string {
   let cleanedText = responseText.trim();
@@ -252,5 +303,57 @@ export async function generateTailoredResume(
     throw new Error(
       `${ERROR_MESSAGES.FAILED_TO_GENERATE_RESUME}: ${errorMessage}`
     );
+  }
+}
+
+// Parses resume text into structured JSON format
+export async function parseResumeToStructure(
+  resumeText: string
+): Promise<ResumeData> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error(ERROR_MESSAGES.OPENROUTER_API_KEY_NOT_CONFIGURED);
+  }
+
+  const prompt = PARSE_RESUME_PROMPT.replace("{resumeText}", resumeText);
+
+  const requestBody: OpenRouterRequest = {
+    model: OPENROUTER_MODEL,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    max_tokens: MAX_TOKENS,
+  };
+
+  try {
+    const apiResponse = await makeOpenRouterRequest(requestBody);
+    const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
+    const firstChoice = chatResponse.choices[0];
+    const responseContent = firstChoice?.message?.content;
+
+    if (!responseContent) {
+      throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
+    }
+
+    const extractedJsonString = extractJsonFromResponse(responseContent);
+
+    try {
+      return JSON.parse(extractedJsonString) as ResumeData;
+    } catch (jsonParseError) {
+      console.error("Failed to parse JSON response:", jsonParseError);
+      console.error("Response content:", extractedJsonString);
+      const errorMessage =
+        jsonParseError instanceof Error
+          ? jsonParseError.message
+          : "Unknown error";
+      throw new Error(`Failed to parse AI response as JSON: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error("Error parsing resume:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Failed to parse resume: ${errorMessage}`);
   }
 }

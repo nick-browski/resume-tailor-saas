@@ -1,5 +1,6 @@
 // HTTP Status Codes
 export const HTTP_STATUS = {
+  OK: 200,
   NOT_FOUND: 404,
   UNAUTHORIZED: 401,
   INTERNAL_SERVER_ERROR: 500,
