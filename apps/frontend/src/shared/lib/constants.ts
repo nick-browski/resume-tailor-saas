@@ -110,6 +110,17 @@ export const QUERY_KEYS = {
   DOCUMENT: "document",
 } as const;
 
+export const MOBILE_CONSTANTS = {
+  BREAKPOINT_WIDTH_PX: 768,
+  MOBILE_USER_AGENT_PATTERN: /iPhone|iPad|iPod|Android/i,
+} as const;
+
+export const PDF_CONSTANTS = {
+  A4_WIDTH_PX: 794,
+  MIN_SCALE: 0.4,
+  MAX_SCALE: 1.0,
+} as const;
+
 export const DOCUMENT_STATUS = {
   PARSED: "parsed",
   GENERATING: "generating",

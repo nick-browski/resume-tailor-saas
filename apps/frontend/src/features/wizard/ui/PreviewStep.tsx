@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/constants";
 import { useDocumentById } from "../api/useDocuments";
 import { useWizardStore } from "../model/wizardStore";
+import { useMobilePdfScale } from "../hooks/useMobilePdfScale";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi } from "@/shared/api";
 import { Loader, LoaderOverlay } from "@/shared/ui";
@@ -24,10 +25,12 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
   const [isParsingLocal, setIsParsingLocal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
   const parseToastId = useWizardStore((state) => state.parseToastId);
   const setParseToastId = useWizardStore((state) => state.setParseToastId);
   const { data: documentData, isLoading } = useDocumentById(documentId);
+  const { isMobile, mobileScale } = useMobilePdfScale();
 
   const toast = useToastContext();
 
@@ -109,6 +112,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     documentData?.originalParseStatus === ORIGINAL_PARSE_STATUS.PARSING;
   const isDocumentLoading = isLoading || !documentData;
 
+  // Load PDF preview when document is ready
   useEffect(() => {
     const isDocumentReady =
       documentData?.pdfResultPath &&
@@ -120,26 +124,35 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
       return;
     }
 
-    let blobUrl: string | null = null;
+    let isCancelled = false;
 
     const loadPDFPreview = async () => {
       try {
         const pdfBlob = await documentsApi.downloadPDF(documentId);
-        blobUrl = URL.createObjectURL(pdfBlob);
+        if (isCancelled) {
+          URL.revokeObjectURL(URL.createObjectURL(pdfBlob));
+          return;
+        }
+        const blobUrl = URL.createObjectURL(pdfBlob);
         setPdfPreviewUrl(blobUrl);
       } catch (error) {
         console.error("Error loading PDF preview:", error);
-        setPdfPreviewUrl(null);
+        if (!isCancelled) {
+          setPdfPreviewUrl(null);
+        }
       }
     };
 
     loadPDFPreview();
 
     return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-      setPdfPreviewUrl(null);
+      isCancelled = true;
+      setPdfPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+        return null;
+      });
     };
   }, [documentData?.pdfResultPath, documentData?.status, documentId]);
 
@@ -169,6 +182,30 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
       }, TIMING_CONSTANTS.DOWNLOAD_DELAY_MS);
     }
   }, [documentData?.pdfResultPath, documentId, toast]);
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+  };
+
+  // Handle escape key and body scroll lock in fullscreen mode
+  useEffect(() => {
+    if (!isFullscreen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullscreen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -211,9 +248,38 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
 
       {/* Preview or Diff */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
-          {showDiff ? "Resume Changes" : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {showDiff
+              ? "Resume Changes"
+              : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
+          </label>
+          {!showDiff &&
+            documentData?.status === DOCUMENT_STATUS.GENERATED &&
+            pdfPreviewUrl && (
+              <button
+                type="button"
+                onClick={handleToggleFullscreen}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors touch-manipulation"
+                aria-label="Fullscreen"
+              >
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Fullscreen</span>
+              </button>
+            )}
+        </div>
         {showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED ? (
           isParsingOriginal && !originalResumeData ? (
             <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
@@ -251,27 +317,174 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
         ) : documentData.pdfResultPath &&
           documentData.status === DOCUMENT_STATUS.GENERATED ? (
           pdfPreviewUrl ? (
-            <div className="flex justify-center">
-              <div className="w-full max-w-4xl">
-                <div className="bg-gray-100 p-4 sm:p-6 rounded-lg shadow-sm">
-                  <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-                    <div className="relative bg-white">
-                      <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
-                      <div className="relative overflow-hidden">
-                        <iframe
-                          src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-                          className="w-full h-[600px] sm:h-[800px] border-0"
-                          title="Resume Preview"
-                          style={{ display: "block" }}
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+            <>
+              <div className="flex justify-center -mx-4 sm:mx-0">
+                <div className="w-full max-w-4xl">
+                  <div className="bg-gray-100 p-2 sm:p-4 md:p-6 rounded-lg shadow-sm">
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                      <div className="relative bg-white">
+                        <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+                        <div
+                          className="relative overflow-auto"
+                          style={{
+                            width: "100%",
+                            maxWidth: "100%",
+                          }}
+                        >
+                          {isMobile ? (
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "50vh",
+                                minHeight: "400px",
+                                overflow: "auto",
+                                WebkitOverflowScrolling: "touch",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  transform: `scale(${mobileScale})`,
+                                  transformOrigin: "top left",
+                                  width: `${100 / mobileScale}%`,
+                                  height: `${100 / mobileScale}%`,
+                                }}
+                              >
+                                <object
+                                  data={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
+                                  type="application/pdf"
+                                  className="border-0"
+                                  style={{
+                                    display: "block",
+                                    width: "100%",
+                                    height: "100%",
+                                    minHeight: "400px",
+                                  }}
+                                  aria-label="Resume Preview"
+                                >
+                                  <p className="p-4 text-sm text-gray-600">
+                                    Your browser does not support PDFs.{" "}
+                                    <a
+                                      href={pdfPreviewUrl || ""}
+                                      download
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      Download the PDF
+                                    </a>
+                                    .
+                                  </p>
+                                </object>
+                              </div>
+                            </div>
+                          ) : (
+                            <iframe
+                              src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
+                              className="w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[800px] border-0"
+                              title="Resume Preview"
+                              style={{
+                                display: "block",
+                                minHeight: "400px",
+                                width: "100%",
+                                maxWidth: "100%",
+                                WebkitOverflowScrolling: "touch",
+                              }}
+                              allow="fullscreen"
+                              scrolling="yes"
+                            />
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                        </div>
+                        <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
                       </div>
-                      <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              {/* Fullscreen Modal */}
+              {isFullscreen && (
+                <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+                  <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 sm:p-6 z-10 pointer-events-none">
+                    <div className="flex items-center gap-2 text-white/80 text-sm sm:text-base">
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                        />
+                      </svg>
+                      <span className="hidden sm:inline">Fullscreen Mode</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleToggleFullscreen}
+                      className="p-2.5 sm:p-3 bg-white/90 hover:bg-white rounded-lg shadow-lg transition-all touch-manipulation pointer-events-auto active:scale-95"
+                      aria-label="Close fullscreen"
+                    >
+                      <svg
+                        className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="w-full h-full flex items-center justify-center pt-16 sm:pt-20">
+                    {isMobile ? (
+                      <object
+                        data={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
+                        type="application/pdf"
+                        className="w-full h-full border-0"
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          maxWidth: "100%",
+                        }}
+                        aria-label="Resume Preview Fullscreen"
+                      >
+                        <p className="p-4 text-sm text-white">
+                          Your browser does not support PDFs.{" "}
+                          <a
+                            href={pdfPreviewUrl || ""}
+                            download
+                            className="text-blue-300 hover:underline"
+                          >
+                            Download the PDF
+                          </a>
+                          .
+                        </p>
+                      </object>
+                    ) : (
+                      <iframe
+                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
+                        className="w-full h-full border-0"
+                        title="Resume Preview Fullscreen"
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          maxWidth: "100%",
+                        }}
+                        allow="fullscreen"
+                        scrolling="yes"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
               <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
