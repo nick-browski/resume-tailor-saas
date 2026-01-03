@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { documentsRouter } from "./routes/documents.js";
+import { downloadRouter } from "./routes/download.js";
 import {
   HTTP_STATUS,
   SUCCESS_MESSAGES,
@@ -21,6 +22,7 @@ app.use(
 app.use(express.json());
 
 app.use("/documents", documentsRouter);
+app.use("/documents", downloadRouter);
 
 // Health check endpoint
 app.get("/health", (request, response) => {
