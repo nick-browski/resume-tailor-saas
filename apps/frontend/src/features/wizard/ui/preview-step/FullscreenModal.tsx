@@ -13,8 +13,15 @@ export function FullscreenModal({
   const { isMobile } = useMobilePdfScale();
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
-      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 sm:p-6 z-10 pointer-events-none">
+    <div 
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 sm:p-6 z-[60] pointer-events-none">
         <div className="flex items-center gap-2 text-white/80 text-sm sm:text-base">
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5"
@@ -34,11 +41,11 @@ export function FullscreenModal({
         <button
           type="button"
           onClick={onClose}
-          className="p-2.5 sm:p-3 bg-white/90 hover:bg-white rounded-lg shadow-lg transition-all touch-manipulation pointer-events-auto active:scale-95"
+          className="p-3 sm:p-3.5 bg-white/90 hover:bg-white rounded-lg shadow-lg transition-all touch-manipulation pointer-events-auto active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Close fullscreen"
         >
           <svg
-            className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700"
+            className="w-6 h-6 sm:w-6 sm:h-6 text-gray-700"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -52,7 +59,7 @@ export function FullscreenModal({
           </svg>
         </button>
       </div>
-      <div className="w-full h-full flex items-center justify-center pt-16 sm:pt-20">
+      <div className="w-full h-full flex items-center justify-center">
         {isMobile ? (
           <object
             data={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
