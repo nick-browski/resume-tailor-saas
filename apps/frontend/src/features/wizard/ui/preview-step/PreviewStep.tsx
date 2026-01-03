@@ -28,7 +28,6 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const [isParsingLocal, setIsParsingLocal] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
-  const parseToastId = useWizardStore((state) => state.parseToastId);
   const setParseToastId = useWizardStore((state) => state.setParseToastId);
   const { data: documentData, isLoading } = useDocumentById(documentId);
 
@@ -42,6 +41,8 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     ? JSON.parse(documentData.originalResumeData)
     : null;
 
+  // Handles showing changes by triggering original resume parsing
+  // Toast notifications are managed by useDocumentStatusMonitor
   const handleShowChanges = useCallback(async () => {
     setShowDiff(true);
     setIsParsingLocal(true);
@@ -55,16 +56,17 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
       return;
     }
 
-    const toastId = toast.showLoading("Parsing original resume...");
+    const toastId = toast.showLoading(TOAST_MESSAGES.PARSING_ORIGINAL_RESUME);
     setParseToastId(toastId);
 
     try {
       await documentsApi.parseOriginalResume(documentId!);
     } catch (error) {
+      // Handle immediate API errors (network failures); status-based errors handled by useDocumentStatusMonitor
       toast.dismissLoading(toastId);
       setParseToastId(null);
       setIsParsingLocal(false);
-      toast.showError("Failed to parse original resume");
+      toast.showError(TOAST_MESSAGES.PARSE_ORIGINAL_RESUME_FAILED);
     }
   }, [
     documentId,
@@ -74,14 +76,9 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     setParseToastId,
   ]);
 
+  // Update local state; toast notifications handled by useDocumentStatusMonitor
   useEffect(() => {
-    if (!parseToastId) {
-      return;
-    }
-
     if (originalResumeData) {
-      toast.dismissLoading(parseToastId);
-      setParseToastId(null);
       setIsParsingLocal(false);
       return;
     }
@@ -90,21 +87,9 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
       documentData?.originalParseStatus &&
       documentData.originalParseStatus !== ORIGINAL_PARSE_STATUS.PARSING
     ) {
-      toast.dismissLoading(parseToastId);
-      setParseToastId(null);
       setIsParsingLocal(false);
-
-      if (documentData.originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
-        toast.showError("Failed to parse original resume");
-      }
     }
-  }, [
-    parseToastId,
-    originalResumeData,
-    documentData?.originalParseStatus,
-    toast,
-    setParseToastId,
-  ]);
+  }, [originalResumeData, documentData?.originalParseStatus]);
 
   const isGenerating = documentData?.status === DOCUMENT_STATUS.GENERATING;
   const isParsingOriginal =
@@ -249,4 +234,3 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     </div>
   );
 }
-

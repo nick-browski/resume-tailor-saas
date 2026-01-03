@@ -9,6 +9,7 @@ import {
   WIZARD_CONSTANTS,
   TOAST_MESSAGES,
   DOCUMENT_STATUS,
+  ORIGINAL_PARSE_STATUS,
 } from "@/shared/lib/constants";
 
 export function useDocumentStatusMonitor() {
@@ -96,13 +97,24 @@ export function useDocumentStatusMonitor() {
 
         const documentData = convertFirestoreSnapshotToDocument(snapshot);
 
-        if (
-          parseToastId &&
-          documentData.originalResumeData &&
-          documentData.originalResumeData.trim() !== ""
-        ) {
-          toast.dismissLoading(parseToastId);
-          setParseToastId(null);
+        // Handle original resume parsing status
+        if (parseToastId) {
+          const originalParseStatus = documentData.originalParseStatus;
+          
+          if (
+            originalParseStatus === ORIGINAL_PARSE_STATUS.PARSED &&
+            documentData.originalResumeData &&
+            documentData.originalResumeData.trim() !== ""
+          ) {
+            toast.dismissLoading(parseToastId);
+            setParseToastId(null);
+          }
+          
+          if (originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
+            toast.dismissLoading(parseToastId);
+            setParseToastId(null);
+            toast.showError(TOAST_MESSAGES.PARSE_ORIGINAL_RESUME_FAILED);
+          }
         }
 
         const documentStatus = documentData.status;

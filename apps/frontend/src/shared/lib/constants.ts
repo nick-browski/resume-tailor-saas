@@ -46,6 +46,8 @@ export const TOAST_MESSAGES = {
     "Failed to create document or generate resume",
   RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
   RESUME_DOWNLOAD_FAILED: "Failed to download resume",
+  PARSING_ORIGINAL_RESUME: "Parsing original resume...",
+  PARSE_ORIGINAL_RESUME_FAILED: "Failed to parse original resume",
 } as const;
 
 export const ERROR_MESSAGES = {
