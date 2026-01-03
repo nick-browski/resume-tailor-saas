@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   TEXTAREA_CONSTANTS,
   TOAST_MESSAGES,
   UI_TEXT,
   QUERY_KEYS,
+  VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
 import { useGenerateResume } from "../api/useGenerate";
 import { useCreateDocument } from "../api/useDocuments";
@@ -11,6 +12,7 @@ import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { Loader } from "@/shared/ui";
 import { useQueryClient } from "@tanstack/react-query";
+import { validateJobDescription } from "../schemas";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -38,17 +40,46 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const toast = useToastContext();
   const queryClient = useQueryClient();
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
   const handleJobDescriptionTextChange = useCallback(
-    (changeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setJobDescriptionText(changeEvent.target.value);
+    (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const jobDescriptionTextValue = textAreaChangeEvent.target.value;
+      setJobDescriptionText(jobDescriptionTextValue);
+      if (hasAttemptedSubmit && jobDescriptionTextValue.trim()) {
+        const validationResult = validateJobDescription(
+          jobDescriptionTextValue
+        );
+        setValidationError(
+          validationResult.success ? null : validationResult.error || null
+        );
+      } else {
+        setValidationError(null);
+      }
     },
-    [setJobDescriptionText]
+    [setJobDescriptionText, hasAttemptedSubmit]
   );
 
   const handleFormSubmit = useCallback(
-    async (formSubmitEvent: React.FormEvent) => {
-      formSubmitEvent.preventDefault();
-      if (!jobDescriptionText.trim() || !resumeData || generationToastId) {
+    async (formSubmitEventHandler: React.FormEvent) => {
+      formSubmitEventHandler.preventDefault();
+      if (!resumeData || generationToastId) {
+        return;
+      }
+
+      setHasAttemptedSubmit(true);
+
+      if (!jobDescriptionText.trim()) {
+        setValidationError(UI_TEXT.JOB_DESCRIPTION_REQUIRED_ERROR);
+        toast.showError(UI_TEXT.JOB_DESCRIPTION_REQUIRED_ERROR);
+        return;
+      }
+
+      const jobDescriptionValidationResult =
+        validateJobDescription(jobDescriptionText);
+      if (!jobDescriptionValidationResult.success) {
+        setValidationError(jobDescriptionValidationResult.error || null);
         return;
       }
 
@@ -134,14 +165,37 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           value={jobDescriptionText}
           onChange={handleJobDescriptionTextChange}
           rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+          className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
+            hasAttemptedSubmit && validationError
+              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+              : "border-gray-300"
+          }`}
           placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
-          required
-          disabled={isCreatingDocument || isStartingGeneration || !!generationToastId}
+          disabled={
+            isCreatingDocument || isStartingGeneration || !!generationToastId
+          }
         />
-        <p className="mt-2 text-xs sm:text-sm text-gray-500">
-          {jobDescriptionText.length} {UI_TEXT.CHARACTERS_LABEL}
-        </p>
+        <div className="mt-2 flex items-center justify-between">
+          <div>
+            {hasAttemptedSubmit && validationError ? (
+              <p className="text-sm text-red-600">{validationError}</p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                {UI_TEXT.JOB_DESCRIPTION_VALIDATION_HINT(
+                  VALIDATION_CONSTANTS.JOB_DESCRIPTION_MIN_LENGTH,
+                  VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH
+                )}
+              </p>
+            )}
+          </div>
+          {jobDescriptionText && (
+            <p className="text-sm text-gray-500">
+              {jobDescriptionText.length.toLocaleString()} /{" "}
+              {VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH.toLocaleString()}{" "}
+              {UI_TEXT.CHARACTERS_LABEL}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-0 pt-2">
@@ -155,7 +209,6 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         <button
           type="submit"
           disabled={
-            !jobDescriptionText.trim() ||
             !resumeData ||
             isCreatingDocument ||
             isStartingGeneration ||
@@ -163,9 +216,9 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           }
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
         >
-          {(isCreatingDocument || isStartingGeneration || generationToastId) && (
-            <Loader size="sm" className="text-white" />
-          )}
+          {(isCreatingDocument ||
+            isStartingGeneration ||
+            generationToastId) && <Loader size="sm" className="text-white" />}
           {isCreatingDocument || isStartingGeneration || generationToastId
             ? UI_TEXT.GENERATING_BUTTON
             : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}

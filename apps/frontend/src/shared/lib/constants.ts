@@ -39,7 +39,9 @@ export const TEXTAREA_CONSTANTS = {
 
 export const VALIDATION_CONSTANTS = {
   RESUME_TEXT_MIN_LENGTH: 10,
-  RESUME_TEXT_MAX_LENGTH: 50000,
+  RESUME_TEXT_MAX_LENGTH: 10000,
+  JOB_DESCRIPTION_MIN_LENGTH: 10,
+  JOB_DESCRIPTION_MAX_LENGTH: 10000,
 } as const;
 
 export const TOAST_MESSAGES = {
@@ -134,6 +136,10 @@ export const UI_TEXT = {
     `Resume cannot exceed ${maxPages} pages. Your document has ${actualPages} pages.`,
   FAILED_TO_VALIDATE_PDF_MESSAGE: "Failed to validate PDF",
   FAILED_TO_READ_PDF_MESSAGE: "Failed to read PDF file",
+  JOB_DESCRIPTION_VALIDATION_HINT: (minLength: number, maxLength: number) =>
+    `Text must be between ${minLength} and ${maxLength.toLocaleString()} characters`,
+  JOB_DESCRIPTION_REQUIRED_ERROR: "Job description is required",
+  INVALID_JOB_DESCRIPTION_MESSAGE: "Invalid job description",
 } as const;
 
 export const QUERY_KEYS = {

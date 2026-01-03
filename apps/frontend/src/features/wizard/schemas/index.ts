@@ -4,3 +4,4 @@ export {
   validateFile,
   validateResumeText,
 } from "./resumeValidation";
+export { validateJobDescription } from "./jobDescriptionValidation";
