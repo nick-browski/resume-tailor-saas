@@ -31,15 +31,15 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   const getStyles = () => {
     switch (toast.type) {
       case "success":
-        return "bg-green-50 border-green-200 text-green-800";
+        return "bg-white border-l-4 border-green-500 text-gray-900 shadow-lg";
       case "error":
-        return "bg-red-50 border-red-200 text-red-800";
+        return "bg-white border-l-4 border-red-500 text-gray-900 shadow-lg";
       case "info":
-        return "bg-blue-50 border-blue-200 text-blue-800";
+        return "bg-white border-l-4 border-blue-500 text-gray-900 shadow-lg";
       case "loading":
-        return "bg-green-50 border-green-200 text-green-800";
+        return "bg-white border-l-4 border-blue-500 text-gray-900 shadow-lg";
       default:
-        return "bg-gray-50 border-gray-200 text-gray-800";
+        return "bg-white border-l-4 border-gray-500 text-gray-900 shadow-lg";
     }
   };
 
@@ -48,7 +48,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       case "success":
         return (
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -64,7 +64,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       case "error":
         return (
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -79,7 +79,11 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
         );
       case "loading":
         return (
-          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4 sm:w-5 sm:h-5 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
             <circle
               className="opacity-25"
               cx="12"
@@ -98,7 +102,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       default:
         return (
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -114,23 +118,34 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
     }
   };
 
+  const styles = getStyles();
+  const iconColor =
+    toast.type === "success"
+      ? "text-green-500"
+      : toast.type === "error"
+      ? "text-red-500"
+      : toast.type === "loading"
+      ? "text-blue-500"
+      : "text-blue-500";
+
   return (
     <div
-      className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-sm min-w-[300px] max-w-md ${
+      className={`flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg border-r border-t border-b ${styles} min-w-0 sm:min-w-[300px] max-w-[calc(100vw-2rem)] sm:max-w-md backdrop-blur-sm ${
         toast.type === "loading" ? "" : "animate-in"
       }`}
     >
-      <div className={`flex-shrink-0 ${getStyles().split(" ")[2]}`}>
-        {getIcon()}
+      <div className={`flex-shrink-0 ${iconColor}`}>{getIcon()}</div>
+      <div className="flex-1 text-xs sm:text-sm font-medium break-words">
+        {toast.message}
       </div>
-      <div className="flex-1 text-sm font-medium">{toast.message}</div>
       {toast.type !== "loading" && (
         <button
           onClick={() => onRemove(toast.id)}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex-shrink-0 text-gray-400 hover:text-gray-700 transition-colors touch-manipulation"
+          aria-label="Close"
         >
           <svg
-            className="w-4 h-4"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -157,7 +172,7 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto z-50 flex flex-col gap-2 pointer-events-none">
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastItem toast={toast} onRemove={onRemove} />
