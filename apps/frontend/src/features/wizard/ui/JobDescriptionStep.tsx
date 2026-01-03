@@ -134,7 +134,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           value={jobDescriptionText}
           onChange={handleJobDescriptionTextChange}
           rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
           placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
           required
           disabled={isCreatingDocument || isStartingGeneration || !!generationToastId}
