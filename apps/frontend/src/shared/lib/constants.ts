@@ -1,17 +1,37 @@
 export const WIZARD_CONSTANTS = {
-  TOTAL_STEPS: 3,
+  INITIAL_STEP: 0,
+  TOTAL_STEPS_EDIT_SCENARIO: 2,
+  TOTAL_STEPS_TAILOR_SCENARIO: 3,
   FIRST_STEP: 1,
-  LAST_STEP: 3,
+  LAST_STEP_EDIT_SCENARIO: 2,
+  LAST_STEP_TAILOR_SCENARIO: 3,
+} as const;
+
+export const SCENARIO = {
+  EDIT: "edit",
+  TAILOR: "tailor",
+} as const;
+
+export const CLASSIFICATION_CONSTANTS = {
+  ENDPOINT: "/classify",
+  MODE_QUERY_PARAM: "mode",
+  FORM_DATA_FIELD_NAMES: {
+    FILE: "file",
+    JOB_TEXT: "jobText",
+    RESUME_TEXT: "resumeText",
+  },
 } as const;
 
 export const FILE_CONSTANTS = {
   MAX_SIZE_MB: 10,
   ACCEPTED_TYPES: ".pdf",
   DEFAULT_FILENAME: "transformed-resume.md",
+  PDF_DOWNLOAD_FILENAME: "transformed-resume.pdf",
   MARKDOWN_MIME_TYPE: "text/markdown",
   PDF_MIME_TYPE: "pdf",
   BYTES_PER_KB: 1024,
   MAX_PAGES: 4,
+  FILE_SIZE_DECIMAL_PLACES: 2,
 } as const;
 
 export const UPLOAD_MODE = {
@@ -42,14 +62,18 @@ export const VALIDATION_CONSTANTS = {
   RESUME_TEXT_MAX_LENGTH: 10000,
   JOB_DESCRIPTION_MIN_LENGTH: 10,
   JOB_DESCRIPTION_MAX_LENGTH: 10000,
+  EDIT_PROMPT_MIN_LENGTH: 10,
+  EDIT_PROMPT_MAX_LENGTH: 500,
 } as const;
 
 export const TOAST_MESSAGES = {
   RESUME_GENERATED_SUCCESS: "Resume transformed successfully!",
+  RESUME_EDITED_SUCCESS: "Resume edited successfully!",
   RESUME_GENERATION_FAILED: "Failed to transform resume",
   DOCUMENT_LOAD_FAILED: "Failed to load document",
   CREATING_DOCUMENT: "Creating document...",
   STARTING_RESUME_GENERATION: "Starting resume transformation...",
+  STARTING_RESUME_EDIT: "Starting resume editing...",
   CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED:
     "Failed to create document or transform resume",
   RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
@@ -58,6 +82,7 @@ export const TOAST_MESSAGES = {
   PARSE_ORIGINAL_RESUME_FAILED: "Failed to parse original resume",
   CLASSIFYING_CONTENT: "Validating content...",
   CLASSIFICATION_FAILED: "Failed to validate content",
+  EDITING_RESUME: "Editing resume...",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -69,13 +94,16 @@ export const UI_TEXT = {
   UPLOAD_RESUME_STEP_TITLE: "Step 1: Upload Your Resume",
   UPLOAD_RESUME_STEP_DESCRIPTION:
     "Upload your current resume. We'll transform it to match any job description.",
+  UPLOAD_RESUME_EDIT_STEP_DESCRIPTION:
+    "Upload your resume and edit it using natural language instructions.",
+  EDIT_PROMPT_TEMPLATES_PLACEHOLDER: "Quick templates...",
   UPLOAD_PDF_BUTTON: "Upload PDF",
   PASTE_TEXT_BUTTON: "Paste Text",
   RESUME_PDF_LABEL: "Resume PDF",
   RESUME_TEXT_LABEL: "Resume Text",
   RESUME_TEXT_PLACEHOLDER: "Paste your resume content here...",
   UPLOAD_FILE_TEXT: "Upload a file",
-  CHANGE_FILE_TEXT: "Change file",
+  REPLACE_FILE_TEXT: "Replace",
   DRAG_AND_DROP_TEXT: "or drag and drop",
   PDF_SIZE_LIMIT_TEXT: "PDF up to",
   SELECTED_FILE_TEXT: "Selected:",
@@ -100,6 +128,17 @@ export const UI_TEXT = {
   GENERATING_BUTTON: "Transforming...",
   GENERATE_TAILORED_RESUME_BUTTON: "Transform Resume",
   PREVIEW_STEP_TITLE: "Step 3: Preview & Download",
+  PREVIEW_STEP_TITLE_EDIT: "Step 2: Preview & Download",
+  PREVIEW_STEP_TITLE_TAILOR: "Step 3: Preview & Download",
+  INITIAL_STEP_TITLE: "Upload Your Resume",
+  INITIAL_STEP_DESCRIPTION:
+    "Upload your resume as a PDF file or paste it as text. Then choose how you want to proceed.",
+  EDIT_RESUME_BUTTON: "Custom Edit",
+  TAILOR_RESUME_BUTTON: "Match Job Description",
+  EDIT_INSTRUCTIONS_LABEL: "What to change",
+  GENERATE_EDITED_RESUME_BUTTON: "Generate Edited Resume",
+  TRANSFORMING_RESUME: "Transforming...",
+  EDITING_RESUME_BUTTON: "Editing...",
   PREVIEW_STEP_DESCRIPTION:
     "Review your transformed resume and download it when ready.",
   TAILORED_RESUME_PREVIEW_LABEL: "Transformed Resume Preview",
@@ -122,7 +161,7 @@ export const UI_TEXT = {
   } and ${VALIDATION_CONSTANTS.RESUME_TEXT_MAX_LENGTH.toLocaleString()} characters`,
   FILE_REQUIRED_ERROR: "File is required",
   FILE_SIZE_UNIT: "MB",
-  REMOVE_FILE_ARIA_LABEL: "Remove file",
+  REMOVE_FILE_TEXT: "Remove",
   FILE_SIZE_EXCEEDS_LIMIT_MESSAGE: (maxSizeMb: number) =>
     `File size exceeds ${maxSizeMb}MB limit`,
   FILE_MUST_BE_PDF_MESSAGE: "File must be a PDF",
@@ -154,6 +193,28 @@ export const UI_TEXT = {
     "The provided text does not appear to be a resume. Please provide a valid resume with personal information, work experience, education, and skills.",
   JOB_DESCRIPTION_CLASSIFICATION_FAILED:
     "The provided text does not appear to be a job description. Please provide a valid job description with job title, responsibilities, and requirements.",
+  EDIT_RESUME_MODAL_TITLE: "Edit Resume",
+  EDIT_RESUME_MODAL_DESCRIPTION:
+    "Describe the changes you want to make to your resume. For example: 'Change phone number to +1*** **** ***' or 'Update email address'.",
+  EDIT_PROMPT_LABEL: "Edit Instructions",
+  EDIT_PROMPT_PLACEHOLDER:
+    "Enter your edit instructions here... (e.g., 'Change phone number to +1*** **** ***')",
+  EDIT_PROMPT_REQUIRED_ERROR: "Edit instructions are required",
+  EDIT_PROMPT_VALIDATION_HINT: (minLength: number, maxLength: number) =>
+    `Edit instructions must be between ${minLength} and ${maxLength.toLocaleString()} characters`,
+  EDIT_PROMPT_TEMPLATES: {
+    CHANGE_CONTACT_INFO: "Change phone number to +1*** **** ***",
+    ADD_CERTIFICATION:
+      "Add certification: AWS Certified Solutions Architect (2024)",
+    UPDATE_EXPERIENCE: "Update work experience: Add new project details",
+  },
+  APPLY_CHANGES_BUTTON: "Apply Changes",
+  EDIT_AND_TRANSFORM_BUTTON: "Edit & Transform",
+  CANCEL_BUTTON: "Cancel",
+  EDITING_RESUME: "Editing resume...",
+  PROMPT_APPLIED_SUCCESS: "Edit prompt applied successfully",
+  RESUME_EDITED_SUCCESS: "Resume edited successfully",
+  RESUME_EDIT_FAILED: "Failed to edit resume",
 } as const;
 
 export const QUERY_KEYS = {
@@ -183,4 +244,12 @@ export const ORIGINAL_PARSE_STATUS = {
   PARSING: "parsing",
   PARSED: "parsed",
   FAILED: "failed",
+} as const;
+
+export const DOM_CONSTANTS = {
+  ESCAPE_KEY: "Escape",
+  KEYDOWN_EVENT: "keydown",
+  ANCHOR_ELEMENT_TAG: "a",
+  OVERFLOW_HIDDEN: "hidden",
+  OVERFLOW_AUTO: "",
 } as const;

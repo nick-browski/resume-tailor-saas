@@ -1,83 +1,74 @@
 import { create } from "zustand";
 import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
+import { getUrlParam, updateUrlParam, URL_QUERY_PARAMS } from "../lib/urlUtils";
 
-export type WizardStep = 1 | 2 | 3;
-
-const STEP_QUERY_PARAM = "step";
-const DOCUMENT_ID_QUERY_PARAM = "docId";
+export type WizardStep = 0 | 1 | 2 | 3;
+export type Scenario = "edit" | "tailor" | null;
 
 // Reads step from URL query parameters
 export function getStepFromUrl(): WizardStep {
-  if (typeof window === "undefined") {
-    return WIZARD_CONSTANTS.FIRST_STEP;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const stepParam = urlParams.get(STEP_QUERY_PARAM);
+  const stepParam = getUrlParam(URL_QUERY_PARAMS.STEP);
   const stepNumber = stepParam ? parseInt(stepParam, 10) : null;
 
   if (
-    stepNumber &&
-    stepNumber >= WIZARD_CONSTANTS.FIRST_STEP &&
-    stepNumber <= WIZARD_CONSTANTS.LAST_STEP
+    stepNumber !== null &&
+    stepNumber >= 0 &&
+    stepNumber <= WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO
   ) {
     return stepNumber as WizardStep;
   }
 
-  return WIZARD_CONSTANTS.FIRST_STEP;
+  return WIZARD_CONSTANTS.INITIAL_STEP;
+}
+
+// Reads scenario from URL query parameters
+export function getScenarioFromUrl(): Scenario {
+  const scenarioParam = getUrlParam(URL_QUERY_PARAMS.SCENARIO);
+  if (scenarioParam === "edit" || scenarioParam === "tailor") {
+    return scenarioParam;
+  }
+  return null;
 }
 
 // Reads documentId from URL query parameters
 export function getDocumentIdFromUrl(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(DOCUMENT_ID_QUERY_PARAM);
+  return getUrlParam(URL_QUERY_PARAMS.DOCUMENT_ID);
 }
 
 // Updates URL query parameter with current step
 function updateUrlStep(step: WizardStep): void {
-  if (typeof window === "undefined") return;
+  const stepValue =
+    step === WIZARD_CONSTANTS.INITIAL_STEP ? null : step.toString();
+  updateUrlParam(URL_QUERY_PARAMS.STEP, stepValue);
+}
 
-  const url = new URL(window.location.href);
-  if (step === WIZARD_CONSTANTS.FIRST_STEP) {
-    url.searchParams.delete(STEP_QUERY_PARAM);
-  } else {
-    url.searchParams.set(STEP_QUERY_PARAM, step.toString());
-  }
-
-  window.history.pushState({}, "", url.toString());
+// Updates URL query parameter with scenario
+function updateUrlScenario(scenario: Scenario): void {
+  updateUrlParam(URL_QUERY_PARAMS.SCENARIO, scenario);
 }
 
 // Updates URL query parameter with documentId
 function updateUrlDocumentId(documentId: string | null): void {
-  if (typeof window === "undefined") return;
-
-  const url = new URL(window.location.href);
-  if (documentId) {
-    url.searchParams.set(DOCUMENT_ID_QUERY_PARAM, documentId);
-  } else {
-    url.searchParams.delete(DOCUMENT_ID_QUERY_PARAM);
-  }
-
-  window.history.pushState({}, "", url.toString());
+  updateUrlParam(URL_QUERY_PARAMS.DOCUMENT_ID, documentId);
 }
 
 interface WizardState {
   currentStep: WizardStep;
   maxReachedStep: WizardStep;
+  selectedScenario: Scenario;
   documentId: string | null;
   resumeData: { file: File | null; text: string } | null;
   jobDescriptionText: string;
+  editPrompt: string | null;
   uploadMode: "file" | "text";
   generationToastId: string | null;
   parseToastId: string | null;
   setStep: (step: WizardStep) => void;
+  setSelectedScenario: (scenario: Scenario) => void;
   setDocumentId: (documentId: string | null) => void;
   setResumeData: (data: { file: File | null; text: string } | null) => void;
   setJobDescriptionText: (text: string) => void;
+  setEditPrompt: (prompt: string | null) => void;
   setUploadMode: (mode: "file" | "text") => void;
   setMaxReachedStep: (step: WizardStep) => void;
   setGenerationToastId: (toastId: string | null) => void;
@@ -89,27 +80,36 @@ interface WizardState {
 
 export const useWizardStore = create<WizardState>((set) => ({
   currentStep: getStepFromUrl(),
-  maxReachedStep: getStepFromUrl(),
+  maxReachedStep:
+    getStepFromUrl() === WIZARD_CONSTANTS.INITIAL_STEP
+      ? WIZARD_CONSTANTS.FIRST_STEP
+      : (getStepFromUrl() as 1 | 2 | 3),
+  selectedScenario: getScenarioFromUrl(),
   documentId: getDocumentIdFromUrl(),
   resumeData: null,
   jobDescriptionText: "",
+  editPrompt: null,
   uploadMode: "file",
   generationToastId: null,
   parseToastId: null,
   setStep: (step: WizardStep) => {
-    if (
-      step >= WIZARD_CONSTANTS.FIRST_STEP &&
-      step <= WIZARD_CONSTANTS.LAST_STEP
-    ) {
+    if (step >= 0 && step <= WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO) {
       set((state) => {
         // Allow navigation to any step that has been reached
-        if (step <= state.maxReachedStep) {
+        if (
+          step === WIZARD_CONSTANTS.INITIAL_STEP ||
+          step <= state.maxReachedStep
+        ) {
           updateUrlStep(step);
           return { currentStep: step };
         }
         return state;
       });
     }
+  },
+  setSelectedScenario: (scenario: Scenario) => {
+    updateUrlScenario(scenario);
+    set({ selectedScenario: scenario });
   },
   setDocumentId: (documentId: string | null) => {
     updateUrlDocumentId(documentId);
@@ -121,13 +121,16 @@ export const useWizardStore = create<WizardState>((set) => ({
   setJobDescriptionText: (text: string) => {
     set({ jobDescriptionText: text });
   },
+  setEditPrompt: (prompt: string | null) => {
+    set({ editPrompt: prompt });
+  },
   setUploadMode: (mode: "file" | "text") => {
     set({ uploadMode: mode });
   },
   setMaxReachedStep: (step: WizardStep) => {
     if (
       step >= WIZARD_CONSTANTS.FIRST_STEP &&
-      step <= WIZARD_CONSTANTS.LAST_STEP
+      step <= WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO
     ) {
       set({ maxReachedStep: step });
     }
@@ -140,34 +143,43 @@ export const useWizardStore = create<WizardState>((set) => ({
   },
   nextStep: () =>
     set((state) => {
-      const newStep = Math.min(
-        state.currentStep + 1,
-        WIZARD_CONSTANTS.LAST_STEP
-      ) as WizardStep;
+      const maxStep =
+        state.selectedScenario === "edit"
+          ? WIZARD_CONSTANTS.LAST_STEP_EDIT_SCENARIO
+          : WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO;
+      const newStep = Math.min(state.currentStep + 1, maxStep) as WizardStep;
       updateUrlStep(newStep);
       return {
         currentStep: newStep,
-        maxReachedStep: Math.max(state.maxReachedStep, newStep) as WizardStep,
+        maxReachedStep: Math.max(
+          state.maxReachedStep,
+          newStep === WIZARD_CONSTANTS.INITIAL_STEP
+            ? WIZARD_CONSTANTS.FIRST_STEP
+            : newStep
+        ) as 1 | 2 | 3,
       };
     }),
   previousStep: () =>
     set((state) => {
       const newStep = Math.max(
         state.currentStep - 1,
-        WIZARD_CONSTANTS.FIRST_STEP
+        WIZARD_CONSTANTS.INITIAL_STEP
       ) as WizardStep;
       updateUrlStep(newStep);
       return { currentStep: newStep };
     }),
   reset: () => {
-    updateUrlStep(WIZARD_CONSTANTS.FIRST_STEP);
+    updateUrlStep(WIZARD_CONSTANTS.INITIAL_STEP);
+    updateUrlScenario(null);
     updateUrlDocumentId(null);
     set({
-      currentStep: WIZARD_CONSTANTS.FIRST_STEP,
+      currentStep: WIZARD_CONSTANTS.INITIAL_STEP,
       maxReachedStep: WIZARD_CONSTANTS.FIRST_STEP,
+      selectedScenario: null,
       documentId: null,
       resumeData: null,
       jobDescriptionText: "",
+      editPrompt: null,
       uploadMode: "file",
       generationToastId: null,
       parseToastId: null,

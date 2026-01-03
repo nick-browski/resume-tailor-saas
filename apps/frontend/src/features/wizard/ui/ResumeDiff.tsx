@@ -24,22 +24,31 @@ export function ResumeDiff({ original, tailored }: ResumeDiffProps) {
     });
   };
 
-  const compareArrays = (originalArray: string[], tailoredArray: string[]) => {
-    const originalSet = new Set(
-      originalArray.map((item) => item.toLowerCase())
-    );
-    const tailoredSet = new Set(
-      tailoredArray.map((item) => item.toLowerCase())
-    );
+  const compareArrays = <T,>(
+    originalArray: T[],
+    tailoredArray: T[],
+    getKey: (item: T) => string = (item) => String(item).toLowerCase()
+  ) => {
+    // If original section is empty, all items are new
+    if (originalArray.length === 0) {
+      return {
+        added: tailoredArray,
+        removed: [],
+        unchanged: [],
+      };
+    }
+
+    const originalSet = new Set(originalArray.map(getKey));
+    const tailoredSet = new Set(tailoredArray.map(getKey));
 
     const added = tailoredArray.filter(
-      (item) => !originalSet.has(item.toLowerCase())
+      (item) => !originalSet.has(getKey(item))
     );
     const removed = originalArray.filter(
-      (item) => !tailoredSet.has(item.toLowerCase())
+      (item) => !tailoredSet.has(getKey(item))
     );
     const unchanged = tailoredArray.filter((item) =>
-      originalSet.has(item.toLowerCase())
+      originalSet.has(getKey(item))
     );
 
     return { added, removed, unchanged };
@@ -163,9 +172,10 @@ export function ResumeDiff({ original, tailored }: ResumeDiffProps) {
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {(() => {
             const { added, unchanged } = compareArrays(
-              original.skills,
-              tailored.skills
+              original.skills || [],
+              tailored.skills || []
             );
+
             return (
               <>
                 {unchanged.map((skill, index) => (
@@ -192,25 +202,97 @@ export function ResumeDiff({ original, tailored }: ResumeDiffProps) {
       </div>
 
       {/* Certifications */}
-      {tailored.certifications && tailored.certifications.length > 0 && (
-        <div>
+      {((tailored.certifications && tailored.certifications.length > 0) ||
+        (original.certifications && original.certifications.length > 0)) && (
+        <div className="border-b pb-3 sm:pb-4">
           <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
             Certifications
           </h3>
           <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-            {tailored.certifications.map((cert, index) => (
-              <div key={index} className="break-words">
-                <span className="font-medium">{cert.name}</span>
-                <span className="text-gray-600 block sm:inline sm:ml-1">
-                  - {cert.issuer}
-                </span>
-                {cert.date && (
-                  <span className="text-gray-600 block sm:inline sm:ml-1">
-                    ({cert.date})
-                  </span>
-                )}
-              </div>
-            ))}
+            {(() => {
+              const { added, removed, unchanged } = compareArrays(
+                original.certifications || [],
+                tailored.certifications || [],
+                (cert) =>
+                  `${cert.name.toLowerCase()}-${cert.issuer.toLowerCase()}`
+              );
+
+              return (
+                <>
+                  {unchanged.map((cert, index) => (
+                    <div key={`unchanged-${index}`} className="break-words">
+                      <div className="flex flex-row flex-wrap items-baseline gap-0.5 sm:gap-1">
+                        <span className="font-medium text-xs sm:text-sm">
+                          {cert.name}
+                        </span>
+                        <span className="text-gray-600 text-xs sm:text-sm">
+                          - {cert.issuer}
+                        </span>
+                        {cert.date && (
+                          <span className="text-gray-600 text-xs sm:text-sm">
+                            ({cert.date})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {added.map((cert, index) => (
+                    <div
+                      key={`added-${index}`}
+                      className="break-words bg-green-200 rounded px-2 py-1.5 sm:px-2 sm:py-1"
+                    >
+                      <div className="flex flex-row flex-wrap sm:items-baseline sm:justify-between items-baseline gap-0.5 sm:gap-1">
+                        <div className="flex flex-row flex-wrap items-baseline gap-0.5 sm:gap-1">
+                          <span className="font-medium text-xs sm:text-sm">
+                            {cert.name}
+                          </span>
+                          <span className="text-gray-600 text-xs sm:text-sm">
+                            - {cert.issuer}
+                          </span>
+                          {cert.date ? (
+                            <span className="text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+                              ({cert.date})
+                              <span className="text-green-700 font-medium ml-1 sm:hidden">
+                                +
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-green-700 font-medium text-xs sm:text-sm sm:hidden whitespace-nowrap ml-1">
+                              +
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-green-700 font-medium text-xs sm:text-sm sm:ml-auto hidden sm:inline whitespace-nowrap">
+                          (new)
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {removed.map((cert, index) => (
+                    <div
+                      key={`removed-${index}`}
+                      className="break-words text-gray-400 line-through"
+                    >
+                      <div className="flex flex-row flex-wrap items-baseline gap-0.5 sm:gap-1">
+                        <span className="font-medium text-xs sm:text-sm">
+                          {cert.name}
+                        </span>
+                        <span className="text-xs sm:text-sm">
+                          - {cert.issuer}
+                        </span>
+                        {cert.date && (
+                          <span className="text-xs sm:text-sm">
+                            ({cert.date})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

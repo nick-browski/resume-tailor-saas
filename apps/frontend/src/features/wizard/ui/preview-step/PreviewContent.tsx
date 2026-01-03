@@ -31,7 +31,7 @@ export function PreviewContent({
 }: PreviewContentProps) {
   // Show diff view
   if (showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED) {
-    if (isParsingOriginal && !originalResumeData) {
+    if (isParsingOriginal) {
       return (
         <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
           <Loader size="lg" />

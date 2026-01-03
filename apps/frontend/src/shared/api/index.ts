@@ -12,6 +12,8 @@ export type {
   GenerateResumeResponse,
   ClassifyContentRequest,
   ClassifyContentResponse,
+  EditResumeRequest,
+  EditResumeResponse,
   ApiError,
   ResumeData,
 } from "./types";

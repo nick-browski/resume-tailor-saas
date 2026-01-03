@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { doc, onSnapshot, Unsubscribe, getDoc } from "firebase/firestore";
-import { useWizardStore } from "../model/wizardStore";
+import { doc, onSnapshot, Unsubscribe } from "firebase/firestore";
+import { useWizardStore, getScenarioFromUrl } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { db } from "@/shared/config/firebase";
 import { useAuthReady } from "@/shared/config/auth";
@@ -18,6 +18,7 @@ export function useDocumentStatusMonitor() {
   const generationToastId = useWizardStore((state) => state.generationToastId);
   const parseToastId = useWizardStore((state) => state.parseToastId);
   const currentStep = useWizardStore((state) => state.currentStep);
+  const selectedScenario = useWizardStore((state) => state.selectedScenario);
   const setGenerationToastId = useWizardStore(
     (state) => state.setGenerationToastId
   );
@@ -28,6 +29,12 @@ export function useDocumentStatusMonitor() {
   );
   const maxReachedStep = useWizardStore((state) => state.maxReachedStep);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
+
+  // Determine last step based on scenario
+  const lastStep =
+    selectedScenario === "edit"
+      ? WIZARD_CONSTANTS.LAST_STEP_EDIT_SCENARIO
+      : WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO;
   const nextStep = useWizardStore((state) => state.nextStep);
 
   const toast = useToastContext();
@@ -52,31 +59,8 @@ export function useDocumentStatusMonitor() {
 
     const documentRef = doc(db, "documents", documentId);
 
-    const showLoadingToastIfNeeded = () => {
-      if (!generationToastId) {
-        const loadingToastId = toast.showLoading(
-          TOAST_MESSAGES.STARTING_RESUME_GENERATION
-        );
-        setGenerationToastId(loadingToastId);
-      }
-    };
-
-    getDoc(documentRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const status = snapshot.data()?.status;
-          const isFinalStatus =
-            status === DOCUMENT_STATUS.GENERATED ||
-            status === DOCUMENT_STATUS.FAILED;
-          if (isFinalStatus) {
-            return;
-          }
-        }
-        showLoadingToastIfNeeded();
-      })
-      .catch(() => {
-        showLoadingToastIfNeeded();
-      });
+    // Don't show toast on initial mount - only show when status changes to "generating"
+    // This prevents showing toast when document is created but not yet generating
 
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
@@ -100,7 +84,7 @@ export function useDocumentStatusMonitor() {
         // Handle original resume parsing status
         if (parseToastId) {
           const originalParseStatus = documentData.originalParseStatus;
-          
+
           if (
             originalParseStatus === ORIGINAL_PARSE_STATUS.PARSED &&
             documentData.originalResumeData &&
@@ -109,7 +93,7 @@ export function useDocumentStatusMonitor() {
             toast.dismissLoading(parseToastId);
             setParseToastId(null);
           }
-          
+
           if (originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
             toast.dismissLoading(parseToastId);
             setParseToastId(null);
@@ -120,9 +104,34 @@ export function useDocumentStatusMonitor() {
         const documentStatus = documentData.status;
         const isNewDocument =
           processedDocumentIdRef.current !== documentData.id;
+        const previousStatus = processedStatusRef.current;
         const isFinalStatus =
           documentStatus === DOCUMENT_STATUS.GENERATED ||
           documentStatus === DOCUMENT_STATUS.FAILED;
+
+        // Initialize processedStatusRef on first snapshot if not set
+        if (processedStatusRef.current === null) {
+          processedStatusRef.current = documentStatus;
+        }
+
+        // Show toast only when status changes to "generating" (not on initial mount or other statuses)
+        if (
+          documentStatus === DOCUMENT_STATUS.GENERATING &&
+          previousStatus !== DOCUMENT_STATUS.GENERATING &&
+          previousStatus !== null &&
+          !generationToastId
+        ) {
+          // Determine scenario from URL if not set in store (fallback)
+          const scenarioFromUrl = getScenarioFromUrl();
+          const effectiveScenario = selectedScenario || scenarioFromUrl;
+
+          const loadingMessage =
+            effectiveScenario === "edit"
+              ? TOAST_MESSAGES.STARTING_RESUME_EDIT
+              : TOAST_MESSAGES.STARTING_RESUME_GENERATION;
+          const loadingToastId = toast.showLoading(loadingMessage);
+          setGenerationToastId(loadingToastId);
+        }
 
         const shouldDismissToast =
           isFinalStatus &&
@@ -147,7 +156,15 @@ export function useDocumentStatusMonitor() {
           }
 
           if (documentStatus === DOCUMENT_STATUS.GENERATED) {
-            toast.showSuccess(TOAST_MESSAGES.RESUME_GENERATED_SUCCESS);
+            // Determine scenario from URL if not set in store (fallback)
+            const scenarioFromUrl = getScenarioFromUrl();
+            const effectiveScenario = selectedScenario || scenarioFromUrl;
+
+            const successMessage =
+              effectiveScenario === "edit"
+                ? TOAST_MESSAGES.RESUME_EDITED_SUCCESS
+                : TOAST_MESSAGES.RESUME_GENERATED_SUCCESS;
+            toast.showSuccess(successMessage);
 
             if (isNewDocument) {
               if (documentData.resumeText) {
@@ -156,19 +173,18 @@ export function useDocumentStatusMonitor() {
               if (documentData.jobText) {
                 setJobDescriptionText(documentData.jobText);
               }
-              if (maxReachedStep < WIZARD_CONSTANTS.LAST_STEP) {
-                setMaxReachedStep(WIZARD_CONSTANTS.LAST_STEP);
+              if (maxReachedStep < lastStep) {
+                setMaxReachedStep(lastStep);
               }
 
-              const isOnPreviewStep =
-                currentStep === WIZARD_CONSTANTS.LAST_STEP;
+              const isOnPreviewStep = currentStep === lastStep;
               const hasPdfReady = !!documentData.pdfResultPath;
 
               if (hasPdfReady && !isOnPreviewStep) {
                 nextStep();
               }
-            } else if (maxReachedStep < WIZARD_CONSTANTS.LAST_STEP) {
-              setMaxReachedStep(WIZARD_CONSTANTS.LAST_STEP);
+            } else if (maxReachedStep < lastStep) {
+              setMaxReachedStep(lastStep);
             }
           } else if (documentStatus === DOCUMENT_STATUS.FAILED) {
             const errorMessage =

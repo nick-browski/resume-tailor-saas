@@ -3,6 +3,7 @@ export interface Document {
   ownerId: string;
   jobText: string;
   resumeText: string;
+  initialOriginalResumeData: string | null;
   originalResumeData: string | null;
   originalParseStatus?: "parsing" | "parsed" | "failed" | null;
   tailoredText: string | null;
@@ -89,4 +90,13 @@ export interface ClassifyContentResponse {
   resumeReason?: string;
   jobDescriptionReason?: string;
   extractedResumeText?: string;
+}
+
+export interface EditResumeRequest {
+  documentId: string;
+  prompt: string;
+}
+
+export interface EditResumeResponse {
+  status: DocumentStatus;
 }

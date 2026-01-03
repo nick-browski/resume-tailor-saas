@@ -14,10 +14,7 @@ class ApiClient {
     this.baseURL = baseURL;
   }
 
-  /**
-   * Gets Firebase ID token with force refresh and returns auth header.
-   * Throws error if user is not authenticated.
-   */
+  // Gets Firebase ID token with force refresh and returns auth header
   private async getFirebaseAuthHeader(): Promise<{ Authorization: string }> {
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -147,6 +144,13 @@ class ApiClient {
     return this.makeRequest<T>(endpoint, {
       method: "POST",
       body: formData,
+    });
+  }
+
+  async patch<T>(endpoint: string, body?: unknown): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
     });
   }
 }

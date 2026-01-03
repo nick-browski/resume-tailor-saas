@@ -1,7 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import {
   TEXTAREA_CONSTANTS,
-  DOCUMENT_STATUS,
   UI_TEXT,
   UPLOAD_MODE,
   VALIDATION_CONSTANTS,
@@ -9,154 +8,144 @@ import {
 import { FileUploadArea, UploadedFileCard } from "@/shared/ui";
 import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
-import { useDocumentById } from "../api/useDocuments";
 import { validateFile, validateResumeText } from "../schemas";
 import { ValidationHint } from "./ValidationHint";
 
-interface UploadResumeStepProps {
-  onNext: () => void;
+interface InitialStepProps {
+  onSelectEdit: () => void;
+  onSelectTailor: () => void;
 }
 
-export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
+export function InitialStep({
+  onSelectEdit,
+  onSelectTailor,
+}: InitialStepProps) {
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const setResumeData = useWizardStore((state) => state.setResumeData);
   const setUploadMode = useWizardStore((state) => state.setUploadMode);
-  const documentId = useWizardStore((state) => state.documentId);
-  const generationToastId = useWizardStore((state) => state.generationToastId);
-  const { data: currentDocument } = useDocumentById(documentId);
   const toast = useToastContext();
 
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
-
-  // Generation is in progress if:
-  // 1. generationToastId exists (toast is visible) OR
-  // 2. document exists and status is not final (GENERATED or FAILED)
-  const isGenerationInProgress =
-    !!generationToastId ||
-    (documentId !== null &&
-      currentDocument?.status !== undefined &&
-      currentDocument.status !== DOCUMENT_STATUS.GENERATED &&
-      currentDocument.status !== DOCUMENT_STATUS.FAILED);
+  const [hasAttemptedValidation, setHasAttemptedValidation] = useState(false);
 
   const resumeTextContent =
     uploadMode === UPLOAD_MODE.TEXT ? resumeData?.text || "" : "";
 
   useEffect(() => {
     setValidationError(null);
-    setHasAttemptedSubmit(false);
+    setHasAttemptedValidation(false);
   }, [uploadMode]);
 
   const handleFileSelect = useCallback(
     async (selectedFile: File) => {
-      if (isGenerationInProgress) return;
       setResumeData({ file: selectedFile, text: "" });
-      if (hasAttemptedSubmit) {
-        const validationResult = await validateFile(selectedFile);
+      if (hasAttemptedValidation) {
+        const fileValidationResult = await validateFile(selectedFile);
         setValidationError(
-          validationResult.success ? null : validationResult.error || null
+          fileValidationResult.success
+            ? null
+            : fileValidationResult.error || null
         );
       } else {
         setValidationError(null);
       }
       toast.showSuccess(UI_TEXT.FILE_SELECTED_SUCCESS);
     },
-    [isGenerationInProgress, setResumeData, toast, hasAttemptedSubmit]
+    [setResumeData, toast, hasAttemptedValidation]
   );
 
   const handleResumeTextChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
-      if (isGenerationInProgress) return;
       const resumeTextValue = textAreaChangeEvent.target.value;
       setResumeData({ file: null, text: resumeTextValue });
-      if (hasAttemptedSubmit && resumeTextValue.trim()) {
-        const validationResult = validateResumeText(resumeTextValue);
+      if (hasAttemptedValidation && resumeTextValue.trim()) {
+        const textValidationResult = validateResumeText(resumeTextValue);
         setValidationError(
-          validationResult.success ? null : validationResult.error || null
+          textValidationResult.success
+            ? null
+            : textValidationResult.error || null
         );
       } else {
         setValidationError(null);
       }
     },
-    [isGenerationInProgress, setResumeData, hasAttemptedSubmit]
+    [setResumeData, hasAttemptedValidation]
   );
 
   const handleRemoveFile = useCallback(() => {
-    if (isGenerationInProgress) return;
-
     setResumeData({
       file: null,
       text: "",
     });
     setValidationError(null);
-    setHasAttemptedSubmit(false);
-  }, [isGenerationInProgress, setResumeData]);
+    setHasAttemptedValidation(false);
+  }, [setResumeData]);
 
-  const handleFormSubmit = useCallback(
-    async (formSubmitEventHandler: React.FormEvent) => {
-      formSubmitEventHandler.preventDefault();
-      if (isGenerationInProgress) return;
+  const validateResume = useCallback(async (): Promise<boolean> => {
+    setHasAttemptedValidation(true);
 
-      setHasAttemptedSubmit(true);
-
-      if (uploadMode === UPLOAD_MODE.FILE) {
-        if (!resumeData?.file) {
-          setValidationError(UI_TEXT.FILE_REQUIRED_ERROR);
-          toast.showError(UI_TEXT.PLEASE_SELECT_FILE);
-          return;
-        }
-        const fileValidationResult = await validateFile(resumeData.file);
-        if (!fileValidationResult.success) {
-          setValidationError(fileValidationResult.error || null);
-          return;
-        }
-      } else {
-        if (!resumeData?.text?.trim()) {
-          setValidationError(
-            UI_TEXT.TEXT_MIN_LENGTH_MESSAGE(
-              VALIDATION_CONSTANTS.RESUME_TEXT_MIN_LENGTH
-            )
-          );
-          toast.showError(UI_TEXT.PLEASE_ENTER_RESUME_TEXT);
-          return;
-        }
-        const textValidationResult = validateResumeText(resumeData.text);
-        if (!textValidationResult.success) {
-          setValidationError(textValidationResult.error || null);
-          return;
-        }
+    if (uploadMode === UPLOAD_MODE.FILE) {
+      if (!resumeData?.file) {
+        setValidationError(UI_TEXT.FILE_REQUIRED_ERROR);
+        toast.showError(UI_TEXT.PLEASE_SELECT_FILE);
+        return false;
       }
+      const fileValidationResult = await validateFile(resumeData.file);
+      if (!fileValidationResult.success) {
+        setValidationError(fileValidationResult.error || null);
+        return false;
+      }
+    } else {
+      if (!resumeData?.text?.trim()) {
+        setValidationError(
+          UI_TEXT.TEXT_MIN_LENGTH_MESSAGE(
+            VALIDATION_CONSTANTS.RESUME_TEXT_MIN_LENGTH
+          )
+        );
+        toast.showError(UI_TEXT.PLEASE_ENTER_RESUME_TEXT);
+        return false;
+      }
+      const textValidationResult = validateResumeText(resumeData.text);
+      if (!textValidationResult.success) {
+        setValidationError(textValidationResult.error || null);
+        return false;
+      }
+    }
 
-      toast.showSuccess(
-        uploadMode === UPLOAD_MODE.FILE
-          ? UI_TEXT.RESUME_UPLOADED_SUCCESS
-          : UI_TEXT.RESUME_TEXT_SAVED
-      );
-      onNext();
+    setValidationError(null);
+    return true;
+  }, [uploadMode, resumeData, toast]);
+
+  const handleScenarioSelect = useCallback(
+    async (onScenarioSelect: () => void) => {
+      const isResumeValidated = await validateResume();
+      if (isResumeValidated) {
+        onScenarioSelect();
+      }
     },
-    [uploadMode, resumeData, onNext, toast, isGenerationInProgress]
+    [validateResume]
   );
 
+  const isResumeValid =
+    !validationError && (resumeData?.file || resumeData?.text?.trim());
+
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
-          {UI_TEXT.UPLOAD_RESUME_STEP_TITLE}
+          {UI_TEXT.INITIAL_STEP_TITLE}
         </h2>
         <p className="text-sm sm:text-base text-gray-600">
-          {UI_TEXT.UPLOAD_RESUME_STEP_DESCRIPTION}
+          {UI_TEXT.INITIAL_STEP_DESCRIPTION}
         </p>
       </div>
 
       <div className="flex gap-2 sm:gap-4 border-b border-gray-200 pb-3 sm:pb-4">
         <button
           type="button"
-          onClick={() =>
-            !isGenerationInProgress && setUploadMode(UPLOAD_MODE.FILE)
-          }
-          disabled={isGenerationInProgress}
-          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          onClick={() => setUploadMode(UPLOAD_MODE.FILE)}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
             uploadMode === UPLOAD_MODE.FILE
               ? "text-blue-600 border-b-2 border-blue-600"
               : "text-gray-500 hover:text-gray-700"
@@ -166,11 +155,8 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
         </button>
         <button
           type="button"
-          onClick={() =>
-            !isGenerationInProgress && setUploadMode(UPLOAD_MODE.TEXT)
-          }
-          disabled={isGenerationInProgress}
-          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          onClick={() => setUploadMode(UPLOAD_MODE.TEXT)}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
             uploadMode === UPLOAD_MODE.TEXT
               ? "text-blue-600 border-b-2 border-blue-600"
               : "text-gray-500 hover:text-gray-700"
@@ -193,10 +179,9 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
                 fileSizeBytes={resumeData.file.size}
                 onReplace={handleFileSelect}
                 onRemove={handleRemoveFile}
-                disabled={isGenerationInProgress}
               />
               <ValidationHint
-                hasAttemptedSubmit={hasAttemptedSubmit}
+                hasAttemptedSubmit={hasAttemptedValidation}
                 validationError={validationError}
                 hintText={UI_TEXT.FILE_VALIDATION_HINT}
               />
@@ -205,11 +190,10 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
             <div className="space-y-3">
               <FileUploadArea
                 onFileSelect={handleFileSelect}
-                disabled={isGenerationInProgress}
-                hasError={hasAttemptedSubmit && !!validationError}
+                hasError={hasAttemptedValidation && !!validationError}
               />
               <ValidationHint
-                hasAttemptedSubmit={hasAttemptedSubmit}
+                hasAttemptedSubmit={hasAttemptedValidation}
                 validationError={validationError}
                 hintText={UI_TEXT.FILE_VALIDATION_HINT}
               />
@@ -227,16 +211,15 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
             value={resumeTextContent}
             onChange={handleResumeTextChange}
             rows={TEXTAREA_CONSTANTS.RESUME_ROWS}
-            className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
-              hasAttemptedSubmit && validationError
+            className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none transition-colors ${
+              hasAttemptedValidation && validationError
                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                 : "border-gray-300"
             }`}
             placeholder={UI_TEXT.RESUME_TEXT_PLACEHOLDER}
-            disabled={isGenerationInProgress}
           />
           <ValidationHint
-            hasAttemptedSubmit={hasAttemptedSubmit}
+            hasAttemptedSubmit={hasAttemptedValidation}
             validationError={validationError}
             hintText={UI_TEXT.TEXT_VALIDATION_HINT}
             currentLength={
@@ -247,15 +230,24 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
         </div>
       )}
 
-      <div className="flex justify-end pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
         <button
-          type="submit"
-          disabled={isGenerationInProgress}
+          type="button"
+          onClick={() => handleScenarioSelect(onSelectEdit)}
+          disabled={!isResumeValid}
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+        >
+          {UI_TEXT.EDIT_RESUME_BUTTON}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleScenarioSelect(onSelectTailor)}
+          disabled={!isResumeValid}
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
-          {UI_TEXT.CONTINUE_BUTTON}
+          {UI_TEXT.TAILOR_RESUME_BUTTON}
         </button>
       </div>
-    </form>
+    </div>
   );
 }

@@ -7,9 +7,10 @@ export function useGenerateResume() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (generateResumeRequest: GenerateResumeRequest) =>
-      generateApi.generate(generateResumeRequest),
-    onSuccess: (_unusedGenerateResponseData, generateRequestVariables) => {
+    mutationFn: (generateResumeRequest: GenerateResumeRequest) => {
+      return generateApi.generate(generateResumeRequest);
+    },
+    onSuccess: (_generateResponseData, generateRequestVariables) => {
       queryClient.invalidateQueries({
         queryKey: [
           QUERY_KEYS.DOCUMENTS,

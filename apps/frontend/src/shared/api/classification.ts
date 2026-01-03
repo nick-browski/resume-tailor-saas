@@ -1,36 +1,46 @@
 import { createApiClient } from "./client";
 import { API_CONFIG } from "@/shared/config";
-import type {
-  ClassifyContentRequest,
-  ClassifyContentResponse,
-} from "./types";
+import { SCENARIO, CLASSIFICATION_CONSTANTS } from "@/shared/lib/constants";
+import type { ClassifyContentRequest, ClassifyContentResponse } from "./types";
 
 const classificationApiClient = createApiClient(API_CONFIG.generateApi);
 
 export const classificationApi = {
   async classify(
-    request: ClassifyContentRequest
+    classifyRequest: ClassifyContentRequest,
+    classificationMode?: "edit" | "tailor"
   ): Promise<ClassifyContentResponse> {
-    if (request.file) {
-      const requestFormData = new FormData();
-      requestFormData.append("file", request.file);
-      requestFormData.append("jobText", request.jobText);
-      if (request.resumeText) {
-        requestFormData.append("resumeText", request.resumeText);
+    const classifyEndpoint = classificationMode
+      ? `${CLASSIFICATION_CONSTANTS.ENDPOINT}?${CLASSIFICATION_CONSTANTS.MODE_QUERY_PARAM}=${classificationMode}`
+      : CLASSIFICATION_CONSTANTS.ENDPOINT;
+
+    if (classifyRequest.file) {
+      const multipartFormData = new FormData();
+      multipartFormData.append(
+        CLASSIFICATION_CONSTANTS.FORM_DATA_FIELD_NAMES.FILE,
+        classifyRequest.file
+      );
+      if (classificationMode !== SCENARIO.EDIT && classifyRequest.jobText) {
+        multipartFormData.append(
+          CLASSIFICATION_CONSTANTS.FORM_DATA_FIELD_NAMES.JOB_TEXT,
+          classifyRequest.jobText
+        );
       }
       return classificationApiClient.postFormData<ClassifyContentResponse>(
-        "/classify",
-        requestFormData
-      );
-    } else {
-      return classificationApiClient.post<ClassifyContentResponse>(
-        "/classify",
-        {
-          resumeText: request.resumeText,
-          jobText: request.jobText,
-        }
+        classifyEndpoint,
+        multipartFormData
       );
     }
+
+    const jsonRequestBody: { resumeText?: string; jobText?: string } = {
+      resumeText: classifyRequest.resumeText,
+    };
+    if (classificationMode !== SCENARIO.EDIT && classifyRequest.jobText) {
+      jsonRequestBody.jobText = classifyRequest.jobText;
+    }
+    return classificationApiClient.post<ClassifyContentResponse>(
+      classifyEndpoint,
+      jsonRequestBody
+    );
   },
 };
-

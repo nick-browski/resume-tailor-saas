@@ -8,6 +8,7 @@ apps/documents-api/.env
 apps/generate-api/.env
 *.log
 .firebase
+firebase-data
 firebase-debug.log
 firestore-debug.log
 ui-debug.log

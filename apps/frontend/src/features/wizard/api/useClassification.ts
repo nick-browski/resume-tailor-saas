@@ -23,7 +23,8 @@ interface UseClassifyContentResult {
   isClassifying: boolean;
   classifyContent: (
     resumeData: ResumeData | null,
-    jobDescriptionText: string
+    jobDescriptionText: string,
+    mode?: "edit" | "tailor"
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
 }
 
@@ -33,15 +34,20 @@ export function useClassifyContent(): UseClassifyContentResult {
     useState<ClassificationErrors>({});
 
   const { mutateAsync: classifyContentApi, isPending: isClassifying } =
-    useMutation<ClassifyContentResponse, Error, ClassifyContentRequest>({
-      mutationFn: (request: ClassifyContentRequest) =>
-        classificationApi.classify(request),
+    useMutation<
+      ClassifyContentResponse,
+      Error,
+      { request: ClassifyContentRequest; mode?: "edit" | "tailor" }
+    >({
+      mutationFn: ({ request, mode }) =>
+        classificationApi.classify(request, mode),
     });
 
   const classifyContent = useCallback(
     async (
       resumeData: ResumeData | null,
-      jobDescriptionText: string
+      jobDescriptionText: string,
+      mode?: "edit" | "tailor"
     ): Promise<{
       extractedResumeText: string | null;
       isValid: boolean;
@@ -57,9 +63,12 @@ export function useClassifyContent(): UseClassifyContentResult {
 
       try {
         const classificationResult = await classifyContentApi({
-          file: resumeData.file || undefined,
-          resumeText: resumeData.text || undefined,
-          jobText: jobDescriptionText,
+          request: {
+            file: resumeData.file || undefined,
+            resumeText: resumeData.text || undefined,
+            jobText: jobDescriptionText,
+          },
+          mode,
         });
 
         toast.dismissLoading(classificationToastId);
@@ -67,19 +76,21 @@ export function useClassifyContent(): UseClassifyContentResult {
         const extractedText =
           classificationResult.extractedResumeText || resumeData.text || null;
 
-        if (
-          !classificationResult.isResumeValid ||
-          !classificationResult.isJobDescriptionValid
-        ) {
+        // For edit mode, only check resume validity
+        const isJobDescriptionValid =
+          mode === "edit" || classificationResult.isJobDescriptionValid;
+
+        if (!classificationResult.isResumeValid || !isJobDescriptionValid) {
           setClassificationErrors({
             resumeError: classificationResult.isResumeValid
               ? undefined
               : classificationResult.resumeReason ||
                 UI_TEXT.RESUME_CLASSIFICATION_FAILED,
-            jobDescriptionError: classificationResult.isJobDescriptionValid
-              ? undefined
-              : classificationResult.jobDescriptionReason ||
-                UI_TEXT.JOB_DESCRIPTION_CLASSIFICATION_FAILED,
+            jobDescriptionError:
+              mode === "edit" || classificationResult.isJobDescriptionValid
+                ? undefined
+                : classificationResult.jobDescriptionReason ||
+                  UI_TEXT.JOB_DESCRIPTION_CLASSIFICATION_FAILED,
           });
           return { extractedResumeText: extractedText, isValid: false };
         }
