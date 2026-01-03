@@ -15,9 +15,13 @@ import { ValidationHint } from "../../validation";
 
 interface UploadResumeStepProps {
   onNext: () => void;
+  onPrevious: () => void;
 }
 
-export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
+export function UploadResumeStep({
+  onNext,
+  onPrevious,
+}: UploadResumeStepProps) {
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const setResumeData = useWizardStore((state) => state.setResumeData);
@@ -247,7 +251,14 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
         </div>
       )}
 
-      <div className="flex justify-end pt-4">
+      <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onPrevious}
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+        >
+          {UI_TEXT.BACK_BUTTON}
+        </button>
         <button
           type="submit"
           disabled={isGenerationInProgress}

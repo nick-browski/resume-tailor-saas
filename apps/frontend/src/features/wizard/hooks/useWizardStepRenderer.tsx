@@ -40,7 +40,9 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
     if (selectedScenario === SCENARIO.EDIT) {
       switch (currentStep) {
         case 1:
-          return <UploadResumeEditStep onNext={nextStep} />;
+          return (
+            <UploadResumeEditStep onNext={nextStep} onPrevious={previousStep} />
+          );
         case 2:
           return (
             <EditPreviewStep onPrevious={previousStep} onReset={onReset} />
@@ -53,7 +55,9 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
     if (selectedScenario === SCENARIO.TAILOR) {
       switch (currentStep) {
         case 1:
-          return <UploadResumeStep onNext={nextStep} />;
+          return (
+            <UploadResumeStep onNext={nextStep} onPrevious={previousStep} />
+          );
         case 2:
           return <JobDescriptionStep onPrevious={previousStep} />;
         case 3:

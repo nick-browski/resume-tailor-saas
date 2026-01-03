@@ -8,9 +8,13 @@ import { ResumeUploadSection, EditPromptSection } from "../../sections";
 
 interface UploadResumeEditStepProps {
   onNext: () => void;
+  onPrevious: () => void;
 }
 
-export function UploadResumeEditStep({ onNext }: UploadResumeEditStepProps) {
+export function UploadResumeEditStep({
+  onNext,
+  onPrevious,
+}: UploadResumeEditStepProps) {
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const documentId = useWizardStore((state) => state.documentId);
@@ -84,6 +88,13 @@ export function UploadResumeEditStep({ onNext }: UploadResumeEditStepProps) {
       />
 
       <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onPrevious}
+          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+        >
+          {UI_TEXT.BACK_BUTTON}
+        </button>
         <button
           type="button"
           onClick={handleEditAndTransform}

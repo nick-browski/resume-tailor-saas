@@ -4,6 +4,7 @@ import { Wizard } from "@/features/wizard";
 import {
   useWizardStore,
   getStepFromUrl,
+  getScenarioFromUrl,
 } from "@/features/wizard/model/wizardStore";
 import { useDocumentStatusMonitor } from "@/features/wizard/hooks/useDocumentStatusMonitor";
 import { useWizardStepRenderer } from "@/features/wizard/hooks/useWizardStepRenderer";
@@ -16,6 +17,7 @@ function App() {
     selectedScenario,
     reset,
     setStep,
+    setSelectedScenario,
     generationToastId,
     parseToastId,
   } = useWizardStore();
@@ -27,12 +29,20 @@ function App() {
   // Sync step with URL on browser back/forward
   useEffect(() => {
     const handlePopState = () => {
-      setStep(getStepFromUrl());
+      const urlStep = getStepFromUrl();
+      const urlScenario = getScenarioFromUrl();
+      setStep(urlStep);
+      // If step is 0, clear scenario to show InitialStep
+      if (urlStep === 0) {
+        setSelectedScenario(null);
+      } else if (urlScenario) {
+        setSelectedScenario(urlScenario);
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [setStep]);
+  }, [setStep, setSelectedScenario]);
 
   // Handle reset with toast dismissal
   const handleReset = useCallback(() => {
