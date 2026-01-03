@@ -1,5 +1,5 @@
 import { DOCUMENT_STATUS, UI_TEXT } from "@/shared/lib/constants";
-import { LoaderOverlay } from "@/shared/ui";
+import { Loader, LoaderOverlay } from "@/shared/ui";
 import { ResumeDiff } from "../ResumeDiff";
 import { PdfPreview } from "./PdfPreview";
 import type { ResumeData } from "@/shared/api/types";
@@ -33,8 +33,8 @@ export function PreviewContent({
   if (showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED) {
     if (isParsingOriginal && !originalResumeData) {
       return (
-        <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-          <LoaderOverlay />
+        <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
+          <Loader size="lg" />
         </div>
       );
     }
@@ -148,4 +148,3 @@ export function PreviewContent({
     </div>
   );
 }
-
