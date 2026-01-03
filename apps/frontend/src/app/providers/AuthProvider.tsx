@@ -6,6 +6,8 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+const INITIAL_LOADER_ID = "initial-loader";
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -19,22 +21,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch (error) {
           console.error("Failed to sign in anonymously:", error);
           setIsInitialized(true);
+          hideInitialLoader();
           return;
         }
       }
       setIsInitialized(true);
+      hideInitialLoader();
     });
 
     return () => unsubscribe();
   }, []);
 
   if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
+    return null;
   }
 
   return <>{children}</>;
+}
+
+function hideInitialLoader() {
+  const initialLoader = document.getElementById(INITIAL_LOADER_ID);
+  if (initialLoader) {
+    initialLoader.classList.add("hidden");
+  }
 }

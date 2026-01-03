@@ -1,3 +1,89 @@
+interface DocumentIconProps {
+  gradientId: string;
+  showDetails?: boolean;
+}
+
+function DocumentIcon({ gradientId, showDetails = true }: DocumentIconProps) {
+  return (
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#1D4ED8" stopOpacity="0.9" />
+        </linearGradient>
+      </defs>
+
+      <g
+        className="origin-center animate-bounce"
+        style={{ animationDuration: "3s" }}
+      >
+        <rect
+          x="30"
+          y="20"
+          width="60"
+          height="80"
+          rx="6"
+          fill={`url(#${gradientId})`}
+          className="drop-shadow-lg"
+        />
+        <rect
+          x="35"
+          y="30"
+          width="50"
+          height="3"
+          rx="1.5"
+          fill="white"
+          opacity="0.9"
+        />
+        <rect
+          x="35"
+          y="40"
+          width="45"
+          height="3"
+          rx="1.5"
+          fill="white"
+          opacity="0.7"
+        />
+        <rect
+          x="35"
+          y="50"
+          width="40"
+          height="3"
+          rx="1.5"
+          fill="white"
+          opacity="0.5"
+        />
+        {showDetails && (
+          <>
+            <rect
+              x="35"
+              y="60"
+              width="35"
+              height="3"
+              rx="1.5"
+              fill="white"
+              opacity="0.4"
+            />
+            <circle
+              cx="60"
+              cy="75"
+              r="6"
+              fill="white"
+              opacity="0.8"
+              className="animate-pulse"
+            />
+          </>
+        )}
+      </g>
+    </svg>
+  );
+}
+
 interface LoaderProps {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -33,15 +119,25 @@ export function Loader({ size = "md", className = "" }: LoaderProps) {
   );
 }
 
+export function LoadingAnimation() {
+  return (
+    <div className="flex items-center justify-center">
+      <div className="relative w-24 h-24">
+        <DocumentIcon gradientId="docGradient" showDetails={true} />
+      </div>
+    </div>
+  );
+}
+
 interface LoaderOverlayProps {
   message?: string;
 }
 
-export function LoaderOverlay({ message = "Loading..." }: LoaderOverlayProps) {
+export function LoaderOverlay({ message }: LoaderOverlayProps) {
   return (
     <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-md">
-      <div className="flex flex-col items-center gap-3">
-        <Loader size="lg" />
+      <div className="flex flex-col items-center gap-4">
+        <LoadingAnimation />
         {message && (
           <p className="text-sm text-gray-600 font-medium">{message}</p>
         )}
