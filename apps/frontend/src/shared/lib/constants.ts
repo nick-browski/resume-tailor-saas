@@ -140,6 +140,11 @@ export const UI_TEXT = {
     `Text must be between ${minLength} and ${maxLength.toLocaleString()} characters`,
   JOB_DESCRIPTION_REQUIRED_ERROR: "Job description is required",
   INVALID_JOB_DESCRIPTION_MESSAGE: "Invalid job description",
+  RESUME_NOT_VALID_WARNING:
+    "Please return to Step 1 and upload a valid resume before continuing.",
+  RESUME_NOT_SELECTED_WARNING:
+    "Please return to Step 1 and upload your resume first.",
+  RESUME_VALIDATION_REQUIRED_TITLE: "Resume validation required",
 } as const;
 
 export const QUERY_KEYS = {

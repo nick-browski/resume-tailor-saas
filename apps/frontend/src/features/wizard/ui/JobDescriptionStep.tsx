@@ -14,6 +14,8 @@ import { Loader } from "@/shared/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateJobDescription } from "../schemas";
 import { ValidationHint } from "./ValidationHint";
+import { ValidationWarning } from "./ValidationWarning";
+import { useResumeValidation } from "../hooks/useResumeValidation";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -27,6 +29,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
     (state) => state.setJobDescriptionText
   );
   const resumeData = useWizardStore((state) => state.resumeData);
+  const uploadMode = useWizardStore((state) => state.uploadMode);
   const documentId = useWizardStore((state) => state.documentId);
   const setDocumentId = useWizardStore((state) => state.setDocumentId);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
@@ -43,6 +46,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const resumeValidationError = useResumeValidation(resumeData, uploadMode);
 
   const handleJobDescriptionTextChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -65,7 +69,10 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const handleFormSubmit = useCallback(
     async (formSubmitEventHandler: React.FormEvent) => {
       formSubmitEventHandler.preventDefault();
-      if (!resumeData || generationToastId) {
+      if (!resumeData || generationToastId || resumeValidationError) {
+        if (resumeValidationError) {
+          toast.showError(resumeValidationError);
+        }
         return;
       }
 
@@ -144,6 +151,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       toast,
       documentId,
       queryClient,
+      resumeValidationError,
     ]
   );
 
@@ -157,6 +165,13 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           {UI_TEXT.JOB_DESCRIPTION_STEP_DESCRIPTION}
         </p>
       </div>
+
+      {resumeValidationError && (
+        <ValidationWarning
+          title={UI_TEXT.RESUME_VALIDATION_REQUIRED_TITLE}
+          message={resumeValidationError}
+        />
+      )}
 
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -202,6 +217,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           type="submit"
           disabled={
             !resumeData ||
+            !!resumeValidationError ||
             isCreatingDocument ||
             isStartingGeneration ||
             !!generationToastId
