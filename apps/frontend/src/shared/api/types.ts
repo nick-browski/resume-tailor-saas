@@ -76,3 +76,17 @@ export interface ApiError {
   code?: string;
   status?: number;
 }
+
+export interface ClassifyContentRequest {
+  file?: File;
+  resumeText?: string;
+  jobText: string;
+}
+
+export interface ClassifyContentResponse {
+  isResumeValid: boolean;
+  isJobDescriptionValid: boolean;
+  resumeReason?: string;
+  jobDescriptionReason?: string;
+  extractedResumeText?: string;
+}

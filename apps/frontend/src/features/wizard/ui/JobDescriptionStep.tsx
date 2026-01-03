@@ -8,6 +8,7 @@ import {
 } from "@/shared/lib/constants";
 import { useGenerateResume } from "../api/useGenerate";
 import { useCreateDocument } from "../api/useDocuments";
+import { useClassifyContent } from "../api/useClassification";
 import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { Loader } from "@/shared/ui";
@@ -47,6 +48,8 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const resumeValidationError = useResumeValidation(resumeData, uploadMode);
+  const { classificationErrors, isClassifying, classifyContent } =
+    useClassifyContent();
 
   const handleJobDescriptionTextChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -92,12 +95,21 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       }
 
       try {
+        const classificationResult = await classifyContent(
+          resumeData,
+          jobDescriptionText
+        );
+
+        if (!classificationResult || !classificationResult.isValid) {
+          return;
+        }
+
         const createDocumentToastId = toast.showLoading(
           TOAST_MESSAGES.CREATING_DOCUMENT
         );
         const createDocumentResponse = await createDocument({
           file: resumeData.file || undefined,
-          resumeText: resumeData.text || undefined,
+          resumeText: classificationResult.extractedResumeText || undefined,
           jobText: jobDescriptionText,
         });
         toast.dismissLoading(createDocumentToastId);
@@ -143,6 +155,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       jobDescriptionText,
       resumeData,
       generationToastId,
+      classifyContent,
       createDocument,
       generateResume,
       setDocumentId,
@@ -173,6 +186,20 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         />
       )}
 
+      {classificationErrors.resumeError && (
+        <ValidationWarning
+          title={UI_TEXT.INVALID_RESUME_TITLE}
+          message={classificationErrors.resumeError}
+        />
+      )}
+
+      {classificationErrors.jobDescriptionError && (
+        <ValidationWarning
+          title={UI_TEXT.INVALID_JOB_DESCRIPTION_TITLE}
+          message={classificationErrors.jobDescriptionError}
+        />
+      )}
+
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
           {UI_TEXT.JOB_DESCRIPTION_LABEL}
@@ -188,7 +215,10 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           }`}
           placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
           disabled={
-            isCreatingDocument || isStartingGeneration || !!generationToastId
+            isCreatingDocument ||
+            isStartingGeneration ||
+            isClassifying ||
+            !!generationToastId
           }
         />
         <ValidationHint
@@ -220,14 +250,19 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
             !!resumeValidationError ||
             isCreatingDocument ||
             isStartingGeneration ||
+            isClassifying ||
             !!generationToastId
           }
           className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
         >
           {(isCreatingDocument ||
             isStartingGeneration ||
+            isClassifying ||
             generationToastId) && <Loader size="sm" className="text-white" />}
-          {isCreatingDocument || isStartingGeneration || generationToastId
+          {isCreatingDocument ||
+          isStartingGeneration ||
+          isClassifying ||
+          generationToastId
             ? UI_TEXT.GENERATING_BUTTON
             : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
         </button>

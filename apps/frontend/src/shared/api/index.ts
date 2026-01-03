@@ -1,5 +1,6 @@
 export { documentsApi } from "./documents";
 export { generateApi } from "./generate";
+export { classificationApi } from "./classification";
 export { createApiClient } from "./client";
 export { convertFirestoreSnapshotToDocument } from "./documentUtils";
 export type {
@@ -9,6 +10,8 @@ export type {
   CreateDocumentResponse,
   GenerateResumeRequest,
   GenerateResumeResponse,
+  ClassifyContentRequest,
+  ClassifyContentResponse,
   ApiError,
   ResumeData,
 } from "./types";

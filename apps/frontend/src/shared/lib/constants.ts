@@ -56,6 +56,8 @@ export const TOAST_MESSAGES = {
   RESUME_DOWNLOAD_FAILED: "Failed to download resume",
   PARSING_ORIGINAL_RESUME: "Parsing original resume...",
   PARSE_ORIGINAL_RESUME_FAILED: "Failed to parse original resume",
+  CLASSIFYING_CONTENT: "Validating content...",
+  CLASSIFICATION_FAILED: "Failed to validate content",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -146,6 +148,12 @@ export const UI_TEXT = {
   RESUME_NOT_SELECTED_WARNING:
     "Please return to Step 1 and upload your resume first.",
   RESUME_VALIDATION_REQUIRED_TITLE: "Resume validation required",
+  INVALID_RESUME_TITLE: "Invalid Resume",
+  INVALID_JOB_DESCRIPTION_TITLE: "Invalid Job Description",
+  RESUME_CLASSIFICATION_FAILED:
+    "The provided text does not appear to be a resume. Please provide a valid resume with personal information, work experience, education, and skills.",
+  JOB_DESCRIPTION_CLASSIFICATION_FAILED:
+    "The provided text does not appear to be a job description. Please provide a valid job description with job title, responsibilities, and requirements.",
 } as const;
 
 export const QUERY_KEYS = {

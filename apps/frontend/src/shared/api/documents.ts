@@ -19,6 +19,9 @@ export const documentsApi = {
     if (createRequest.file) {
       const requestFormData = new FormData();
       requestFormData.append("file", createRequest.file);
+      if (createRequest.resumeText) {
+        requestFormData.append("resumeText", createRequest.resumeText);
+      }
       if (createRequest.jobText) {
         requestFormData.append("jobText", createRequest.jobText);
       }
