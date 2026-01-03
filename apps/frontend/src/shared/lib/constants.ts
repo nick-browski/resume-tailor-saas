@@ -72,8 +72,8 @@ export const TOAST_MESSAGES = {
   RESUME_GENERATION_FAILED: "Failed to transform resume",
   DOCUMENT_LOAD_FAILED: "Failed to load document",
   CREATING_DOCUMENT: "Creating document...",
-  STARTING_RESUME_GENERATION: "Starting resume transformation...",
-  STARTING_RESUME_EDIT: "Starting resume editing...",
+  STARTING_RESUME_GENERATION: "Resume transformation in progress...",
+  STARTING_RESUME_EDIT: "Resume editing in progress...",
   CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED:
     "Failed to create document or transform resume",
   RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
