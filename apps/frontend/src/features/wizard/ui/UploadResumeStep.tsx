@@ -11,6 +11,7 @@ import { useWizardStore } from "../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { useDocumentById } from "../api/useDocuments";
 import { validateFile, validateResumeText } from "../schemas";
+import { ValidationHint } from "./ValidationHint";
 
 interface UploadResumeStepProps {
   onNext: () => void;
@@ -287,15 +288,11 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
                   </button>
                 </div>
               </div>
-              <div>
-                {hasAttemptedSubmit && validationError ? (
-                  <p className="text-sm text-red-600">{validationError}</p>
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    {UI_TEXT.FILE_VALIDATION_HINT}
-                  </p>
-                )}
-              </div>
+              <ValidationHint
+                hasAttemptedSubmit={hasAttemptedSubmit}
+                validationError={validationError}
+                hintText={UI_TEXT.FILE_VALIDATION_HINT}
+              />
             </div>
           ) : (
             <div className="space-y-3">
@@ -351,15 +348,11 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
                   </p>
                 </div>
               </div>
-              <div>
-                {hasAttemptedSubmit && validationError ? (
-                  <p className="text-sm text-red-600">{validationError}</p>
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    {UI_TEXT.FILE_VALIDATION_HINT}
-                  </p>
-                )}
-              </div>
+              <ValidationHint
+                hasAttemptedSubmit={hasAttemptedSubmit}
+                validationError={validationError}
+                hintText={UI_TEXT.FILE_VALIDATION_HINT}
+              />
             </div>
           )}
         </div>
@@ -382,24 +375,15 @@ export function UploadResumeStep({ onNext }: UploadResumeStepProps) {
             placeholder={UI_TEXT.RESUME_TEXT_PLACEHOLDER}
             disabled={isGenerationInProgress}
           />
-          <div className="mt-2 flex items-center justify-between">
-            <div>
-              {hasAttemptedSubmit && validationError ? (
-                <p className="text-sm text-red-600">{validationError}</p>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  {UI_TEXT.TEXT_VALIDATION_HINT}
-                </p>
-              )}
-            </div>
-            {resumeTextContent && (
-              <p className="text-sm text-gray-500">
-                {resumeTextContent.length.toLocaleString()} /{" "}
-                {VALIDATION_CONSTANTS.RESUME_TEXT_MAX_LENGTH.toLocaleString()}{" "}
-                {UI_TEXT.CHARACTERS_LABEL}
-              </p>
-            )}
-          </div>
+          <ValidationHint
+            hasAttemptedSubmit={hasAttemptedSubmit}
+            validationError={validationError}
+            hintText={UI_TEXT.TEXT_VALIDATION_HINT}
+            currentLength={
+              resumeTextContent ? resumeTextContent.length : undefined
+            }
+            maxLength={VALIDATION_CONSTANTS.RESUME_TEXT_MAX_LENGTH}
+          />
         </div>
       )}
 

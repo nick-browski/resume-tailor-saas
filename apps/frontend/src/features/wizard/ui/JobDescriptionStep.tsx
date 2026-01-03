@@ -13,6 +13,7 @@ import { useToastContext } from "@/app/providers/ToastProvider";
 import { Loader } from "@/shared/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateJobDescription } from "../schemas";
+import { ValidationHint } from "./ValidationHint";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -175,27 +176,18 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
             isCreatingDocument || isStartingGeneration || !!generationToastId
           }
         />
-        <div className="mt-2 flex items-center justify-between">
-          <div>
-            {hasAttemptedSubmit && validationError ? (
-              <p className="text-sm text-red-600">{validationError}</p>
-            ) : (
-              <p className="text-sm text-gray-500">
-                {UI_TEXT.JOB_DESCRIPTION_VALIDATION_HINT(
-                  VALIDATION_CONSTANTS.JOB_DESCRIPTION_MIN_LENGTH,
-                  VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH
-                )}
-              </p>
-            )}
-          </div>
-          {jobDescriptionText && (
-            <p className="text-sm text-gray-500">
-              {jobDescriptionText.length.toLocaleString()} /{" "}
-              {VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH.toLocaleString()}{" "}
-              {UI_TEXT.CHARACTERS_LABEL}
-            </p>
+        <ValidationHint
+          hasAttemptedSubmit={hasAttemptedSubmit}
+          validationError={validationError}
+          hintText={UI_TEXT.JOB_DESCRIPTION_VALIDATION_HINT(
+            VALIDATION_CONSTANTS.JOB_DESCRIPTION_MIN_LENGTH,
+            VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH
           )}
-        </div>
+          currentLength={
+            jobDescriptionText ? jobDescriptionText.length : undefined
+          }
+          maxLength={VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH}
+        />
       </div>
 
       <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-0 pt-2">
