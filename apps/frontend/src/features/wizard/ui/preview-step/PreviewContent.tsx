@@ -62,7 +62,7 @@ export function PreviewContent({
   // Loading state
   if (isLoading || !documentData) {
     return (
-      <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+      <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
         <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
       </div>
     );
@@ -71,7 +71,7 @@ export function PreviewContent({
   // Generating state
   if (isGenerating) {
     return (
-      <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+      <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
         <LoaderOverlay message={UI_TEXT.GENERATING_TAILORED_RESUME_TEXT} />
       </div>
     );
@@ -96,7 +96,7 @@ export function PreviewContent({
   ) {
     if (!pdfPreviewUrl) {
       return (
-        <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+        <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
           <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
         </div>
       );
