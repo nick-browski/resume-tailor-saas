@@ -7,7 +7,7 @@ export const WIZARD_CONSTANTS = {
 export const FILE_CONSTANTS = {
   MAX_SIZE_MB: 10,
   ACCEPTED_TYPES: ".pdf",
-  DEFAULT_FILENAME: "tailored-resume.md",
+  DEFAULT_FILENAME: "transformed-resume.md",
   MARKDOWN_MIME_TYPE: "text/markdown",
   PDF_MIME_TYPE: "pdf",
   BYTES_PER_KB: 1024,
@@ -45,13 +45,13 @@ export const VALIDATION_CONSTANTS = {
 } as const;
 
 export const TOAST_MESSAGES = {
-  RESUME_GENERATED_SUCCESS: "Resume generated successfully!",
-  RESUME_GENERATION_FAILED: "Failed to generate resume",
+  RESUME_GENERATED_SUCCESS: "Resume transformed successfully!",
+  RESUME_GENERATION_FAILED: "Failed to transform resume",
   DOCUMENT_LOAD_FAILED: "Failed to load document",
   CREATING_DOCUMENT: "Creating document...",
-  STARTING_RESUME_GENERATION: "Starting resume generation...",
+  STARTING_RESUME_GENERATION: "Starting resume transformation...",
   CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED:
-    "Failed to create document or generate resume",
+    "Failed to create document or transform resume",
   RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
   RESUME_DOWNLOAD_FAILED: "Failed to download resume",
   PARSING_ORIGINAL_RESUME: "Parsing original resume...",
@@ -66,7 +66,7 @@ export const ERROR_MESSAGES = {
 export const UI_TEXT = {
   UPLOAD_RESUME_STEP_TITLE: "Step 1: Upload Your Resume",
   UPLOAD_RESUME_STEP_DESCRIPTION:
-    "Upload your resume as a PDF file or paste it as text.",
+    "Upload your current resume. We'll transform it to match any job description.",
   UPLOAD_PDF_BUTTON: "Upload PDF",
   PASTE_TEXT_BUTTON: "Paste Text",
   RESUME_PDF_LABEL: "Resume PDF",
@@ -87,27 +87,28 @@ export const UI_TEXT = {
   PLEASE_UPLOAD_PDF: "Please upload a PDF file",
   PLEASE_SELECT_FILE: "Please select a file",
   PLEASE_ENTER_RESUME_TEXT: "Please enter resume text",
-  JOB_DESCRIPTION_STEP_TITLE: "Step 2: Paste Job Description",
+  JOB_DESCRIPTION_STEP_TITLE: "Step 2: Add Job Description",
   JOB_DESCRIPTION_STEP_DESCRIPTION:
-    "Paste the job description you want to tailor your resume for.",
+    "Paste the job description you want to match. We'll adapt your resume to fit perfectly.",
   JOB_DESCRIPTION_LABEL: "Job Description",
   JOB_DESCRIPTION_PLACEHOLDER:
-    "Paste the complete job description here, including requirements, responsibilities, and qualifications...",
+    "Paste the complete job description here. Include requirements, responsibilities, and qualifications...",
   CHARACTERS_LABEL: "characters",
   BACK_BUTTON: "Back",
-  GENERATING_BUTTON: "Generating...",
-  GENERATE_TAILORED_RESUME_BUTTON: "Generate Tailored Resume",
+  GENERATING_BUTTON: "Transforming...",
+  GENERATE_TAILORED_RESUME_BUTTON: "Transform Resume",
   PREVIEW_STEP_TITLE: "Step 3: Preview & Download",
   PREVIEW_STEP_DESCRIPTION:
-    "Review your tailored resume and download it when ready.",
-  TAILORED_RESUME_PREVIEW_LABEL: "Tailored Resume Preview",
+    "Review your transformed resume and download it when ready.",
+  TAILORED_RESUME_PREVIEW_LABEL: "Transformed Resume Preview",
   LOADING_TEXT: "Loading...",
   LOADING_DOCUMENT_TEXT: "Loading document...",
-  GENERATING_TAILORED_RESUME_TEXT: "Generating tailored resume... Please wait.",
+  GENERATING_TAILORED_RESUME_TEXT:
+    "Transforming your resume to match the job description... Please wait.",
   GENERATION_FAILED_PREFIX: "Generation failed:",
   UNKNOWN_ERROR_TEXT: "Unknown error",
   NO_RESUME_AVAILABLE_TEXT: "No resume available yet.",
-  PDF_READY_TEXT: "Your tailored resume PDF is ready for download.",
+  PDF_READY_TEXT: "Your transformed resume PDF is ready for download.",
   CLICK_DOWNLOAD_BUTTON_TEXT:
     "Click the download button below to get your PDF.",
   START_OVER_BUTTON: "Start Over",

@@ -151,7 +151,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
       const downloadUrl = URL.createObjectURL(pdfBlob);
       const downloadLink = document.createElement("a");
       downloadLink.href = downloadUrl;
-      downloadLink.download = "tailored-resume.pdf";
+      downloadLink.download = "transformed-resume.pdf";
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
