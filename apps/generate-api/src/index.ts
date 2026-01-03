@@ -9,7 +9,6 @@ import {
   IS_CLOUD_RUN,
   SERVER_CONFIG,
   API_ROUTES,
-  ERROR_MESSAGES,
 } from "./config/constants.js";
 import { verifyCloudTasksToken } from "./middleware/cloudTasksAuth.js";
 import {
@@ -17,6 +16,10 @@ import {
   processParseOriginal,
 } from "./services/generateService.js";
 import { createTaskHandler } from "./utils/taskHandler.js";
+import {
+  processGenerationTaskSchema,
+  processParseOriginalTaskSchema,
+} from "./schemas/taskSchemas.js";
 
 const serverPort = Number(process.env.PORT) || SERVER_CONFIG.DEFAULT_PORT;
 
@@ -39,17 +42,7 @@ app.post(
   API_ROUTES.TASKS_PROCESS_GENERATION,
   verifyCloudTasksToken,
   createTaskHandler(
-    (body) => {
-      if (
-        !body.documentId ||
-        !body.resumeText ||
-        !body.jobText ||
-        !body.ownerId
-      ) {
-        return ERROR_MESSAGES.MISSING_REQUIRED_FIELDS_GENERATION;
-      }
-      return null;
-    },
+    processGenerationTaskSchema,
     (body) =>
       processGeneration(
         body.documentId,
@@ -66,12 +59,7 @@ app.post(
   API_ROUTES.TASKS_PROCESS_PARSE_ORIGINAL,
   verifyCloudTasksToken,
   createTaskHandler(
-    (body) => {
-      if (!body.documentId || !body.resumeText || !body.ownerId) {
-        return ERROR_MESSAGES.MISSING_REQUIRED_FIELDS_PARSE;
-      }
-      return null;
-    },
+    processParseOriginalTaskSchema,
     (body) =>
       processParseOriginal(body.documentId, body.resumeText, body.ownerId),
     "parse-original task"

@@ -14,6 +14,8 @@ import {
   PARSE_RESPONSE_STATUS,
 } from "../config/constants.js";
 import { handleServiceError } from "../utils/errorHandler.js";
+import { validateParams } from "../middleware/validation.js";
+import { documentIdParamsSchema } from "../schemas/generateSchemas.js";
 
 export const generateRouter: express.Router = express.Router();
 
@@ -21,6 +23,7 @@ export const generateRouter: express.Router = express.Router();
 generateRouter.post(
   "/:id/generate",
   verifyFirebaseToken,
+  validateParams(documentIdParamsSchema),
   async (request: AuthenticatedRequest, response) => {
     try {
       const userId = request.userId!;
@@ -46,6 +49,7 @@ generateRouter.post(
 generateRouter.post(
   "/:id/parse-original",
   verifyFirebaseToken,
+  validateParams(documentIdParamsSchema),
   async (request: AuthenticatedRequest, response) => {
     try {
       const userId = request.userId!;
@@ -70,4 +74,3 @@ generateRouter.post(
     }
   }
 );
-
