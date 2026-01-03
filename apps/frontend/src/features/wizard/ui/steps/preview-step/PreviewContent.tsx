@@ -62,15 +62,6 @@ export function PreviewContent({
     );
   }
 
-  // Loading state
-  if (isLoading || !documentData) {
-    return (
-      <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-        <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
-      </div>
-    );
-  }
-
   // Generating state
   if (isGenerating) {
     const generatingMessage =
@@ -85,7 +76,7 @@ export function PreviewContent({
   }
 
   // Failed state
-  if (documentData.status === DOCUMENT_STATUS.FAILED) {
+  if (documentData?.status === DOCUMENT_STATUS.FAILED) {
     return (
       <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
         <p className="text-sm text-red-600">
@@ -96,9 +87,9 @@ export function PreviewContent({
     );
   }
 
-  // PDF preview state
+  // PDF preview state - check if PDF is ready but not loaded yet
   if (
-    documentData.pdfResultPath &&
+    documentData?.pdfResultPath &&
     documentData.status === DOCUMENT_STATUS.GENERATED
   ) {
     if (!pdfPreviewUrl) {
@@ -142,6 +133,15 @@ export function PreviewContent({
           )}
         </div>
         <PdfPreview pdfPreviewUrl={pdfPreviewUrl} />
+      </div>
+    );
+  }
+
+  // Loading state - only show if document is not ready yet
+  if (isLoading || !documentData) {
+    return (
+      <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+        <LoaderOverlay message={UI_TEXT.LOADING_RESUME_PDF_TEXT} />
       </div>
     );
   }

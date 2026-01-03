@@ -143,7 +143,6 @@ export const UI_TEXT = {
     "Review your transformed resume and download it when ready.",
   TAILORED_RESUME_PREVIEW_LABEL: "Transformed Resume Preview",
   LOADING_TEXT: "Loading...",
-  LOADING_DOCUMENT_TEXT: "Loading document...",
   LOADING_RESUME_PDF_TEXT: "Loading resume PDF...",
   GENERATING_TAILORED_RESUME_TEXT:
     "Transforming your resume to match the job description... Please wait.",
