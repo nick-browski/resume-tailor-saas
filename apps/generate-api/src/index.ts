@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
 import { generateRouter } from "./routes/generate.js";
+import { classifyRouter } from "./routes/classify.js";
 import { initializeFirebaseAdmin } from "./config/firebase-admin.js";
 import {
   SUCCESS_MESSAGES,
   CORS_CONFIG,
-  HTTP_STATUS,
   IS_CLOUD_RUN,
   SERVER_CONFIG,
   API_ROUTES,
@@ -16,6 +16,7 @@ import {
   processGeneration,
   processParseOriginal,
 } from "./services/generateService.js";
+import { createTaskHandler } from "./utils/taskHandler.js";
 
 const serverPort = Number(process.env.PORT) || SERVER_CONFIG.DEFAULT_PORT;
 
@@ -31,37 +32,7 @@ app.use(
 );
 app.use(express.json());
 app.use(API_ROUTES.DOCUMENTS, generateRouter);
-
-// Common task handler factory
-const createTaskHandler = (
-  validateFields: (body: any) => string | null,
-  processTask: (body: any) => Promise<void>,
-  errorContext: string
-) => {
-  return async (request: express.Request, response: express.Response) => {
-    try {
-      const validationError = validateFields(request.body);
-      if (validationError) {
-        response.status(HTTP_STATUS.BAD_REQUEST).json({
-          error: validationError,
-        });
-        return;
-      }
-
-      await processTask(request.body);
-      response.status(HTTP_STATUS.OK).json({ success: true });
-    } catch (taskError) {
-      console.error(`Error processing ${errorContext}:`, taskError);
-      const errorMessage =
-        taskError instanceof Error
-          ? taskError.message
-          : ERROR_MESSAGES.UNKNOWN_ERROR;
-      response.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        error: errorMessage,
-      });
-    }
-  };
-};
+app.use("/classify", classifyRouter);
 
 // Generation processing handler (Cloud Tasks, requires OIDC auth)
 app.post(
