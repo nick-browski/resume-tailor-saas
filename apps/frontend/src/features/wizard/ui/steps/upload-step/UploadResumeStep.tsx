@@ -7,11 +7,11 @@ import {
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
 import { FileUploadArea, UploadedFileCard } from "@/shared/ui";
-import { useWizardStore } from "../model/wizardStore";
+import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
-import { useDocumentById } from "../api/useDocuments";
-import { validateFile, validateResumeText } from "../schemas";
-import { ValidationHint } from "./ValidationHint";
+import { useDocumentById } from "../../../api/useDocuments";
+import { validateFile, validateResumeText } from "../../../schemas";
+import { ValidationHint } from "../../validation";
 
 interface UploadResumeStepProps {
   onNext: () => void;

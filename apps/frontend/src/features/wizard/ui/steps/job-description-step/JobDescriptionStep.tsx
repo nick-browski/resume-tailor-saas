@@ -6,17 +6,16 @@ import {
   QUERY_KEYS,
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
-import { useGenerateResume } from "../api/useGenerate";
-import { useCreateDocument } from "../api/useDocuments";
-import { useClassifyContent } from "../api/useClassification";
-import { useWizardStore } from "../model/wizardStore";
+import { useGenerateResume } from "../../../api/useGenerate";
+import { useCreateDocument } from "../../../api/useDocuments";
+import { useClassifyContent } from "../../../api/useClassification";
+import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { Loader } from "@/shared/ui";
 import { useQueryClient } from "@tanstack/react-query";
-import { validateJobDescription } from "../schemas";
-import { ValidationHint } from "./ValidationHint";
-import { ValidationWarning } from "./ValidationWarning";
-import { useResumeValidation } from "../hooks/useResumeValidation";
+import { validateJobDescription } from "../../../schemas";
+import { ValidationHint, ValidationWarning } from "../../validation";
+import { useResumeValidation } from "../../../hooks/useResumeValidation";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;

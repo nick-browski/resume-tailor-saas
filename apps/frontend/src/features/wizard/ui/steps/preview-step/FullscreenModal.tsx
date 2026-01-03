@@ -1,4 +1,4 @@
-import { useMobilePdfScale } from "../../hooks/useMobilePdfScale";
+import { useMobilePdfScale } from "../../../hooks/useMobilePdfScale";
 
 interface FullscreenModalProps {
   pdfPreviewUrl: string;

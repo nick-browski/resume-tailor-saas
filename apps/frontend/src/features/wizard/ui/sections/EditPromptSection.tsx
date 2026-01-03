@@ -4,8 +4,8 @@ import {
   UI_TEXT,
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
-import { validateEditPrompt } from "../schemas";
-import { ValidationHint } from "./ValidationHint";
+import { validateEditPrompt } from "../../schemas";
+import { ValidationHint } from "../validation";
 
 interface EditPromptSectionProps {
   editPrompt: string;

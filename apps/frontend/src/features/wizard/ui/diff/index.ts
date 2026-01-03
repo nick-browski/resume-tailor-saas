@@ -1,0 +1,2 @@
+export { ResumeDiff } from "./ResumeDiff";
+

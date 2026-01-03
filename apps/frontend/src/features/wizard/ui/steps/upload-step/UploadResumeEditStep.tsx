@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { UI_TEXT, DOCUMENT_STATUS } from "@/shared/lib/constants";
-import { useWizardStore } from "../model/wizardStore";
-import { useDocumentById } from "../api/useDocuments";
+import { useWizardStore } from "../../../model/wizardStore";
+import { useDocumentById } from "../../../api/useDocuments";
 import { Loader } from "@/shared/ui";
-import { useEditAndTransform } from "../hooks";
-import { ResumeUploadSection } from "./ResumeUploadSection";
-import { EditPromptSection } from "./EditPromptSection";
+import { useEditAndTransform } from "../../../hooks";
+import { ResumeUploadSection, EditPromptSection } from "../../sections";
 
 interface UploadResumeEditStepProps {
   onNext: () => void;

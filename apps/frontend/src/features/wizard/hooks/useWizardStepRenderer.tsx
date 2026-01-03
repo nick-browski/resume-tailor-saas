@@ -1,11 +1,11 @@
 import { useWizardStore } from "../model/wizardStore";
 import { SCENARIO } from "@/shared/lib/constants";
-import { InitialStep } from "../ui/InitialStep";
-import { UploadResumeEditStep } from "../ui/UploadResumeEditStep";
-import { EditPreviewStep } from "../ui/EditPreviewStep";
-import { UploadResumeStep } from "../ui/UploadResumeStep";
-import { JobDescriptionStep } from "../ui/JobDescriptionStep";
-import { PreviewStep } from "../ui/preview-step/PreviewStep";
+import { InitialStep } from "../ui/steps/initial-step";
+import { UploadResumeEditStep } from "../ui/steps/upload-step";
+import { EditPreviewStep } from "../ui/steps/edit-step";
+import { UploadResumeStep } from "../ui/steps/upload-step";
+import { JobDescriptionStep } from "../ui/steps/job-description-step";
+import { PreviewStep } from "../ui/steps/preview-step";
 
 interface UseWizardStepRendererProps {
   onReset: () => void;
@@ -42,7 +42,9 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
         case 1:
           return <UploadResumeEditStep onNext={nextStep} />;
         case 2:
-          return <EditPreviewStep onPrevious={previousStep} onReset={onReset} />;
+          return (
+            <EditPreviewStep onPrevious={previousStep} onReset={onReset} />
+          );
         default:
           return null;
       }
@@ -66,4 +68,3 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
 
   return { renderStep };
 }
-

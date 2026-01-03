@@ -6,10 +6,10 @@ import {
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
 import { FileUploadArea, UploadedFileCard } from "@/shared/ui";
-import { useWizardStore } from "../model/wizardStore";
-import { validateResumeText } from "../schemas";
-import { ValidationHint } from "./ValidationHint";
-import { useFileUpload } from "../hooks/useFileUpload";
+import { useWizardStore } from "../../model/wizardStore";
+import { validateResumeText } from "../../schemas";
+import { ValidationHint } from "../validation";
+import { useFileUpload } from "../../hooks/useFileUpload";
 
 interface ResumeUploadSectionProps {
   isGenerationInProgress: boolean;

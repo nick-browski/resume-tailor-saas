@@ -5,20 +5,20 @@ import {
   TOAST_MESSAGES,
   UI_TEXT,
 } from "@/shared/lib/constants";
-import { useDocumentById } from "../api/useDocuments";
-import { useWizardStore } from "../model/wizardStore";
+import { useDocumentById } from "../../../api/useDocuments";
+import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi, generateApi } from "@/shared/api";
-import { usePdfPreview, useResumeDownload, useFullscreen } from "../hooks";
+import { usePdfPreview, useResumeDownload, useFullscreen } from "../../../hooks";
 import {
   getResumeDataFromDocument,
   getOriginalResumeDataForDiff,
-} from "../lib/resumeDataUtils";
-import { PreviewHeader } from "./preview-step/PreviewHeader";
-import { PreviewToggleButtons } from "./preview-step/PreviewToggleButtons";
-import { PreviewContent } from "./preview-step/PreviewContent";
-import { PreviewActions } from "./preview-step/PreviewActions";
-import { FullscreenModal } from "./preview-step/FullscreenModal";
+} from "../../../lib/resumeDataUtils";
+import { PreviewHeader } from "../preview-step/PreviewHeader";
+import { PreviewToggleButtons } from "../preview-step/PreviewToggleButtons";
+import { PreviewContent } from "../preview-step/PreviewContent";
+import { PreviewActions } from "../preview-step/PreviewActions";
+import { FullscreenModal } from "../preview-step/FullscreenModal";
 import { Loader } from "@/shared/ui";
 
 interface EditPreviewStepProps {

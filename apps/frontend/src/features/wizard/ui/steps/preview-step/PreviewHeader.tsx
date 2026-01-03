@@ -1,5 +1,5 @@
 import { UI_TEXT } from "@/shared/lib/constants";
-import { useWizardStore } from "../../model/wizardStore";
+import { useWizardStore } from "../../../model/wizardStore";
 
 export function PreviewHeader() {
   const selectedScenario = useWizardStore((state) => state.selectedScenario);

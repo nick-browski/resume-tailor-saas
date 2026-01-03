@@ -1,6 +1,6 @@
 import { DOCUMENT_STATUS, UI_TEXT } from "@/shared/lib/constants";
 import { Loader, LoaderOverlay } from "@/shared/ui";
-import { ResumeDiff } from "../ResumeDiff";
+import { ResumeDiff } from "../../diff";
 import { PdfPreview } from "./PdfPreview";
 import type { ResumeData } from "@/shared/api/types";
 import type { Document } from "@/shared/api/types";

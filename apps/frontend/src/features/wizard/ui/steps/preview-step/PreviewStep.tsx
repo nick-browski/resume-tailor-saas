@@ -4,15 +4,15 @@ import {
   ORIGINAL_PARSE_STATUS,
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
-import { useDocumentById } from "../../api/useDocuments";
-import { useWizardStore } from "../../model/wizardStore";
+import { useDocumentById } from "../../../api/useDocuments";
+import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi } from "@/shared/api";
-import { usePdfPreview, useResumeDownload, useFullscreen } from "../../hooks";
+import { usePdfPreview, useResumeDownload, useFullscreen } from "../../../hooks";
 import {
   getResumeDataFromDocument,
   getOriginalResumeDataForDiff,
-} from "../../lib/resumeDataUtils";
+} from "../../../lib/resumeDataUtils";
 import { PreviewHeader } from "./PreviewHeader";
 import { PreviewToggleButtons } from "./PreviewToggleButtons";
 import { PreviewContent } from "./PreviewContent";
