@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Layout } from "@/widgets/layout";
 import {
   Wizard,
@@ -12,10 +12,19 @@ import {
 } from "@/features/wizard/model/wizardStore";
 import { useDocumentStatusMonitor } from "@/features/wizard/hooks/useDocumentStatusMonitor";
 import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
+import { useToastContext } from "@/app/providers/ToastProvider";
 
 function App() {
-  const { currentStep, nextStep, previousStep, reset, setStep } =
-    useWizardStore();
+  const {
+    currentStep,
+    nextStep,
+    previousStep,
+    reset,
+    setStep,
+    generationToastId,
+    parseToastId,
+  } = useWizardStore();
+  const toast = useToastContext();
 
   // Monitors document status changes and shows toast notifications
   useDocumentStatusMonitor();
@@ -30,6 +39,17 @@ function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [setStep]);
 
+  // Handle reset with toast dismissal
+  const handleReset = useCallback(() => {
+    if (generationToastId) {
+      toast.dismissLoading(generationToastId);
+    }
+    if (parseToastId) {
+      toast.dismissLoading(parseToastId);
+    }
+    reset();
+  }, [generationToastId, parseToastId, toast, reset]);
+
   const renderCurrentStep = (): React.ReactNode => {
     switch (currentStep) {
       case WIZARD_CONSTANTS.FIRST_STEP:
@@ -37,7 +57,7 @@ function App() {
       case 2:
         return <JobDescriptionStep onPrevious={previousStep} />;
       case WIZARD_CONSTANTS.LAST_STEP:
-        return <PreviewStep onPrevious={previousStep} onReset={reset} />;
+        return <PreviewStep onPrevious={previousStep} onReset={handleReset} />;
       default:
         return null;
     }
