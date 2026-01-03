@@ -14,11 +14,13 @@ import { verifyCloudTasksToken } from "./middleware/cloudTasksAuth.js";
 import {
   processGeneration,
   processParseOriginal,
+  processEditResume,
 } from "./services/generateService.js";
 import { createTaskHandler } from "./utils/taskHandler.js";
 import {
   processGenerationTaskSchema,
   processParseOriginalTaskSchema,
+  processEditResumeTaskSchema,
 } from "./schemas/taskSchemas.js";
 
 const serverPort = Number(process.env.PORT) || SERVER_CONFIG.DEFAULT_PORT;
@@ -63,6 +65,17 @@ app.post(
     (body) =>
       processParseOriginal(body.documentId, body.resumeText, body.ownerId),
     "parse-original task"
+  )
+);
+
+// Edit resume processing handler (Cloud Tasks, requires OIDC auth)
+app.post(
+  API_ROUTES.TASKS_PROCESS_EDIT_RESUME,
+  verifyCloudTasksToken,
+  createTaskHandler(
+    processEditResumeTaskSchema,
+    (body) => processEditResume(body.documentId, body.editPrompt, body.ownerId),
+    "edit-resume task"
   )
 );
 

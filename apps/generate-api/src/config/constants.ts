@@ -48,6 +48,17 @@ export const ERROR_MESSAGES = {
   ERROR_PROCESSING_GENERATION: "Error processing generation for document",
   ERROR_PARSING_ORIGINAL_RESUME: "Error parsing original resume for document",
   UNKNOWN_ERROR: "Unknown error",
+  VALIDATION_FAILED: "Validation failed",
+  FILE_OR_RESUME_TEXT_REQUIRED: "Either file or resumeText is required",
+  FAILED_TO_CLASSIFY_CONTENT: "Failed to classify content",
+  FAILED_TO_EDIT_RESUME: "Failed to edit resume",
+  RESUME_TEXT_EMPTY: "Resume text is empty",
+  JOB_DESCRIPTION_TEXT_EMPTY: "Job description text is empty",
+  FAILED_TO_ANALYZE_RESUME_CONTENT: "Failed to analyze resume content",
+  FAILED_TO_ANALYZE_JOB_DESCRIPTION_CONTENT:
+    "Failed to analyze job description content",
+  FAILED_TO_PARSE_EXISTING_RESUME_DATA: "Failed to parse existing resume data",
+  FAILED_TO_EXTRACT_TEXT_FROM_PDF: "Failed to extract text from PDF file",
 } as const;
 
 // Success Messages
@@ -110,6 +121,7 @@ export const API_ROUTES = {
   DOCUMENTS: "/documents",
   TASKS_PROCESS_GENERATION: "/tasks/process-generation",
   TASKS_PROCESS_PARSE_ORIGINAL: "/tasks/process-parse-original",
+  TASKS_PROCESS_EDIT_RESUME: "/tasks/process-edit-resume",
   HEALTH: "/health",
 } as const;
 

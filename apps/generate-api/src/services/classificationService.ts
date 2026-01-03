@@ -40,6 +40,11 @@ interface ClassificationResponse {
   reason: string;
 }
 
+export enum ClassificationMode {
+  EDIT = "edit",
+  TAILOR = "tailor",
+}
+
 const RESUME_CLASSIFICATION_PROMPT = `You are a content classifier. Analyze the provided text and determine if it is a resume/CV.
 
 A resume/CV typically contains:
@@ -49,6 +54,28 @@ A resume/CV typically contains:
 - Education (degrees, institutions, graduation dates)
 - Skills (technical and soft skills)
 - Optional: certifications, projects, languages
+
+Return ONLY a valid JSON object with this structure:
+{
+  "isResume": boolean,
+  "confidence": number (0-1),
+  "reason": "string explaining your decision in one sentence"
+}
+
+Text to classify:
+{text}`;
+
+const RESUME_CLASSIFICATION_PROMPT_FOR_EDIT = `You are a content classifier. Analyze the provided text and determine if it is a valid, well-structured resume/CV that has been edited or customized.
+
+A valid edited resume/CV must contain:
+- Personal information (name, email, phone, location)
+- Professional summary or objective
+- Work experience with job titles, companies, dates, and responsibilities
+- Education (degrees, institutions, graduation dates)
+- Skills (technical and soft skills)
+- Optional: certifications, projects, languages
+
+The resume should be complete, coherent, and properly formatted. Reject incomplete, malformed, or nonsensical content.
 
 Return ONLY a valid JSON object with this structure:
 {
@@ -134,12 +161,12 @@ async function makeOpenRouterRequest(
     return makeOpenRouterRequest(requestBody, attemptNumber + 1);
   }
 
-  const errorText = await apiResponse.text();
-  const errorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
+  const errorResponseText = await apiResponse.text();
+  const apiErrorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
     "{status}",
     apiResponse.status.toString()
-  ).replace("{errorText}", errorText);
-  throw new Error(errorMessage);
+  ).replace("{errorText}", errorResponseText);
+  throw new Error(apiErrorMessage);
 }
 
 export interface ClassificationResult {
@@ -151,20 +178,24 @@ export interface ClassificationResult {
 }
 
 export async function classifyResume(
-  resumeText: string
+  resumeText: string,
+  useEditPrompt: boolean = false
 ): Promise<{ isValid: boolean; reason?: string }> {
   if (!OPENROUTER_API_KEY) {
     throw new Error(ERROR_MESSAGES.OPENROUTER_API_KEY_NOT_CONFIGURED);
   }
 
   if (!resumeText || !resumeText.trim()) {
-    return { isValid: false, reason: "Resume text is empty" };
+    return {
+      isValid: false,
+      reason: ERROR_MESSAGES.RESUME_TEXT_EMPTY,
+    };
   }
 
-  const prompt = RESUME_CLASSIFICATION_PROMPT.replace(
-    "{text}",
-    resumeText.substring(0, 2000)
-  );
+  const promptTemplate = useEditPrompt
+    ? RESUME_CLASSIFICATION_PROMPT_FOR_EDIT
+    : RESUME_CLASSIFICATION_PROMPT;
+  const prompt = promptTemplate.replace("{text}", resumeText.substring(0, 2000));
 
   const requestBody: OpenRouterRequest = {
     model: OPENROUTER_MODEL,
@@ -198,19 +229,23 @@ export async function classifyResume(
         isValid,
         reason: isValid ? undefined : classification.reason,
       };
-    } catch (jsonParseError) {
-      console.error("Failed to parse classification JSON:", jsonParseError);
+    } catch (jsonParsingError) {
+      console.error("Failed to parse classification JSON:", jsonParsingError);
       console.error("Response content:", extractedJsonString);
       return {
         isValid: false,
-        reason: "Failed to analyze resume content",
+        reason: ERROR_MESSAGES.FAILED_TO_ANALYZE_RESUME_CONTENT,
       };
     }
-  } catch (error) {
-    console.error("Error classifying resume:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Failed to classify resume: ${errorMessage}`);
+  } catch (classificationError) {
+    console.error("Error classifying resume:", classificationError);
+    const classificationErrorMessage =
+      classificationError instanceof Error
+        ? classificationError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(
+      `Failed to classify resume: ${classificationErrorMessage}`
+    );
   }
 }
 
@@ -263,32 +298,48 @@ export async function classifyJobDescription(
         isValid,
         reason: isValid ? undefined : classification.reason,
       };
-    } catch (jsonParseError) {
+    } catch (jsonParsingError) {
       console.error(
         "Failed to parse classification JSON:",
-        jsonParseError
+        jsonParsingError
       );
       console.error("Response content:", extractedJsonString);
       return {
         isValid: false,
-        reason: "Failed to analyze job description content",
+        reason: ERROR_MESSAGES.FAILED_TO_ANALYZE_JOB_DESCRIPTION_CONTENT,
       };
     }
-  } catch (error) {
-    console.error("Error classifying job description:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Failed to classify job description: ${errorMessage}`);
+  } catch (classificationError) {
+    console.error("Error classifying job description:", classificationError);
+    const classificationErrorMessage =
+      classificationError instanceof Error
+        ? classificationError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(
+      `Failed to classify job description: ${classificationErrorMessage}`
+    );
   }
 }
 
 export async function classifyContent(
   resumeText: string,
-  jobDescriptionText: string
+  jobDescriptionText: string,
+  mode: ClassificationMode = ClassificationMode.TAILOR
 ): Promise<ClassificationResult> {
+  // For EDIT mode: only classify resume with stricter prompt, skip job description
+  if (mode === ClassificationMode.EDIT) {
+    const resumeClassification = await classifyResume(resumeText, true);
+    return {
+      isResumeValid: resumeClassification.isValid,
+      isJobDescriptionValid: true, // Skip validation for edit mode
+      resumeReason: resumeClassification.reason,
+    };
+  }
+
+  // For TAILOR mode: classify both resume and job description
   const [resumeClassification, jobDescriptionClassification] =
     await Promise.all([
-      classifyResume(resumeText),
+      classifyResume(resumeText, false),
       classifyJobDescription(jobDescriptionText),
     ]);
 

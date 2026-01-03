@@ -1,6 +1,10 @@
 import { chromium, Browser, Page } from "playwright";
 import { getStorage } from "../config/firebase-admin.js";
-import { STORAGE_CONFIG, PDF_CONFIG } from "../config/constants.js";
+import {
+  STORAGE_CONFIG,
+  PDF_CONFIG,
+  ERROR_MESSAGES,
+} from "../config/constants.js";
 import type { ResumeData } from "./openRouterService.js";
 
 // Generates CSS styles with dynamic scale for single-page optimization
@@ -409,10 +413,10 @@ export async function generatePDFFromResumeData(
     return storageFilePath;
   } catch (pdfGenerationError) {
     console.error("Error generating PDF:", pdfGenerationError);
-    const errorMessage =
+    const pdfGenerationErrorMessage =
       pdfGenerationError instanceof Error
         ? pdfGenerationError.message
-        : "Unknown error";
-    throw new Error(`Failed to generate PDF: ${errorMessage}`);
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(`Failed to generate PDF: ${pdfGenerationErrorMessage}`);
   }
 }

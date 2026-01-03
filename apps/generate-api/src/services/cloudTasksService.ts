@@ -91,12 +91,12 @@ async function createCloudTaskWithOidcAuth(
       task: cloudTask,
     });
   } catch (createTaskError) {
-    const errorMessage =
+    const taskCreationErrorMessage =
       createTaskError instanceof Error
         ? createTaskError.message
         : String(createTaskError);
     console.error("[CLOUD_TASKS_CREATE_ERROR]", {
-      error: errorMessage,
+      error: taskCreationErrorMessage,
       queuePath,
       serviceAccountEmail: CLOUD_TASKS_SERVICE_ACCOUNT,
       taskUrl,
@@ -130,6 +130,18 @@ export async function createParseOriginalTask(
   await createCloudTaskWithOidcAuth(API_ROUTES.TASKS_PROCESS_PARSE_ORIGINAL, {
     documentId,
     resumeText,
+    ownerId,
+  });
+}
+
+export async function createEditResumeTask(
+  documentId: string,
+  editPrompt: string,
+  ownerId: string
+): Promise<void> {
+  await createCloudTaskWithOidcAuth(API_ROUTES.TASKS_PROCESS_EDIT_RESUME, {
+    documentId,
+    editPrompt,
     ownerId,
   });
 }

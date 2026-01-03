@@ -182,28 +182,114 @@ Resume Text:
 
 CRITICAL: Return ONLY the JSON object, nothing else. No markdown, no code blocks, no explanations. Start with { and end with }.`;
 
-// Extracts JSON object from AI response, handling markdown code blocks
+const EDIT_RESUME_PROMPT = `You are a professional resume editor. Apply the following changes to the resume.
+
+User request: {editPrompt}
+
+CRITICAL RULES:
+1. DO NOT add new information that is not in the original resume
+2. DO NOT invent facts, dates, companies, or skills
+3. ONLY modify what the user explicitly requested
+4. Preserve all other information exactly as it was
+5. If the user's request is unclear or cannot be applied, preserve the original data
+
+OUTPUT FORMAT REQUIREMENTS:
+- You MUST return ONLY a valid JSON object
+- DO NOT include markdown code blocks (no \`\`\`json or \`\`\`)
+- DO NOT include any text before or after the JSON object
+- DO NOT include explanations, comments, or additional text
+- The response must start with { and end with }
+- The JSON must be valid and parseable
+
+REQUIRED JSON STRUCTURE:
+{
+  "personalInfo": {
+    "fullName": "string",
+    "email": "string",
+    "phone": "string",
+    "location": "string",
+    "linkedIn": "string (optional)",
+    "website": "string (optional)"
+  },
+  "summary": "string",
+  "experience": [
+    {
+      "company": "string",
+      "position": "string",
+      "startDate": "string",
+      "endDate": "string | 'Present'",
+      "description": ["string"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "string",
+      "degree": "string",
+      "field": "string (optional)",
+      "graduationDate": "string"
+    }
+  ],
+  "skills": ["string"],
+  "certifications": [
+    {
+      "name": "string",
+      "issuer": "string",
+      "date": "string (optional)"
+    }
+  ]
+}
+
+Original Resume Data (JSON):
+{resumeData}
+
+CRITICAL: Return ONLY the updated JSON structure in the same format. Start with { and end with }.`;
+
 function extractJsonFromResponse(responseText: string): string {
-  let cleanedText = responseText.trim();
+  let cleanedResponseText = responseText.trim();
+  cleanedResponseText = cleanedResponseText.replace(/^```json\s*/i, "");
+  cleanedResponseText = cleanedResponseText.replace(/^```\s*/, "");
+  cleanedResponseText = cleanedResponseText.replace(/\s*```\s*$/, "");
 
-  // Remove markdown code block markers
-  cleanedText = cleanedText.replace(/^```json\s*/i, "");
-  cleanedText = cleanedText.replace(/^```\s*/, "");
-  cleanedText = cleanedText.replace(/\s*```\s*$/, "");
-
-  // Extract JSON object from first { to last }
-  const firstBraceIndex = cleanedText.indexOf("{");
-  const lastBraceIndex = cleanedText.lastIndexOf("}");
+  const jsonStartIndex = cleanedResponseText.indexOf("{");
+  const jsonEndIndex = cleanedResponseText.lastIndexOf("}");
 
   if (
-    firstBraceIndex !== -1 &&
-    lastBraceIndex !== -1 &&
-    lastBraceIndex > firstBraceIndex
+    jsonStartIndex !== -1 &&
+    jsonEndIndex !== -1 &&
+    jsonEndIndex > jsonStartIndex
   ) {
-    return cleanedText.substring(firstBraceIndex, lastBraceIndex + 1);
+    return cleanedResponseText.substring(jsonStartIndex, jsonEndIndex + 1);
   }
 
-  return cleanedText;
+  return cleanedResponseText;
+}
+
+async function processOpenRouterResponse(
+  apiResponse: Response
+): Promise<ResumeData> {
+  const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
+  const firstChoice = chatResponse.choices[0];
+  const responseContent = firstChoice?.message?.content;
+
+  if (!responseContent) {
+    throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
+  }
+
+  const extractedJsonString = extractJsonFromResponse(responseContent);
+
+  try {
+    return JSON.parse(extractedJsonString) as ResumeData;
+  } catch (jsonParsingError) {
+    console.error("Failed to parse JSON response:", jsonParsingError);
+    console.error("Response content:", extractedJsonString);
+    const parsingErrorMessage =
+      jsonParsingError instanceof Error
+        ? jsonParsingError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(
+      `Failed to parse AI response as JSON: ${parsingErrorMessage}`
+    );
+  }
 }
 
 // Makes API request with automatic retry for transient errors
@@ -241,12 +327,12 @@ async function makeOpenRouterRequest(
     return makeOpenRouterRequest(requestBody, attemptNumber + 1);
   }
 
-  const errorText = await apiResponse.text();
-  const errorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
+  const errorResponseText = await apiResponse.text();
+  const apiErrorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
     "{status}",
     apiResponse.status.toString()
-  ).replace("{errorText}", errorText);
-  throw new Error(errorMessage);
+  ).replace("{errorText}", errorResponseText);
+  throw new Error(apiErrorMessage);
 }
 
 export async function generateTailoredResume(
@@ -275,27 +361,7 @@ export async function generateTailoredResume(
 
   try {
     const apiResponse = await makeOpenRouterRequest(requestBody);
-    const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
-    const firstChoice = chatResponse.choices[0];
-    const responseContent = firstChoice?.message?.content;
-
-    if (!responseContent) {
-      throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
-    }
-
-    const extractedJsonString = extractJsonFromResponse(responseContent);
-
-    try {
-      return JSON.parse(extractedJsonString) as ResumeData;
-    } catch (jsonParseError) {
-      console.error("Failed to parse JSON response:", jsonParseError);
-      console.error("Response content:", extractedJsonString);
-      const errorMessage =
-        jsonParseError instanceof Error
-          ? jsonParseError.message
-          : "Unknown error";
-      throw new Error(`Failed to parse AI response as JSON: ${errorMessage}`);
-    }
+    return await processOpenRouterResponse(apiResponse);
   } catch (error) {
     console.error("Error calling OpenRouter API:", error);
     const errorMessage =
@@ -329,31 +395,55 @@ export async function parseResumeToStructure(
 
   try {
     const apiResponse = await makeOpenRouterRequest(requestBody);
-    const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
-    const firstChoice = chatResponse.choices[0];
-    const responseContent = firstChoice?.message?.content;
+    return await processOpenRouterResponse(apiResponse);
+  } catch (parsingError) {
+    console.error("Error parsing resume:", parsingError);
+    const parsingErrorMessage =
+      parsingError instanceof Error
+        ? parsingError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(`Failed to parse resume: ${parsingErrorMessage}`);
+  }
+}
 
-    if (!responseContent) {
-      throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
-    }
+// Edits resume based on user prompt
+export async function editResumeWithPrompt(
+  resumeData: ResumeData,
+  editPrompt: string
+): Promise<ResumeData> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error(ERROR_MESSAGES.OPENROUTER_API_KEY_NOT_CONFIGURED);
+  }
 
-    const extractedJsonString = extractJsonFromResponse(responseContent);
+  const resumeDataJson = JSON.stringify(resumeData, null, 2);
+  const prompt = EDIT_RESUME_PROMPT.replace("{editPrompt}", editPrompt).replace(
+    "{resumeData}",
+    resumeDataJson
+  );
 
-    try {
-      return JSON.parse(extractedJsonString) as ResumeData;
-    } catch (jsonParseError) {
-      console.error("Failed to parse JSON response:", jsonParseError);
-      console.error("Response content:", extractedJsonString);
-      const errorMessage =
-        jsonParseError instanceof Error
-          ? jsonParseError.message
-          : "Unknown error";
-      throw new Error(`Failed to parse AI response as JSON: ${errorMessage}`);
-    }
-  } catch (error) {
-    console.error("Error parsing resume:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Failed to parse resume: ${errorMessage}`);
+  const requestBody: OpenRouterRequest = {
+    model: OPENROUTER_MODEL,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    max_tokens: MAX_TOKENS,
+  };
+
+  try {
+    const apiResponse = await makeOpenRouterRequest(requestBody);
+    return await processOpenRouterResponse(apiResponse);
+  } catch (editingError) {
+    console.error(
+      "Error calling OpenRouter API for resume editing:",
+      editingError
+    );
+    const editingErrorMessage =
+      editingError instanceof Error
+        ? editingError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(`Failed to edit resume: ${editingErrorMessage}`);
   }
 }

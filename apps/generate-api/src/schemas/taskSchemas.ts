@@ -14,3 +14,9 @@ export const processParseOriginalTaskSchema = z.object({
   ownerId: firestoreIdSchema,
 });
 
+export const processEditResumeTaskSchema = z.object({
+  documentId: firestoreIdSchema,
+  editPrompt: z.string().min(1),
+  ownerId: firestoreIdSchema,
+});
+
