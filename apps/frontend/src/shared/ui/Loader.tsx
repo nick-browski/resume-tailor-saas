@@ -153,7 +153,9 @@ export function LoaderOverlay({ message }: LoaderOverlayProps) {
       <div className="flex flex-col items-center gap-4">
         <LoadingAnimation />
         {message && (
-          <p className="text-sm text-gray-600 font-medium">{message}</p>
+          <p className="text-sm text-gray-600 font-medium text-center">
+            {message}
+          </p>
         )}
       </div>
     </div>

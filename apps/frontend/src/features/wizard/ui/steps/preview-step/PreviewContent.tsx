@@ -2,6 +2,7 @@ import { DOCUMENT_STATUS, UI_TEXT } from "@/shared/lib/constants";
 import { Loader, LoaderOverlay } from "@/shared/ui";
 import { ResumeDiff } from "../../diff";
 import { PdfPreview } from "./PdfPreview";
+import { useWizardStore } from "../../../model/wizardStore";
 import type { ResumeData } from "@/shared/api/types";
 import type { Document } from "@/shared/api/types";
 
@@ -29,6 +30,8 @@ export function PreviewContent({
   pdfPreviewUrl,
   onToggleFullscreen,
 }: PreviewContentProps) {
+  const selectedScenario = useWizardStore((state) => state.selectedScenario);
+
   // Show diff view
   if (showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED) {
     if (isParsingOriginal) {
@@ -70,9 +73,13 @@ export function PreviewContent({
 
   // Generating state
   if (isGenerating) {
+    const generatingMessage =
+      selectedScenario === "edit"
+        ? UI_TEXT.GENERATING_EDITED_RESUME_TEXT
+        : UI_TEXT.GENERATING_TAILORED_RESUME_TEXT;
     return (
       <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-        <LoaderOverlay message={UI_TEXT.GENERATING_TAILORED_RESUME_TEXT} />
+        <LoaderOverlay message={generatingMessage} />
       </div>
     );
   }
@@ -97,7 +104,7 @@ export function PreviewContent({
     if (!pdfPreviewUrl) {
       return (
         <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-          <LoaderOverlay message={UI_TEXT.LOADING_DOCUMENT_TEXT} />
+          <LoaderOverlay message={UI_TEXT.LOADING_RESUME_PDF_TEXT} />
         </div>
       );
     }
