@@ -1,6 +1,4 @@
 import { getDb, getStorage } from "../config/firebase-admin.js";
-// @ts-expect-error - pdf-parse doesn't have types
-import pdfParse from "pdf-parse";
 import type { Document } from "../types/document.js";
 import type { Timestamp } from "firebase-admin/firestore";
 import { FIREBASE_CONFIG, STORAGE_CONFIG } from "../config/constants.js";
@@ -25,9 +23,7 @@ export async function createDocument(
   let originalPdfPath: string | null = null;
 
   if (pdfBuffer && pdfFileName) {
-    const parsedPdfData = await pdfParse(pdfBuffer);
-    finalResumeText = parsedPdfData.text;
-
+    // Save file to Storage for archiving
     const storageBucket = storage.bucket();
     const timestamp = Date.now();
     const storageFilePath = `${STORAGE_CONFIG.RESUMES_FOLDER}/${ownerId}/${timestamp}-${pdfFileName}`;
