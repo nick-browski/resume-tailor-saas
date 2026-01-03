@@ -82,6 +82,7 @@ export async function getDocumentById(
     ownerId: documentData.ownerId,
     jobText: documentData.jobText,
     resumeText: documentData.resumeText,
+    initialOriginalResumeData: documentData.initialOriginalResumeData || null,
     originalResumeData: documentData.originalResumeData || null,
     tailoredText: documentData.tailoredText,
     tailoredResumeData: documentData.tailoredResumeData || null,
@@ -110,6 +111,7 @@ export async function getAllDocuments(ownerId: string): Promise<Document[]> {
       ownerId: documentData.ownerId,
       jobText: documentData.jobText,
       resumeText: documentData.resumeText,
+      initialOriginalResumeData: documentData.initialOriginalResumeData || null,
       originalResumeData: documentData.originalResumeData || null,
       tailoredText: documentData.tailoredText,
       tailoredResumeData: documentData.tailoredResumeData || null,
@@ -120,16 +122,4 @@ export async function getAllDocuments(ownerId: string): Promise<Document[]> {
       error: documentData.error,
     };
   });
-}
-
-// Updates document fields
-export async function updateDocument(
-  documentId: string,
-  updates: Partial<Omit<Document, "id" | "createdAt" | "ownerId">>
-): Promise<void> {
-  const database = getDb();
-  const documentReference = database
-    .collection(DOCUMENTS_COLLECTION_NAME)
-    .doc(documentId);
-  await documentReference.update(updates);
 }
