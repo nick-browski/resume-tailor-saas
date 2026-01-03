@@ -31,15 +31,15 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   const getStyles = () => {
     switch (toast.type) {
       case "success":
-        return "bg-white border-l-4 border-green-500 text-gray-900 shadow-lg";
+        return "bg-white border border-gray-200 border-l-4 border-l-green-500 text-gray-900 shadow-sm";
       case "error":
-        return "bg-white border-l-4 border-red-500 text-gray-900 shadow-lg";
+        return "bg-white border border-gray-200 border-l-4 border-l-red-500 text-gray-900 shadow-sm";
       case "info":
-        return "bg-white border-l-4 border-blue-500 text-gray-900 shadow-lg";
+        return "bg-white border border-gray-200 border-l-4 border-l-blue-500 text-gray-900 shadow-sm";
       case "loading":
-        return "bg-white border-l-4 border-blue-500 text-gray-900 shadow-lg";
+        return "bg-white border border-gray-200 border-l-4 border-l-blue-500 text-gray-900 shadow-sm";
       default:
-        return "bg-white border-l-4 border-gray-500 text-gray-900 shadow-lg";
+        return "bg-white border border-gray-200 border-l-4 border-l-gray-500 text-gray-900 shadow-sm";
     }
   };
 
@@ -121,16 +121,16 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   const styles = getStyles();
   const iconColor =
     toast.type === "success"
-      ? "text-green-500"
+      ? "text-green-600"
       : toast.type === "error"
-      ? "text-red-500"
+      ? "text-red-600"
       : toast.type === "loading"
-      ? "text-blue-500"
-      : "text-blue-500";
+      ? "text-blue-600"
+      : "text-blue-600";
 
   return (
     <div
-      className={`flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg border-r border-t border-b ${styles} min-w-0 sm:min-w-[300px] max-w-[calc(100vw-2rem)] sm:max-w-md backdrop-blur-sm ${
+      className={`flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-md ${styles} min-w-0 sm:min-w-[300px] max-w-[calc(100vw-2rem)] sm:max-w-md ${
         toast.type === "loading" ? "" : "animate-in"
       }`}
     >
@@ -141,7 +141,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       {toast.type !== "loading" && (
         <button
           onClick={() => onRemove(toast.id)}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-700 transition-colors touch-manipulation"
+          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation"
           aria-label="Close"
         >
           <svg
