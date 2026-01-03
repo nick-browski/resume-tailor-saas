@@ -11,6 +11,7 @@ export const FILE_CONSTANTS = {
   MARKDOWN_MIME_TYPE: "text/markdown",
   PDF_MIME_TYPE: "pdf",
   BYTES_PER_KB: 1024,
+  MAX_PAGES: 4,
 } as const;
 
 export const UPLOAD_MODE = {
@@ -34,6 +35,11 @@ export const QUERY_CONSTANTS = {
 export const TEXTAREA_CONSTANTS = {
   RESUME_ROWS: 10,
   JOB_DESCRIPTION_ROWS: 12,
+} as const;
+
+export const VALIDATION_CONSTANTS = {
+  RESUME_TEXT_MIN_LENGTH: 10,
+  RESUME_TEXT_MAX_LENGTH: 50000,
 } as const;
 
 export const TOAST_MESSAGES = {
@@ -105,6 +111,29 @@ export const UI_TEXT = {
   START_OVER_BUTTON: "Start Over",
   DOWNLOADING_TEXT: "Downloading...",
   DOWNLOAD_RESUME_BUTTON: "Download Resume",
+  FILE_VALIDATION_HINT: `File must be a PDF, not exceed ${FILE_CONSTANTS.MAX_SIZE_MB}MB, and have no more than ${FILE_CONSTANTS.MAX_PAGES} pages`,
+  TEXT_VALIDATION_HINT: `Text must be between ${
+    VALIDATION_CONSTANTS.RESUME_TEXT_MIN_LENGTH
+  } and ${VALIDATION_CONSTANTS.RESUME_TEXT_MAX_LENGTH.toLocaleString()} characters`,
+  FILE_REQUIRED_ERROR: "File is required",
+  FILE_SIZE_UNIT: "MB",
+  REMOVE_FILE_ARIA_LABEL: "Remove file",
+  FILE_SIZE_EXCEEDS_LIMIT_MESSAGE: (maxSizeMb: number) =>
+    `File size exceeds ${maxSizeMb}MB limit`,
+  FILE_MUST_BE_PDF_MESSAGE: "File must be a PDF",
+  TEXT_MIN_LENGTH_MESSAGE: (minLength: number) =>
+    `Text must be at least ${minLength} characters`,
+  TEXT_MAX_LENGTH_MESSAGE: (maxLength: number) =>
+    `Text must not exceed ${maxLength.toLocaleString()} characters`,
+  INVALID_FILE_MESSAGE: "Invalid file",
+  INVALID_TEXT_MESSAGE: "Invalid text",
+  RESUME_PAGE_COUNT_EXCEEDS_LIMIT_MESSAGE: (
+    maxPages: number,
+    actualPages: number
+  ) =>
+    `Resume cannot exceed ${maxPages} pages. Your document has ${actualPages} pages.`,
+  FAILED_TO_VALIDATE_PDF_MESSAGE: "Failed to validate PDF",
+  FAILED_TO_READ_PDF_MESSAGE: "Failed to read PDF file",
 } as const;
 
 export const QUERY_KEYS = {
