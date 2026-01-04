@@ -114,7 +114,7 @@ pnpm dev:documents-api
 FIREBASE_AUTH_EMULATOR_HOST=http://localhost:9099 \
 FIRESTORE_EMULATOR_HOST=localhost:8082 \
 FIREBASE_PROJECT_ID=demo-project \
-OPENROUTER_API_KEY=your-key \
+MISTRAL_API_KEY=your-key \
 pnpm dev:generate-api
 
 # Terminal 4: Frontend
@@ -142,7 +142,7 @@ For emulator mode:
 For production mode:
 
 - `FIREBASE_SERVICE_ACCOUNT_KEY` - JSON service account key
-- `OPENROUTER_API_KEY` - OpenRouter API key (only for generate-api)
+- `MISTRAL_API_KEY` - Mistral API key (only for generate-api)
 
 #### Frontend
 

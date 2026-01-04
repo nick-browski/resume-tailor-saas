@@ -101,24 +101,24 @@ fi
 rm ${KEY_FILE}
 echo -e "${GREEN}✓ FIREBASE_SERVICE_ACCOUNT_KEY secret created/updated${NC}"
 
-# Check if OPENROUTER_API_KEY secret exists
-echo -e "\n${BLUE}🔐 Checking OPENROUTER_API_KEY secret...${NC}"
-if ! gcloud secrets describe OPENROUTER_API_KEY &> /dev/null; then
-  echo -e "${YELLOW}⚠️  OPENROUTER_API_KEY secret does not exist.${NC}"
+# Check if MISTRAL_API_KEY secret exists
+echo -e "\n${BLUE}🔐 Checking MISTRAL_API_KEY secret...${NC}"
+if ! gcloud secrets describe MISTRAL_API_KEY &> /dev/null; then
+  echo -e "${YELLOW}⚠️  MISTRAL_API_KEY secret does not exist.${NC}"
   echo -e "${YELLOW}Please create it manually:${NC}"
-  echo -e "  1. Get your API key from https://openrouter.ai/keys"
-  echo -e "  2. Run: echo -n 'your-api-key' | gcloud secrets create OPENROUTER_API_KEY --data-file=-"
+  echo -e "  1. Get your API key from https://console.mistral.ai/api-keys"
+  echo -e "  2. Run: echo -n 'your-api-key' | gcloud secrets create MISTRAL_API_KEY --data-file=-"
 else
-  echo -e "${GREEN}✓ OPENROUTER_API_KEY secret already exists${NC}"
+  echo -e "${GREEN}✓ MISTRAL_API_KEY secret already exists${NC}"
 fi
 
 echo -e "\n${GREEN}✅ Setup complete!${NC}\n"
 echo -e "${BLUE}📋 Summary:${NC}"
 echo -e "  Service Account: ${SERVICE_ACCOUNT_EMAIL}"
 echo -e "  FIREBASE_SERVICE_ACCOUNT_KEY: ✓ Created"
-if gcloud secrets describe OPENROUTER_API_KEY &> /dev/null; then
-  echo -e "  OPENROUTER_API_KEY: ✓ Exists"
+if gcloud secrets describe MISTRAL_API_KEY &> /dev/null; then
+  echo -e "  MISTRAL_API_KEY: ✓ Exists"
 else
-  echo -e "  OPENROUTER_API_KEY: ⚠️  Needs to be created"
+  echo -e "  MISTRAL_API_KEY: ⚠️  Needs to be created"
 fi
 
