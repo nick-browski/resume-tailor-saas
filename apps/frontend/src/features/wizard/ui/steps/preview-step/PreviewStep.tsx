@@ -8,7 +8,11 @@ import { useDocumentById } from "../../../api/useDocuments";
 import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { documentsApi } from "@/shared/api";
-import { usePdfPreview, useResumeDownload, useFullscreen } from "../../../hooks";
+import {
+  usePdfPreview,
+  useResumeDownload,
+  useFullscreen,
+} from "../../../hooks";
 import {
   getResumeDataFromDocument,
   getOriginalResumeDataForDiff,
@@ -32,7 +36,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   const { data: documentData, isLoading } = useDocumentById(documentId);
   const toast = useToastContext();
 
-  const { tailoredResumeData, originalResumeData, initialOriginalResumeData } =
+  const { tailoredResumeData, currentResumeData, baselineResumeData } =
     getResumeDataFromDocument(documentData);
 
   const { pdfPreviewUrl } = usePdfPreview({
@@ -54,7 +58,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     setShowDiff(true);
     setIsParsingLocal(true);
 
-    if (originalResumeData) {
+    if (currentResumeData) {
       setIsParsingLocal(false);
       return;
     }
@@ -77,14 +81,14 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   }, [
     documentId,
     documentData?.originalParseStatus,
-    originalResumeData,
+    currentResumeData,
     toast,
     setParseToastId,
   ]);
 
   // Update local state; toast notifications handled by useDocumentStatusMonitor
   useEffect(() => {
-    if (originalResumeData) {
+    if (currentResumeData) {
       setIsParsingLocal(false);
       return;
     }
@@ -95,7 +99,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     ) {
       setIsParsingLocal(false);
     }
-  }, [originalResumeData, documentData?.originalParseStatus]);
+  }, [currentResumeData, documentData?.originalParseStatus]);
 
   const isGenerating = documentData?.status === DOCUMENT_STATUS.GENERATING;
   const isParsingOriginal =
@@ -105,8 +109,8 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
 
   const originalResumeDataForDiff = getOriginalResumeDataForDiff(
     showDiff,
-    initialOriginalResumeData,
-    originalResumeData
+    baselineResumeData,
+    currentResumeData
   );
 
   return (

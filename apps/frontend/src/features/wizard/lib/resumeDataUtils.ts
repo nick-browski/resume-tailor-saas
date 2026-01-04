@@ -14,25 +14,26 @@ export function parseResumeData(
 
 export function getResumeDataFromDocument(documentData: Document | null): {
   tailoredResumeData: ResumeData | null;
-  originalResumeData: ResumeData | null;
-  initialOriginalResumeData: ResumeData | null;
+  currentResumeData: ResumeData | null;
+  baselineResumeData: ResumeData | null;
 } {
   return {
     tailoredResumeData: parseResumeData(documentData?.tailoredResumeData),
-    originalResumeData: parseResumeData(documentData?.originalResumeData),
-    initialOriginalResumeData: parseResumeData(
+    currentResumeData: parseResumeData(documentData?.originalResumeData),
+    baselineResumeData: parseResumeData(
       documentData?.initialOriginalResumeData
     ),
   };
 }
 
+// DIFF uses baselineResumeData, normal view uses currentResumeData
 export function getOriginalResumeDataForDiff(
   showDiff: boolean,
-  initialOriginalResumeData: ResumeData | null,
-  originalResumeData: ResumeData | null
+  baselineResumeData: ResumeData | null,
+  currentResumeData: ResumeData | null
 ): ResumeData | null {
-  if (showDiff && initialOriginalResumeData) {
-    return initialOriginalResumeData;
+  if (showDiff) {
+    return baselineResumeData;
   }
-  return originalResumeData;
+  return currentResumeData;
 }
