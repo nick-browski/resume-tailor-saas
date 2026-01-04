@@ -84,6 +84,7 @@ export const TOAST_MESSAGES = {
   CLASSIFICATION_FAILED: "Failed to validate content",
   EDITING_RESUME: "Editing resume...",
   DOCUMENT_EXPIRED: "Document expired. Please create a new one.",
+  DOCUMENT_ACCESS_DENIED: "This is not your document. Access denied.",
 } as const;
 
 export const ERROR_MESSAGES = {

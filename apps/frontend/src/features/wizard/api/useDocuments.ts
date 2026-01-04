@@ -5,7 +5,11 @@ import { db } from "@/shared/config/firebase";
 import { useAuthReady } from "@/shared/config/auth";
 import { documentsApi, convertFirestoreSnapshotToDocument } from "@/shared/api";
 import type { CreateDocumentRequest, Document } from "@/shared/api";
-import { QUERY_KEYS, TOAST_MESSAGES } from "@/shared/lib/constants";
+import {
+  QUERY_KEYS,
+  TOAST_MESSAGES,
+  WIZARD_CONSTANTS,
+} from "@/shared/lib/constants";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { useWizardStore } from "../model/wizardStore";
 
@@ -27,8 +31,11 @@ export function useDocumentById(documentId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const toast = useToastContext();
   const reset = useWizardStore((state) => state.reset);
+  const setStep = useWizardStore((state) => state.setStep);
+  const setDocumentId = useWizardStore((state) => state.setDocumentId);
   const previousDocumentIdRef = useRef<string | null>(null);
   const wasDocumentLoadedRef = useRef<boolean>(false);
+  const hasShownAccessDeniedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isReady || !user) {
@@ -41,6 +48,7 @@ export function useDocumentById(documentId: string | null) {
       setIsLoading(false);
       previousDocumentIdRef.current = null;
       wasDocumentLoadedRef.current = false;
+      hasShownAccessDeniedRef.current = null;
       return;
     }
 
@@ -48,6 +56,7 @@ export function useDocumentById(documentId: string | null) {
     if (previousDocumentIdRef.current !== documentId) {
       wasDocumentLoadedRef.current = false;
       previousDocumentIdRef.current = documentId;
+      hasShownAccessDeniedRef.current = null;
     }
 
     setIsLoading(true);
@@ -74,14 +83,23 @@ export function useDocumentById(documentId: string | null) {
         wasDocumentLoadedRef.current = true;
       },
       (error) => {
-        if (error?.code !== "permission-denied") {
+        if (error?.code === "permission-denied") {
+          if (hasShownAccessDeniedRef.current !== documentId) {
+            hasShownAccessDeniedRef.current = documentId;
+            toast.showError(TOAST_MESSAGES.DOCUMENT_ACCESS_DENIED);
+            setDocumentId(null);
+            setStep(WIZARD_CONSTANTS.FIRST_STEP);
+          }
           setIsLoading(false);
+          setDocumentData(null);
+          return;
         }
+        setIsLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [isReady, user, documentId, toast, reset]);
+  }, [isReady, user, documentId, toast, reset, setStep, setDocumentId]);
 
   return { data: documentData, isLoading };
 }
