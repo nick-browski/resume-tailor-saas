@@ -29,6 +29,7 @@ export function useDocumentStatusMonitor() {
   );
   const maxReachedStep = useWizardStore((state) => state.maxReachedStep);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
+  const reset = useWizardStore((state) => state.reset);
 
   // Determine last step based on scenario
   const lastStep =
@@ -42,6 +43,7 @@ export function useDocumentStatusMonitor() {
   const processedStatusRef = useRef<string | null>(null);
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const shownLoadErrorForDocIdRef = useRef<string | null>(null);
+  const hasShownExpiredMessageRef = useRef<string | null>(null);
 
   // Subscribe to Firestore document changes in real-time
   // Only subscribe after auth is ready to prevent permission-denied errors
@@ -50,6 +52,7 @@ export function useDocumentStatusMonitor() {
       processedDocumentIdRef.current = null;
       processedStatusRef.current = null;
       shownLoadErrorForDocIdRef.current = null;
+      hasShownExpiredMessageRef.current = null;
       return;
     }
 
@@ -71,6 +74,21 @@ export function useDocumentStatusMonitor() {
       documentRef,
       (snapshot) => {
         if (!snapshot.exists()) {
+          // Document expired (TTL) or deleted
+          if (hasShownExpiredMessageRef.current !== documentId) {
+            if (generationToastId) {
+              toast.dismissLoading(generationToastId);
+              setGenerationToastId(null);
+            }
+            if (parseToastId) {
+              toast.dismissLoading(parseToastId);
+              setParseToastId(null);
+            }
+            toast.showError(TOAST_MESSAGES.DOCUMENT_EXPIRED);
+            // Reset wizard to initial state
+            reset();
+            hasShownExpiredMessageRef.current = documentId;
+          }
           return;
         }
 
@@ -228,6 +246,8 @@ export function useDocumentStatusMonitor() {
     generationToastId,
     parseToastId,
     currentStep,
+    selectedScenario,
+    lastStep,
     setGenerationToastId,
     setParseToastId,
     setResumeData,
@@ -235,6 +255,7 @@ export function useDocumentStatusMonitor() {
     maxReachedStep,
     setMaxReachedStep,
     nextStep,
+    reset,
     toast,
   ]);
 }
