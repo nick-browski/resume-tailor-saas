@@ -1,5 +1,9 @@
-import { DOCUMENT_STATUS, UI_TEXT } from "@/shared/lib/constants";
-import { Loader, LoaderOverlay } from "@/shared/ui";
+import {
+  DOCUMENT_STATUS,
+  UI_TEXT,
+  TOAST_MESSAGES,
+} from "@/shared/lib/constants";
+import { LoaderOverlay } from "@/shared/ui";
 import { ResumeDiff } from "../../diff";
 import { PdfPreview } from "./PdfPreview";
 import { useWizardStore } from "../../../model/wizardStore";
@@ -36,8 +40,8 @@ export function PreviewContent({
   if (showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED) {
     if (isParsingOriginal) {
       return (
-        <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh]">
-          <Loader size="lg" />
+        <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
+          <LoaderOverlay message={TOAST_MESSAGES.PARSING_ORIGINAL_RESUME} />
         </div>
       );
     }

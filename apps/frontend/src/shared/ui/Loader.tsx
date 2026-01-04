@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface DocumentIconProps {
   gradientId: string;
   showDetails?: boolean;
@@ -134,10 +136,11 @@ export function Loader({ size = "md", className = "" }: LoaderProps) {
 }
 
 export function LoadingAnimation() {
+  const uniqueId = useId();
   return (
-    <div className="flex items-center justify-center py-6">
-      <div className="relative w-24 h-24">
-        <DocumentIcon gradientId="docGradient" showDetails={true} />
+    <div className="flex items-center justify-center w-full">
+      <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+        <DocumentIcon gradientId={uniqueId} showDetails={true} />
       </div>
     </div>
   );
@@ -150,10 +153,10 @@ interface LoaderOverlayProps {
 export function LoaderOverlay({ message }: LoaderOverlayProps) {
   return (
     <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[9999]">
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-4 sm:gap-5">
         <LoadingAnimation />
         {message && (
-          <p className="text-sm text-gray-600 font-medium text-center">
+          <p className="text-sm sm:text-base text-gray-600 font-medium text-center px-4">
             {message}
           </p>
         )}
