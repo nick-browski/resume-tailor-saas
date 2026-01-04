@@ -90,12 +90,13 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
             <div className="relative bg-white">
               <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
               <div
-                className="relative overflow-auto"
+                className="relative"
                 style={{
                   width: FULL_WIDTH_PERCENT,
                   maxWidth: FULL_WIDTH_PERCENT,
                   height: containerHeight,
                   minHeight: minHeight,
+                  overflow: isMobile ? "hidden" : "auto",
                 }}
               >
                 {/* Skeleton shown while loading */}
@@ -111,8 +112,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                     style={{
                       width: FULL_WIDTH_PERCENT,
                       height: FULL_HEIGHT_PERCENT,
-                      overflow: "auto",
-                      WebkitOverflowScrolling: "touch",
+                      overflow: "hidden",
                       position: "relative",
                     }}
                   >
