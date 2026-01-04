@@ -18,6 +18,7 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
     previousStep,
     setSelectedScenario,
     setStep,
+    setDocumentId,
   } = useWizardStore();
 
   const renderStep = () => {
@@ -25,10 +26,12 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
       return (
         <InitialStep
           onSelectEdit={() => {
+            setDocumentId(null);
             setSelectedScenario(SCENARIO.EDIT);
             setStep(1);
           }}
           onSelectTailor={() => {
+            setDocumentId(null);
             setSelectedScenario(SCENARIO.TAILOR);
             setStep(1);
           }}

@@ -122,6 +122,17 @@ export const useWizardStore = create<WizardState>((set) => {
                 documentId: null,
               };
             }
+            // Clear documentId when starting new flow (going to step 1 from initial step)
+            const isStartingNewFlow =
+              step === WIZARD_CONSTANTS.FIRST_STEP &&
+              state.currentStep === WIZARD_CONSTANTS.INITIAL_STEP;
+            if (isStartingNewFlow) {
+              updateUrlParams({
+                [URL_QUERY_PARAMS.STEP]: step.toString(),
+                [URL_QUERY_PARAMS.DOCUMENT_ID]: null,
+              });
+              return { currentStep: step, documentId: null };
+            }
             updateUrlStep(step);
             return { currentStep: step };
           }
@@ -198,6 +209,7 @@ export const useWizardStore = create<WizardState>((set) => {
             currentStep: newStep,
             selectedScenario: null,
             documentId: null,
+            maxReachedStep: WIZARD_CONSTANTS.FIRST_STEP,
           };
         }
         updateUrlStep(newStep);

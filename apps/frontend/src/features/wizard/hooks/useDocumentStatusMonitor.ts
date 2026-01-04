@@ -198,7 +198,17 @@ export function useDocumentStatusMonitor() {
               const isOnPreviewStep = currentStep === lastStep;
               const hasPdfReady = !!documentData.pdfResultPath;
 
-              if (hasPdfReady && !isOnPreviewStep) {
+              // Auto-advance only if status changed from non-GENERATED to GENERATED (document became ready after subscription)
+              const documentBecameReadyAfterSubscription =
+                previousStatus !== null &&
+                previousStatus !== DOCUMENT_STATUS.GENERATED &&
+                documentStatus === DOCUMENT_STATUS.GENERATED;
+
+              if (
+                hasPdfReady &&
+                !isOnPreviewStep &&
+                documentBecameReadyAfterSubscription
+              ) {
                 nextStep();
               }
             } else if (maxReachedStep < lastStep) {
