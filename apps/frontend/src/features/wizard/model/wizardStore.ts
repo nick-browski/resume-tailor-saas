@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { WIZARD_CONSTANTS } from "@/shared/lib/constants";
-import { getUrlParam, updateUrlParam, URL_QUERY_PARAMS } from "../lib/urlUtils";
+import {
+  getUrlParam,
+  updateUrlParams,
+  URL_QUERY_PARAMS,
+} from "../lib/urlUtils";
 
 export type WizardStep = 0 | 1 | 2 | 3;
 export type Scenario = "edit" | "tailor" | null;
@@ -39,17 +43,17 @@ export function getDocumentIdFromUrl(): string | null {
 function updateUrlStep(step: WizardStep): void {
   // Setting step=0 explicitly supports direct URL navigation
   const stepValue = step.toString();
-  updateUrlParam(URL_QUERY_PARAMS.STEP, stepValue);
+  updateUrlParams({ [URL_QUERY_PARAMS.STEP]: stepValue });
 }
 
 // Updates URL query parameter with scenario
 function updateUrlScenario(scenario: Scenario): void {
-  updateUrlParam(URL_QUERY_PARAMS.SCENARIO, scenario);
+  updateUrlParams({ [URL_QUERY_PARAMS.SCENARIO]: scenario });
 }
 
 // Updates URL query parameter with documentId
 function updateUrlDocumentId(documentId: string | null): void {
-  updateUrlParam(URL_QUERY_PARAMS.DOCUMENT_ID, documentId);
+  updateUrlParams({ [URL_QUERY_PARAMS.DOCUMENT_ID]: documentId });
 }
 
 interface WizardState {
@@ -105,12 +109,20 @@ export const useWizardStore = create<WizardState>((set) => {
             step === WIZARD_CONSTANTS.INITIAL_STEP ||
             step <= state.maxReachedStep
           ) {
-            updateUrlStep(step);
-            // If going to initial step, clear scenario
+            // If going to initial step, reset URL to contain only step parameter
             if (step === WIZARD_CONSTANTS.INITIAL_STEP) {
-              updateUrlScenario(null);
-              return { currentStep: step, selectedScenario: null };
+              updateUrlParams({
+                [URL_QUERY_PARAMS.STEP]: step.toString(),
+                [URL_QUERY_PARAMS.SCENARIO]: null,
+                [URL_QUERY_PARAMS.DOCUMENT_ID]: null,
+              });
+              return {
+                currentStep: step,
+                selectedScenario: null,
+                documentId: null,
+              };
             }
+            updateUrlStep(step);
             return { currentStep: step };
           }
           return state;
@@ -175,18 +187,28 @@ export const useWizardStore = create<WizardState>((set) => {
           state.currentStep - 1,
           WIZARD_CONSTANTS.INITIAL_STEP
         ) as WizardStep;
-        updateUrlStep(newStep);
-        // If going back to initial step, clear scenario
+        // If going back to initial step, reset URL to contain only step parameter
         if (newStep === WIZARD_CONSTANTS.INITIAL_STEP) {
-          updateUrlScenario(null);
-          return { currentStep: newStep, selectedScenario: null };
+          updateUrlParams({
+            [URL_QUERY_PARAMS.STEP]: newStep.toString(),
+            [URL_QUERY_PARAMS.SCENARIO]: null,
+            [URL_QUERY_PARAMS.DOCUMENT_ID]: null,
+          });
+          return {
+            currentStep: newStep,
+            selectedScenario: null,
+            documentId: null,
+          };
         }
+        updateUrlStep(newStep);
         return { currentStep: newStep };
       }),
     reset: () => {
-      updateUrlStep(WIZARD_CONSTANTS.INITIAL_STEP);
-      updateUrlScenario(null);
-      updateUrlDocumentId(null);
+      updateUrlParams({
+        [URL_QUERY_PARAMS.STEP]: WIZARD_CONSTANTS.INITIAL_STEP.toString(),
+        [URL_QUERY_PARAMS.SCENARIO]: null,
+        [URL_QUERY_PARAMS.DOCUMENT_ID]: null,
+      });
       set({
         currentStep: WIZARD_CONSTANTS.INITIAL_STEP,
         maxReachedStep: WIZARD_CONSTANTS.FIRST_STEP,

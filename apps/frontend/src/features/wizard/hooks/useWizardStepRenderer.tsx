@@ -3,7 +3,6 @@ import { SCENARIO } from "@/shared/lib/constants";
 import { InitialStep } from "../ui/steps/initial-step";
 import { UploadResumeEditStep } from "../ui/steps/upload-step";
 import { EditPreviewStep } from "../ui/steps/edit-step";
-import { UploadResumeStep } from "../ui/steps/upload-step";
 import { JobDescriptionStep } from "../ui/steps/job-description-step";
 import { PreviewStep } from "../ui/steps/preview-step";
 
@@ -55,12 +54,8 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
     if (selectedScenario === SCENARIO.TAILOR) {
       switch (currentStep) {
         case 1:
-          return (
-            <UploadResumeStep onNext={nextStep} onPrevious={previousStep} />
-          );
-        case 2:
           return <JobDescriptionStep onPrevious={previousStep} />;
-        case 3:
+        case 2:
           return <PreviewStep onPrevious={previousStep} onReset={onReset} />;
         default:
           return null;

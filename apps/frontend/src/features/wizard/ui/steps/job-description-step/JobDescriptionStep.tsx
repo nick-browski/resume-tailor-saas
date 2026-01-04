@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { validateJobDescription } from "../../../schemas";
 import { ValidationHint, ValidationWarning } from "../../validation";
 import { useResumeValidation } from "../../../hooks/useResumeValidation";
+import { ResumeUploadSection } from "../../sections";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -45,10 +46,19 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const queryClient = useQueryClient();
 
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [resumeValidationError, setResumeValidationError] = useState<
+    string | null
+  >(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
-  const resumeValidationError = useResumeValidation(resumeData, uploadMode);
+  const resumeValidationErrorFromHook = useResumeValidation(
+    resumeData,
+    uploadMode
+  );
   const { classificationErrors, isClassifying, classifyContent } =
     useClassifyContent();
+
+  // Generation is in progress if toast is visible (generation started after form submit)
+  const isGenerationInProgress = !!generationToastId;
 
   const handleJobDescriptionTextChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -71,9 +81,11 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const handleFormSubmit = useCallback(
     async (formSubmitEventHandler: React.FormEvent) => {
       formSubmitEventHandler.preventDefault();
-      if (!resumeData || generationToastId || resumeValidationError) {
-        if (resumeValidationError) {
-          toast.showError(resumeValidationError);
+      const effectiveResumeValidationError =
+        resumeValidationError || resumeValidationErrorFromHook;
+      if (!resumeData || generationToastId || effectiveResumeValidationError) {
+        if (effectiveResumeValidationError) {
+          toast.showError(effectiveResumeValidationError);
         }
         return;
       }
@@ -123,7 +135,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         }
 
         setDocumentId(createdDocumentId);
-        setMaxReachedStep(2 as 1 | 2 | 3);
+        setMaxReachedStep(2 as 1 | 2);
 
         const loadingToastId = toast.showLoading(
           TOAST_MESSAGES.STARTING_RESUME_GENERATION
@@ -164,6 +176,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       documentId,
       queryClient,
       resumeValidationError,
+      resumeValidationErrorFromHook,
     ]
   );
 
@@ -178,10 +191,17 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         </p>
       </div>
 
-      {resumeValidationError && (
+      <ResumeUploadSection
+        isGenerationInProgress={isGenerationInProgress}
+        hasAttemptedSubmit={hasAttemptedSubmit}
+        validationError={resumeValidationError}
+        onValidationError={setResumeValidationError}
+      />
+
+      {(resumeValidationErrorFromHook || resumeValidationError) && (
         <ValidationWarning
           title={UI_TEXT.RESUME_VALIDATION_REQUIRED_TITLE}
-          message={resumeValidationError}
+          message={resumeValidationErrorFromHook || resumeValidationError || ""}
         />
       )}
 
@@ -246,7 +266,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           type="submit"
           disabled={
             !resumeData ||
-            !!resumeValidationError ||
+            !!(resumeValidationError || resumeValidationErrorFromHook) ||
             isCreatingDocument ||
             isStartingGeneration ||
             isClassifying ||

@@ -4,7 +4,9 @@ import { useWizardStore } from "../../../model/wizardStore";
 import { useDocumentById } from "../../../api/useDocuments";
 import { Loader } from "@/shared/ui";
 import { useEditAndTransform } from "../../../hooks";
+import { useClassifyContent } from "../../../api/useClassification";
 import { ResumeUploadSection, EditPromptSection } from "../../sections";
+import { ValidationWarning } from "../../validation";
 
 interface UploadResumeEditStepProps {
   onNext: () => void;
@@ -20,6 +22,7 @@ export function UploadResumeEditStep({
   const documentId = useWizardStore((state) => state.documentId);
   const generationToastId = useWizardStore((state) => state.generationToastId);
   const { data: currentDocument } = useDocumentById(documentId);
+  const { classificationErrors, classifyContent } = useClassifyContent();
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -42,6 +45,7 @@ export function UploadResumeEditStep({
       resumeData,
       documentId,
       editPrompt,
+      classifyContent,
       onValidationError: setValidationError,
       onEditPromptError: setEditPromptError,
       onNext,
@@ -77,6 +81,13 @@ export function UploadResumeEditStep({
         validationError={validationError}
         onValidationError={setValidationError}
       />
+
+      {classificationErrors.resumeError && (
+        <ValidationWarning
+          title={UI_TEXT.INVALID_RESUME_TITLE}
+          message={classificationErrors.resumeError}
+        />
+      )}
 
       <EditPromptSection
         editPrompt={editPrompt}

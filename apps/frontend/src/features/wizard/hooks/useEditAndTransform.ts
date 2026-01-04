@@ -7,7 +7,6 @@ import {
   validateEditPrompt,
 } from "../schemas";
 import { useCreateDocument } from "../api/useDocuments";
-import { useClassifyContent } from "../api/useClassification";
 import { generateApi } from "@/shared/api";
 import {
   UI_TEXT,
@@ -16,11 +15,21 @@ import {
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
 
+interface ResumeData {
+  file: File | null;
+  text: string;
+}
+
 interface UseEditAndTransformProps {
   uploadMode: "file" | "text";
-  resumeData: { file: File | null; text: string } | null;
+  resumeData: ResumeData | null;
   documentId: string | null;
   editPrompt: string;
+  classifyContent: (
+    resumeData: ResumeData | null,
+    jobDescriptionText: string,
+    mode?: "edit" | "tailor"
+  ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
   onValidationError: (error: string | null) => void;
   onEditPromptError: (error: string | null) => void;
   onNext: () => void;
@@ -31,6 +40,7 @@ export function useEditAndTransform({
   resumeData,
   documentId,
   editPrompt,
+  classifyContent,
   onValidationError,
   onEditPromptError,
   onNext,
@@ -39,7 +49,6 @@ export function useEditAndTransform({
   const setEditPromptInStore = useWizardStore((state) => state.setEditPrompt);
   const toast = useToastContext();
   const { mutateAsync: createDocument } = useCreateDocument();
-  const { classifyContent } = useClassifyContent();
 
   const handleEditAndTransform = useCallback(async () => {
     // Validate resume

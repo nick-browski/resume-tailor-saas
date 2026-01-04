@@ -12,14 +12,16 @@ export function getUrlParam(paramName: string): string | null {
   return urlParams.get(paramName);
 }
 
-// Updates URL query parameter
-export function updateUrlParam(paramName: string, value: string | null): void {
+// Updates URL query parameters in a single history push
+export function updateUrlParams(params: Record<string, string | null>): void {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
-  if (value) {
-    url.searchParams.set(paramName, value);
-  } else {
-    url.searchParams.delete(paramName);
-  }
+  Object.entries(params).forEach(([paramName, value]) => {
+    if (value) {
+      url.searchParams.set(paramName, value);
+    } else {
+      url.searchParams.delete(paramName);
+    }
+  });
   window.history.pushState({}, "", url.toString());
 }
