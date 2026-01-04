@@ -13,6 +13,10 @@ export const ANIMATION_CONSTANTS = {
   TOAST_EXIT_DURATION_MS: 250,
   TOAST_DEFAULT_DURATION_MS: 5000,
   TOAST_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+  MODAL_ENTER_DURATION_MS: 300,
+  MODAL_EXIT_DURATION_MS: 250,
+  MODAL_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+  MODAL_BACKDROP_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
 } as const;
 
 export const SCENARIO = {

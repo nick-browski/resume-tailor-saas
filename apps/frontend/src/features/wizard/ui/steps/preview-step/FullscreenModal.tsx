@@ -1,4 +1,6 @@
+import { useState, useEffect, useCallback } from "react";
 import { useMobilePdfScale } from "../../../hooks/useMobilePdfScale";
+import { ANIMATION_CONSTANTS } from "@/shared/lib/constants";
 
 interface FullscreenModalProps {
   pdfPreviewUrl: string;
@@ -11,17 +13,67 @@ export function FullscreenModal({
   onClose,
 }: FullscreenModalProps) {
   const { isMobile } = useMobilePdfScale();
+  const [isExiting, setIsExiting] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger enter animation after mount
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose();
+    }, ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS);
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleEscapeKeyPress = (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Escape" && !isExiting) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKeyPress);
+    };
+  }, [isExiting, handleClose]);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{
+        backgroundColor: isVisible
+          ? "rgba(0, 0, 0, 0.95)"
+          : "rgba(0, 0, 0, 0)",
+        transition: `background-color ${
+          isExiting
+            ? ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS
+            : ANIMATION_CONSTANTS.MODAL_ENTER_DURATION_MS
+        }ms ${ANIMATION_CONSTANTS.MODAL_BACKDROP_EASING}`,
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
+        if (e.target === e.currentTarget && !isExiting) {
+          handleClose();
         }
       }}
     >
-      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 sm:p-6 z-[60] pointer-events-none">
+      <div
+        className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 sm:p-6 z-[60] pointer-events-none"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transition: `opacity ${
+            isExiting
+              ? ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS
+              : ANIMATION_CONSTANTS.MODAL_ENTER_DURATION_MS
+          }ms ${ANIMATION_CONSTANTS.MODAL_EASING}`,
+        }}
+      >
         <div className="flex items-center gap-2 text-white/80 text-sm sm:text-base">
           <svg
             className="w-4 h-4 sm:w-5 sm:h-5"
@@ -40,7 +92,7 @@ export function FullscreenModal({
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className="p-3 sm:p-3.5 bg-white/90 hover:bg-white rounded-lg shadow-lg transition-all touch-manipulation pointer-events-auto active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Close fullscreen"
         >
@@ -59,7 +111,23 @@ export function FullscreenModal({
           </svg>
         </button>
       </div>
-      <div className="w-full h-full flex items-center justify-center">
+      <div
+        className="w-full h-full flex items-center justify-center"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? "scale(1)" : "scale(0.95)",
+          transition: `opacity ${
+            isExiting
+              ? ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS
+              : ANIMATION_CONSTANTS.MODAL_ENTER_DURATION_MS
+          }ms ${ANIMATION_CONSTANTS.MODAL_EASING}, transform ${
+            isExiting
+              ? ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS
+              : ANIMATION_CONSTANTS.MODAL_ENTER_DURATION_MS
+          }ms ${ANIMATION_CONSTANTS.MODAL_EASING}`,
+          willChange: "opacity, transform",
+        }}
+      >
         {isMobile ? (
           <object
             data={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
