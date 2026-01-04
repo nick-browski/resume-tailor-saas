@@ -19,6 +19,8 @@ export const ANIMATION_CONSTANTS = {
   MODAL_BACKDROP_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
   WIZARD_STEP_TRANSITION_DURATION_MS: 300,
   WIZARD_STEP_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+  LOADER_OVERLAY_FADE_IN_DURATION_MS: 250,
+  LOADER_OVERLAY_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
 } as const;
 
 export const SCENARIO = {
