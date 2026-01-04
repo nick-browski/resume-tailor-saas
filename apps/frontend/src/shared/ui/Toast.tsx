@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { ANIMATION_CONSTANTS } from "@/shared/lib/constants";
 
 export type ToastType = "success" | "error" | "info" | "loading";
 
@@ -15,18 +16,27 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onRemove }: ToastItemProps) {
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleRemove = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onRemove(toast.id);
+    }, ANIMATION_CONSTANTS.TOAST_EXIT_DURATION_MS);
+  }, [toast.id, onRemove]);
+
   useEffect(() => {
     if (toast.type === "loading") {
       return;
     }
 
-    const duration = toast.duration ?? 5000;
+    const duration = toast.duration ?? ANIMATION_CONSTANTS.TOAST_DEFAULT_DURATION_MS;
     const timer = setTimeout(() => {
-      onRemove(toast.id);
+      handleRemove();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [toast, onRemove]);
+  }, [toast, handleRemove]);
 
   const getStyles = () => {
     switch (toast.type) {
@@ -131,7 +141,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   return (
     <div
       className={`flex items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 rounded-md ${styles} min-w-0 sm:min-w-[300px] max-w-[calc(100vw-2rem)] sm:max-w-md ${
-        toast.type === "loading" ? "" : "animate-in"
+        isExiting ? "animate-out" : toast.type === "loading" ? "" : "animate-in"
       }`}
     >
       <div className={`flex-shrink-0 ${iconColor}`}>{getIcon()}</div>
@@ -140,7 +150,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       </div>
       {toast.type !== "loading" && (
         <button
-          onClick={() => onRemove(toast.id)}
+          onClick={handleRemove}
           className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation"
           aria-label="Close"
         >

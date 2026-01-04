@@ -7,6 +7,14 @@ export const WIZARD_CONSTANTS = {
   LAST_STEP_TAILOR_SCENARIO: 2,
 } as const;
 
+// Animation timing constants
+export const ANIMATION_CONSTANTS = {
+  TOAST_ENTER_DURATION_MS: 300,
+  TOAST_EXIT_DURATION_MS: 250,
+  TOAST_DEFAULT_DURATION_MS: 5000,
+  TOAST_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+} as const;
+
 export const SCENARIO = {
   EDIT: "edit",
   TAILOR: "tailor",
