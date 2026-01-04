@@ -5,34 +5,21 @@
 
 set -e
 
-# Set gcloud Python path if not set
-if [ -z "$CLOUDSDK_PYTHON" ]; then
-  export CLOUDSDK_PYTHON=/opt/homebrew/opt/python@3.13/bin/python3
-fi
+# Load common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/common.sh"
 
-# Add gcloud to PATH if not present
-if ! command -v gcloud &> /dev/null; then
-  export PATH=/opt/homebrew/share/google-cloud-sdk/bin:$PATH
-fi
+# Initialize gcloud
+init_gcloud
 
-PROJECT_ID="resume-tailor-saas"
+# Configuration
+PROJECT_ID="${PROJECT_ID:-resume-tailor-saas}"
 SERVICE_ACCOUNT_NAME="resume-tailor-saas"
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 
-# Colors
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+# Colors are loaded from common.sh
 
 echo -e "${BLUE}🔧 Setting up backend secrets and service account...${NC}\n"
-
-# Check if gcloud is installed
-if ! command -v gcloud &> /dev/null; then
-  echo -e "${RED}❌ gcloud CLI is not installed. Please install it first.${NC}"
-  exit 1
-fi
 
 # Set project
 gcloud config set project ${PROJECT_ID}
@@ -57,8 +44,16 @@ fi
 # Grant necessary roles
 echo -e "${BLUE}🔐 Granting roles to Service Account...${NC}"
 
-# Wait a moment for service account to be fully created
-sleep 2
+# Wait for service account to be fully created (with retry)
+if ! gcloud iam service-accounts describe ${SERVICE_ACCOUNT_EMAIL} --project=${PROJECT_ID} &>/dev/null; then
+  echo -e "${YELLOW}Waiting for service account to be ready...${NC}"
+  for i in {1..10}; do
+    if gcloud iam service-accounts describe ${SERVICE_ACCOUNT_EMAIL} --project=${PROJECT_ID} &>/dev/null; then
+      break
+    fi
+    sleep 1
+  done
+fi
 
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
@@ -103,22 +98,43 @@ echo -e "${GREEN}✓ FIREBASE_SERVICE_ACCOUNT_KEY secret created/updated${NC}"
 
 # Check if MISTRAL_API_KEY secret exists
 echo -e "\n${BLUE}🔐 Checking MISTRAL_API_KEY secret...${NC}"
-if ! gcloud secrets describe MISTRAL_API_KEY &> /dev/null; then
+if ! validate_secret MISTRAL_API_KEY "${PROJECT_ID}"; then
   echo -e "${YELLOW}⚠️  MISTRAL_API_KEY secret does not exist.${NC}"
-  echo -e "${YELLOW}Please create it manually:${NC}"
-  echo -e "  1. Get your API key from https://console.mistral.ai/api-keys"
-  echo -e "  2. Run: echo -n 'your-api-key' | gcloud secrets create MISTRAL_API_KEY --data-file=-"
+  
+  # If MISTRAL_API_KEY is provided as environment variable, create the secret
+  if [ -n "$MISTRAL_API_KEY" ]; then
+    echo -e "${BLUE}Creating MISTRAL_API_KEY secret from environment variable...${NC}"
+    echo -n "${MISTRAL_API_KEY}" | gcloud secrets create MISTRAL_API_KEY \
+      --data-file=- \
+      --project=${PROJECT_ID} \
+      --quiet
+    echo -e "${GREEN}✓ MISTRAL_API_KEY secret created${NC}"
+  else
+    echo -e "${YELLOW}Please create it manually:${NC}"
+    echo -e "  1. Get your API key from https://console.mistral.ai/api-keys"
+    echo -e "  2. Run: echo -n 'your-api-key' | gcloud secrets create MISTRAL_API_KEY --data-file=- --project=${PROJECT_ID}"
+    echo -e "${YELLOW}Or set MISTRAL_API_KEY environment variable and re-run this script${NC}"
+  fi
 else
-  echo -e "${GREEN}✓ MISTRAL_API_KEY secret already exists${NC}"
+  # If secret exists but MISTRAL_API_KEY env var is provided, update it
+  if [ -n "$MISTRAL_API_KEY" ]; then
+    echo -e "${BLUE}Updating MISTRAL_API_KEY secret from environment variable...${NC}"
+    echo -n "${MISTRAL_API_KEY}" | gcloud secrets versions add MISTRAL_API_KEY \
+      --data-file=- \
+      --project=${PROJECT_ID} \
+      --quiet
+    echo -e "${GREEN}✓ MISTRAL_API_KEY secret updated${NC}"
+  else
+    echo -e "${GREEN}✓ MISTRAL_API_KEY secret already exists${NC}"
+  fi
 fi
 
 echo -e "\n${GREEN}✅ Setup complete!${NC}\n"
 echo -e "${BLUE}📋 Summary:${NC}"
 echo -e "  Service Account: ${SERVICE_ACCOUNT_EMAIL}"
 echo -e "  FIREBASE_SERVICE_ACCOUNT_KEY: ✓ Created"
-if gcloud secrets describe MISTRAL_API_KEY &> /dev/null; then
+if validate_secret MISTRAL_API_KEY "${PROJECT_ID}"; then
   echo -e "  MISTRAL_API_KEY: ✓ Exists"
 else
   echo -e "  MISTRAL_API_KEY: ⚠️  Needs to be created"
 fi
-
