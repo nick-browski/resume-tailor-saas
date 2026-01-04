@@ -21,6 +21,9 @@ export const ANIMATION_CONSTANTS = {
   WIZARD_STEP_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
   LOADER_OVERLAY_FADE_IN_DURATION_MS: 250,
   LOADER_OVERLAY_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+  SKELETON_SHIMMER_DURATION_MS: 2000,
+  SKELETON_BASE_COLOR: "#e5e7eb",
+  SKELETON_HIGHLIGHT_COLOR: "#f3f4f6",
 } as const;
 
 export const SCENARIO = {
