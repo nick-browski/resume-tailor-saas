@@ -33,6 +33,26 @@ function getDocumentReference(
   return database.collection(DOCUMENTS_COLLECTION_NAME).doc(documentId);
 }
 
+// Preserves expireAt field when updating documents (for TTL)
+async function updateDocumentWithExpireAt(
+  documentReference: DocumentReference<DocumentData>,
+  updateData: Record<string, unknown>,
+  existingData?: DocumentData
+): Promise<void> {
+  if (existingData?.expireAt) {
+    updateData.expireAt = existingData.expireAt;
+  } else {
+    const snapshot = await documentReference.get();
+    if (snapshot.exists) {
+      const data = snapshot.data();
+      if (data?.expireAt) {
+        updateData.expireAt = data.expireAt;
+      }
+    }
+  }
+  await documentReference.update(updateData);
+}
+
 async function validateDocumentAccess(
   documentId: string,
   ownerId: string
@@ -59,13 +79,18 @@ async function updateStatusToFailed(
   documentReference: DocumentReference<DocumentData>,
   documentId: string,
   errorMessage: string,
-  errorLogContext: string
+  errorLogContext: string,
+  existingData?: DocumentData
 ): Promise<void> {
   try {
-    await documentReference.update({
-      status: DOCUMENT_STATUS.FAILED,
-      error: errorMessage,
-    });
+    await updateDocumentWithExpireAt(
+      documentReference,
+      {
+        status: DOCUMENT_STATUS.FAILED,
+        error: errorMessage,
+      },
+      existingData
+    );
   } catch (statusUpdateError) {
     console.error(`${errorLogContext} ${documentId}:`, statusUpdateError);
   }
@@ -74,12 +99,17 @@ async function updateStatusToFailed(
 async function updateParseStatusToFailed(
   documentReference: DocumentReference<DocumentData>,
   documentId: string,
-  errorLogContext: string
+  errorLogContext: string,
+  existingData?: DocumentData
 ): Promise<void> {
   try {
-    await documentReference.update({
-      originalParseStatus: FIRESTORE_PARSE_STATUS.FAILED,
-    });
+    await updateDocumentWithExpireAt(
+      documentReference,
+      {
+        originalParseStatus: FIRESTORE_PARSE_STATUS.FAILED,
+      },
+      existingData
+    );
   } catch (statusUpdateError) {
     console.error(`${errorLogContext} ${documentId}:`, statusUpdateError);
   }
@@ -93,6 +123,8 @@ export async function processGeneration(
   ownerId: string
 ): Promise<void> {
   const documentReference = getDocumentReference(documentId);
+  const snapshot = await documentReference.get();
+  const existingData = snapshot.exists ? snapshot.data() : undefined;
 
   try {
     const resumeData = await generateTailoredResume(resumeText, jobText);
@@ -102,12 +134,16 @@ export async function processGeneration(
       documentId
     );
 
-    await documentReference.update({
-      status: DOCUMENT_STATUS.GENERATED,
-      tailoredResumeData: JSON.stringify(resumeData),
-      pdfResultPath: pdfPath,
-      error: null,
-    });
+    await updateDocumentWithExpireAt(
+      documentReference,
+      {
+        status: DOCUMENT_STATUS.GENERATED,
+        tailoredResumeData: JSON.stringify(resumeData),
+        pdfResultPath: pdfPath,
+        error: null,
+      },
+      existingData
+    );
   } catch (generationError) {
     const generationErrorMessage =
       generationError instanceof Error
@@ -118,7 +154,8 @@ export async function processGeneration(
       documentReference,
       documentId,
       generationErrorMessage,
-      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED
+      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED,
+      existingData
     );
 
     console.error(
@@ -167,10 +204,14 @@ export async function startGeneration(
     throw new Error(statusErrorMessage);
   }
 
-  await documentReference.update({
-    status: DOCUMENT_STATUS.GENERATING,
-    error: null,
-  });
+  await updateDocumentWithExpireAt(
+    documentReference,
+    {
+      status: DOCUMENT_STATUS.GENERATING,
+      error: null,
+    },
+    documentData
+  );
 
   const resumeTextForGeneration = await getResumeTextForParsing(documentData);
 
@@ -217,27 +258,32 @@ export async function processParseOriginal(
   ownerId: string
 ): Promise<void> {
   const documentReference = getDocumentReference(documentId);
+  const snapshot = await documentReference.get();
+  const existingData = snapshot.exists ? snapshot.data() : undefined;
 
   try {
     const parsedResume = await parseResumeToStructure(resumeText);
-    const currentDocumentSnapshot = await documentReference.get();
-    const currentDocumentData = currentDocumentSnapshot.data();
 
     const updateData: Record<string, unknown> = {
       originalParseStatus: FIRESTORE_PARSE_STATUS.PARSED,
       originalResumeData: JSON.stringify(parsedResume),
     };
 
-    if (!currentDocumentData?.initialOriginalResumeData) {
+    if (!existingData?.initialOriginalResumeData) {
       updateData.initialOriginalResumeData = JSON.stringify(parsedResume);
     }
 
-    await documentReference.update(updateData);
+    await updateDocumentWithExpireAt(
+      documentReference,
+      updateData,
+      existingData
+    );
   } catch (parsingError) {
     await updateParseStatusToFailed(
       documentReference,
       documentId,
-      ERROR_MESSAGES.FAILED_TO_UPDATE_PARSE_STATUS_TO_FAILED
+      ERROR_MESSAGES.FAILED_TO_UPDATE_PARSE_STATUS_TO_FAILED,
+      existingData
     );
     throw parsingError;
   }
@@ -312,9 +358,13 @@ export async function startParseOriginal(
 
   const resumeTextForParsing = await getResumeTextForParsing(documentData);
 
-  await documentReference.update({
-    originalParseStatus: FIRESTORE_PARSE_STATUS.PARSING,
-  });
+  await updateDocumentWithExpireAt(
+    documentReference,
+    {
+      originalParseStatus: FIRESTORE_PARSE_STATUS.PARSING,
+    },
+    documentData
+  );
 
   if (IS_DEV) {
     await processParseOriginal(documentId, resumeTextForParsing, ownerId);
@@ -375,13 +425,17 @@ export async function processEditResume(
     );
 
     // Save to both fields: originalResumeData (current state) and tailoredResumeData (for DIFF)
-    await documentReference.update({
-      originalResumeData: JSON.stringify(editedResumeData),
-      tailoredResumeData: JSON.stringify(editedResumeData),
-      pdfResultPath: pdfPath,
-      status: DOCUMENT_STATUS.GENERATED,
-      error: null,
-    });
+    await updateDocumentWithExpireAt(
+      documentReference,
+      {
+        originalResumeData: JSON.stringify(editedResumeData),
+        tailoredResumeData: JSON.stringify(editedResumeData),
+        pdfResultPath: pdfPath,
+        status: DOCUMENT_STATUS.GENERATED,
+        error: null,
+      },
+      documentData
+    );
   } catch (editingError) {
     const editingErrorMessage =
       editingError instanceof Error
@@ -392,7 +446,8 @@ export async function processEditResume(
       documentReference,
       documentId,
       editingErrorMessage,
-      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED
+      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED,
+      documentData
     );
 
     console.error(
@@ -409,16 +464,20 @@ export async function startEditResume(
   editPrompt: string,
   ownerId: string
 ): Promise<{ status: string }> {
-  const { documentReference } = await validateDocumentAccess(
+  const { documentReference, documentData } = await validateDocumentAccess(
     documentId,
     ownerId
   );
 
   // Update status to indicate editing is in progress
-  await documentReference.update({
-    status: DOCUMENT_STATUS.GENERATING,
-    error: null,
-  });
+  await updateDocumentWithExpireAt(
+    documentReference,
+    {
+      status: DOCUMENT_STATUS.GENERATING,
+      error: null,
+    },
+    documentData
+  );
 
   if (IS_DEV) {
     await processEditResume(documentId, editPrompt, ownerId);
