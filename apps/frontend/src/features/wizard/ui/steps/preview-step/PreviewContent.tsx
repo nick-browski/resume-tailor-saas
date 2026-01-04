@@ -1,9 +1,5 @@
-import {
-  DOCUMENT_STATUS,
-  UI_TEXT,
-  TOAST_MESSAGES,
-} from "@/shared/lib/constants";
-import { LoaderOverlay } from "@/shared/ui";
+import { DOCUMENT_STATUS, UI_TEXT } from "@/shared/lib/constants";
+import { LoaderOverlay, DiffSkeleton } from "@/shared/ui";
 import { ResumeDiff } from "../../diff";
 import { PdfPreview } from "./PdfPreview";
 import { useWizardStore } from "../../../model/wizardStore";
@@ -40,8 +36,13 @@ export function PreviewContent({
   if (showDiff && documentData?.status === DOCUMENT_STATUS.GENERATED) {
     if (isParsingOriginal) {
       return (
-        <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-          <LoaderOverlay message={TOAST_MESSAGES.PARSING_ORIGINAL_RESUME} />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Resume Changes
+            </label>
+          </div>
+          <DiffSkeleton />
         </div>
       );
     }
@@ -91,19 +92,11 @@ export function PreviewContent({
     );
   }
 
-  // PDF preview state - check if PDF is ready but not loaded yet
+  // PDF preview state - show container with skeleton even if PDF URL is not ready yet
   if (
     documentData?.pdfResultPath &&
     documentData.status === DOCUMENT_STATUS.GENERATED
   ) {
-    if (!pdfPreviewUrl) {
-      return (
-        <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-          <LoaderOverlay message={UI_TEXT.LOADING_RESUME_PDF_TEXT} />
-        </div>
-      );
-    }
-
     return (
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -136,16 +129,23 @@ export function PreviewContent({
             </button>
           )}
         </div>
-        <PdfPreview pdfPreviewUrl={pdfPreviewUrl} />
+        <PdfPreview pdfPreviewUrl={pdfPreviewUrl || ""} />
       </div>
     );
   }
 
-  // Loading state - only show if document is not ready yet
+  // Loading state - show skeleton instead of loader
   if (isLoading || !documentData) {
     return (
-      <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 flex items-center justify-center min-h-[30vh] sm:min-h-[20vh] relative">
-        <LoaderOverlay message={UI_TEXT.LOADING_RESUME_PDF_TEXT} />
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {showDiff
+              ? "Resume Changes"
+              : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
+          </label>
+        </div>
+        <PdfPreview pdfPreviewUrl="" />
       </div>
     );
   }

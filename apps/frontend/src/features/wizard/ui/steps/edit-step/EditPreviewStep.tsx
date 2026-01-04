@@ -24,7 +24,8 @@ import { PreviewToggleButtons } from "../preview-step/PreviewToggleButtons";
 import { PreviewContent } from "../preview-step/PreviewContent";
 import { PreviewActions } from "../preview-step/PreviewActions";
 import { FullscreenModal } from "../preview-step/FullscreenModal";
-import { Loader } from "@/shared/ui";
+import { Loader, Tour } from "@/shared/ui";
+import { useTourSteps } from "../../../hooks/useTourSteps";
 
 interface EditPreviewStepProps {
   onPrevious: () => void;
@@ -57,6 +58,28 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
   });
 
   const { isFullscreen, handleToggleFullscreen } = useFullscreen();
+
+  // Create tour steps with refs
+  const { refs, steps: tourSteps } = useTourSteps({
+    previewButton: {
+      title: "Preview Your Resume",
+      content:
+        "Click here to see your edited resume in preview mode. This shows the final version of your resume.",
+      position: "bottom",
+    },
+    showChangesButton: {
+      title: "Show Changes",
+      content:
+        "Click here to see what was modified in your resume. This highlights the differences between the original and edited versions.",
+      position: "bottom",
+    },
+    downloadButton: {
+      title: "Download Your Resume",
+      content:
+        "Download your edited resume as a PDF file. It's ready to use for your job application.",
+      position: "top",
+    },
+  });
 
   const handleShowChanges = useCallback(async () => {
     setShowDiff(true);
@@ -148,64 +171,73 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <PreviewHeader />
-
-      <PrivacyNotice />
-
-      {!documentData?.pdfResultPath && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleTransformResume}
-            disabled={isGenerating || isDocumentLoading || isTransforming}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
-          >
-            {(isGenerating || isTransforming) && (
-              <Loader size="sm" className="text-white" />
-            )}
-            {isGenerating || isTransforming
-              ? UI_TEXT.EDITING_RESUME_BUTTON
-              : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
-          </button>
-        </div>
-      )}
-
-      <PreviewToggleButtons
-        documentStatus={documentData?.status}
-        showDiff={showDiff}
-        onShowPreview={() => setShowDiff(false)}
-        onShowChanges={handleShowChanges}
+    <>
+      <Tour
+        steps={tourSteps}
+        storageKey="resume-tailor-tour-edit-preview-step"
       />
+      <div className="space-y-4 sm:space-y-6">
+        <PreviewHeader />
 
-      <PreviewContent
-        showDiff={showDiff}
-        documentData={documentData}
-        isLoading={isLoading}
-        isGenerating={isGenerating}
-        isParsingOriginal={isParsingOriginal}
-        originalResumeData={originalResumeDataForDiff}
-        tailoredResumeData={tailoredResumeData}
-        pdfPreviewUrl={pdfPreviewUrl}
-        onToggleFullscreen={handleToggleFullscreen}
-      />
+        <PrivacyNotice />
 
-      {isFullscreen && pdfPreviewUrl && (
-        <FullscreenModal
-          pdfPreviewUrl={pdfPreviewUrl}
-          onClose={handleToggleFullscreen}
+        {!documentData?.pdfResultPath && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleTransformResume}
+              disabled={isGenerating || isDocumentLoading || isTransforming}
+              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
+            >
+              {(isGenerating || isTransforming) && (
+                <Loader size="sm" className="text-white" />
+              )}
+              {isGenerating || isTransforming
+                ? UI_TEXT.EDITING_RESUME_BUTTON
+                : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
+            </button>
+          </div>
+        )}
+
+        <PreviewToggleButtons
+          documentStatus={documentData?.status}
+          showDiff={showDiff}
+          onShowPreview={() => setShowDiff(false)}
+          onShowChanges={handleShowChanges}
+          previewButtonRef={refs.previewButton}
+          showChangesButtonRef={refs.showChangesButton}
         />
-      )}
 
-      <PreviewActions
-        isDownloading={isDownloading}
-        isDocumentLoading={isDocumentLoading}
-        isParsingOriginal={isParsingOriginal}
-        documentData={documentData}
-        onPrevious={onPrevious}
-        onReset={onReset}
-        onDownload={handleResumeDownload}
-      />
-    </div>
+        <PreviewContent
+          showDiff={showDiff}
+          documentData={documentData}
+          isLoading={isLoading}
+          isGenerating={isGenerating}
+          isParsingOriginal={isParsingOriginal}
+          originalResumeData={originalResumeDataForDiff}
+          tailoredResumeData={tailoredResumeData}
+          pdfPreviewUrl={pdfPreviewUrl}
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+
+        {isFullscreen && pdfPreviewUrl && (
+          <FullscreenModal
+            pdfPreviewUrl={pdfPreviewUrl}
+            onClose={handleToggleFullscreen}
+          />
+        )}
+
+        <PreviewActions
+          ref={refs.downloadButton}
+          isDownloading={isDownloading}
+          isDocumentLoading={isDocumentLoading}
+          isParsingOriginal={isParsingOriginal}
+          documentData={documentData}
+          onPrevious={onPrevious}
+          onReset={onReset}
+          onDownload={handleResumeDownload}
+        />
+      </div>
+    </>
   );
 }

@@ -1,4 +1,9 @@
 export { ToastContainer, type Toast, type ToastType } from "./Toast";
 export { Loader, LoaderOverlay, LoadingAnimation } from "./Loader";
 export { FileUploadArea } from "./FileUploadArea";
+export { Tour } from "./Tour";
+export type { TourStep } from "./Tour";
+export { TourTarget } from "./TourTarget";
 export { UploadedFileCard } from "./UploadedFileCard";
+export { PdfSkeleton } from "./PdfSkeleton";
+export { DiffSkeleton } from "./DiffSkeleton";

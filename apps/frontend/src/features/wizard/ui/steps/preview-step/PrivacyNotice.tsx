@@ -22,11 +22,11 @@ export function PrivacyNotice() {
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">
+    <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5 sm:p-4">
+      <div className="flex items-start gap-2 sm:gap-3">
+        <div className="flex-shrink-0 mt-0.5 sm:mt-0.5">
           <svg
-            className="w-5 h-5 text-blue-600"
+            className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -40,20 +40,26 @@ export function PrivacyNotice() {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-blue-900">
-            Your privacy matters. Unlike others, we delete your data in 2 hours.
-            Anonymous authentication ensures privacy. Full control over your
-            resume transformation—everything is up to you.
+          <p className="text-xs sm:text-sm text-blue-900 leading-relaxed break-words">
+            <span className="font-medium">Your privacy matters.</span>{" "}
+            <span className="hidden sm:inline">
+              Unlike others, we delete your data in 2 hours. Anonymous
+              authentication ensures privacy. Full control over your resume
+              transformation-everything is up to you.
+            </span>
+            <span className="sm:hidden">
+              We delete your data in 2 hours. Anonymous auth. Full control.
+            </span>
           </p>
         </div>
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex-shrink-0 text-blue-600 hover:text-blue-800 transition-colors"
+          className="flex-shrink-0 text-blue-600 hover:text-blue-800 transition-colors touch-manipulation p-0.5 sm:p-0"
           aria-label="Close"
         >
           <svg
-            className="w-5 h-5"
+            className="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -70,4 +76,3 @@ export function PrivacyNotice() {
     </div>
   );
 }
-

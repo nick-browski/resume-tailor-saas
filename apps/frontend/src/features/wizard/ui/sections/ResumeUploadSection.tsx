@@ -1,11 +1,11 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, forwardRef } from "react";
 import {
   TEXTAREA_CONSTANTS,
   UI_TEXT,
   UPLOAD_MODE,
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
-import { FileUploadArea, UploadedFileCard } from "@/shared/ui";
+import { FileUploadArea, UploadedFileCard, TourTarget } from "@/shared/ui";
 import { useWizardStore } from "../../model/wizardStore";
 import { validateResumeText } from "../../schemas";
 import { ValidationHint } from "../validation";
@@ -16,14 +16,21 @@ interface ResumeUploadSectionProps {
   hasAttemptedSubmit: boolean;
   validationError: string | null;
   onValidationError: (error: string | null) => void;
+  uploadAreaRef?: React.RefObject<HTMLDivElement>;
 }
 
-export function ResumeUploadSection({
-  isGenerationInProgress,
-  hasAttemptedSubmit,
-  validationError,
-  onValidationError,
-}: ResumeUploadSectionProps) {
+export const ResumeUploadSection = forwardRef<
+  HTMLDivElement,
+  ResumeUploadSectionProps
+>(function ResumeUploadSection(
+  {
+    isGenerationInProgress,
+    hasAttemptedSubmit,
+    validationError,
+    onValidationError,
+  },
+  ref
+) {
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const setUploadMode = useWizardStore((state) => state.setUploadMode);
@@ -116,11 +123,13 @@ export function ResumeUploadSection({
             </div>
           ) : (
             <div className="space-y-3">
-              <FileUploadArea
-                onFileSelect={handleFileSelect}
-                disabled={isGenerationInProgress}
-                hasError={hasAttemptedSubmit && !!validationError}
-              />
+              <TourTarget ref={ref}>
+                <FileUploadArea
+                  onFileSelect={handleFileSelect}
+                  disabled={isGenerationInProgress}
+                  hasError={hasAttemptedSubmit && !!validationError}
+                />
+              </TourTarget>
               <ValidationHint
                 hasAttemptedSubmit={hasAttemptedSubmit}
                 validationError={validationError}
@@ -160,4 +169,4 @@ export function ResumeUploadSection({
       )}
     </>
   );
-}
+});

@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, forwardRef } from "react";
 import {
   TEXTAREA_CONSTANTS,
   UI_TEXT,
   VALIDATION_CONSTANTS,
 } from "@/shared/lib/constants";
+import { TourTarget } from "@/shared/ui";
 import { validateEditPrompt } from "../../schemas";
 import { ValidationHint } from "../validation";
 
@@ -16,14 +17,20 @@ interface EditPromptSectionProps {
   onEditPromptError: (error: string | null) => void;
 }
 
-export function EditPromptSection({
-  editPrompt,
-  editPromptError,
-  isEditing,
-  hasAttemptedSubmit,
-  onEditPromptChange,
-  onEditPromptError,
-}: EditPromptSectionProps) {
+export const EditPromptSection = forwardRef<
+  HTMLDivElement,
+  EditPromptSectionProps
+>(function EditPromptSection(
+  {
+    editPrompt,
+    editPromptError,
+    isEditing,
+    hasAttemptedSubmit,
+    onEditPromptChange,
+    onEditPromptError,
+  },
+  ref
+) {
   const handleEditPromptChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
       const editPromptValue = textAreaChangeEvent.target.value;
@@ -90,19 +97,21 @@ export function EditPromptSection({
           </select>
         </div>
       </div>
-      <textarea
-        value={editPrompt}
-        onChange={handleEditPromptChange}
-        rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-        className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors touch-manipulation ${
-          hasAttemptedSubmit && editPromptError
-            ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-            : "border-gray-300"
-        }`}
-        placeholder={UI_TEXT.EDIT_PROMPT_PLACEHOLDER}
-        disabled={isEditing}
-        required
-      />
+      <TourTarget ref={ref}>
+        <textarea
+          value={editPrompt}
+          onChange={handleEditPromptChange}
+          rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
+          className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors touch-manipulation ${
+            hasAttemptedSubmit && editPromptError
+              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+              : "border-gray-300"
+          }`}
+          placeholder={UI_TEXT.EDIT_PROMPT_PLACEHOLDER}
+          disabled={isEditing}
+          required
+        />
+      </TourTarget>
       <ValidationHint
         hasAttemptedSubmit={hasAttemptedSubmit}
         validationError={editPromptError}
@@ -115,4 +124,4 @@ export function EditPromptSection({
       />
     </div>
   );
-}
+});

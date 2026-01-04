@@ -23,6 +23,8 @@ import { PreviewToggleButtons } from "./PreviewToggleButtons";
 import { PreviewContent } from "./PreviewContent";
 import { PreviewActions } from "./PreviewActions";
 import { FullscreenModal } from "./FullscreenModal";
+import { Tour } from "@/shared/ui";
+import { useTourSteps } from "../../../hooks/useTourSteps";
 
 interface PreviewStepProps {
   onPrevious: () => void;
@@ -52,6 +54,28 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   });
 
   const { isFullscreen, handleToggleFullscreen } = useFullscreen();
+
+  // Create tour steps with refs
+  const { refs, steps: tourSteps } = useTourSteps({
+    previewButton: {
+      title: "Preview Your Resume",
+      content:
+        "Click here to see your tailored resume in preview mode. This shows the final version of your resume.",
+      position: "bottom",
+    },
+    showChangesButton: {
+      title: "Show Changes",
+      content:
+        "Click here to see what was modified in your resume. This highlights the differences between the original and tailored versions.",
+      position: "bottom",
+    },
+    downloadButton: {
+      title: "Download Your Resume",
+      content:
+        "Download your tailored resume as a PDF file. It's ready to use for your job application.",
+      position: "top",
+    },
+  });
 
   // Handles showing changes by triggering original resume parsing
   // Toast notifications are managed by useDocumentStatusMonitor
@@ -115,46 +139,52 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <PreviewHeader />
+    <>
+      <Tour steps={tourSteps} storageKey="resume-tailor-tour-preview-step" />
+      <div className="space-y-4 sm:space-y-6">
+        <PreviewHeader />
 
-      <PrivacyNotice />
+        <PrivacyNotice />
 
-      <PreviewToggleButtons
-        documentStatus={documentData?.status}
-        showDiff={showDiff}
-        onShowPreview={() => setShowDiff(false)}
-        onShowChanges={handleShowChanges}
-      />
-
-      <PreviewContent
-        showDiff={showDiff}
-        documentData={documentData}
-        isLoading={isLoading}
-        isGenerating={isGenerating}
-        isParsingOriginal={isParsingOriginal}
-        originalResumeData={originalResumeDataForDiff}
-        tailoredResumeData={tailoredResumeData}
-        pdfPreviewUrl={pdfPreviewUrl}
-        onToggleFullscreen={handleToggleFullscreen}
-      />
-
-      {isFullscreen && pdfPreviewUrl && (
-        <FullscreenModal
-          pdfPreviewUrl={pdfPreviewUrl}
-          onClose={handleToggleFullscreen}
+        <PreviewToggleButtons
+          documentStatus={documentData?.status}
+          showDiff={showDiff}
+          onShowPreview={() => setShowDiff(false)}
+          onShowChanges={handleShowChanges}
+          previewButtonRef={refs.previewButton}
+          showChangesButtonRef={refs.showChangesButton}
         />
-      )}
 
-      <PreviewActions
-        isDownloading={isDownloading}
-        isDocumentLoading={isDocumentLoading}
-        isParsingOriginal={isParsingOriginal}
-        documentData={documentData}
-        onPrevious={onPrevious}
-        onReset={onReset}
-        onDownload={handleResumeDownload}
-      />
-    </div>
+        <PreviewContent
+          showDiff={showDiff}
+          documentData={documentData}
+          isLoading={isLoading}
+          isGenerating={isGenerating}
+          isParsingOriginal={isParsingOriginal}
+          originalResumeData={originalResumeDataForDiff}
+          tailoredResumeData={tailoredResumeData}
+          pdfPreviewUrl={pdfPreviewUrl}
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+
+        {isFullscreen && pdfPreviewUrl && (
+          <FullscreenModal
+            pdfPreviewUrl={pdfPreviewUrl}
+            onClose={handleToggleFullscreen}
+          />
+        )}
+
+        <PreviewActions
+          ref={refs.downloadButton}
+          isDownloading={isDownloading}
+          isDocumentLoading={isDocumentLoading}
+          isParsingOriginal={isParsingOriginal}
+          documentData={documentData}
+          onPrevious={onPrevious}
+          onReset={onReset}
+          onDownload={handleResumeDownload}
+        />
+      </div>
+    </>
   );
 }
