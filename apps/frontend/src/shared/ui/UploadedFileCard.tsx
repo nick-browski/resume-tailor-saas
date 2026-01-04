@@ -1,4 +1,5 @@
-import { FILE_CONSTANTS, UI_TEXT } from "@/shared/lib/constants";
+import { useEffect, useState } from "react";
+import { FILE_CONSTANTS, UI_TEXT, ANIMATION_CONSTANTS } from "@/shared/lib/constants";
 
 interface UploadedFileCardProps {
   fileName: string;
@@ -15,13 +16,35 @@ export function UploadedFileCard({
   onRemove,
   disabled = false,
 }: UploadedFileCardProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Запускаем анимацию появления после монтирования
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, ANIMATION_CONSTANTS.FILE_CARD_ENTER_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const fileSizeMB = (
     fileSizeBytes /
     (FILE_CONSTANTS.BYTES_PER_KB * FILE_CONSTANTS.BYTES_PER_KB)
   ).toFixed(FILE_CONSTANTS.FILE_SIZE_DECIMAL_PLACES);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div
+      className={`bg-white border border-gray-200 rounded-lg overflow-hidden transition ${
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 -translate-y-2"
+      }`}
+      style={{
+        transitionDuration: `${ANIMATION_CONSTANTS.FILE_CARD_ENTER_DURATION_MS}ms`,
+        transitionTimingFunction: ANIMATION_CONSTANTS.FILE_CARD_EASING,
+        willChange: "opacity, transform",
+      }}
+    >
       <div className="flex items-start gap-3 p-3 sm:p-4 border-l-4 border-green-500 bg-green-50/30">
         <div className="flex-shrink-0 mt-0.5">
           <svg
@@ -49,10 +72,10 @@ export function UploadedFileCard({
       </div>
       <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 flex items-center gap-3 border-t border-gray-100">
         <label
-          className={`text-sm font-medium transition-colors ${
+          className={`text-sm font-medium transition duration-150 ${
             disabled
               ? "text-gray-400 cursor-not-allowed"
-              : "text-blue-600 hover:text-blue-700 cursor-pointer"
+              : "text-blue-600 hover:text-blue-700 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           }`}
         >
           {UI_TEXT.REPLACE_FILE_TEXT}
@@ -74,7 +97,7 @@ export function UploadedFileCard({
           type="button"
           onClick={onRemove}
           disabled={disabled}
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-sm font-medium text-gray-600 hover:text-gray-900 hover:scale-[1.02] active:scale-[0.98] transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
         >
           {UI_TEXT.REMOVE_FILE_TEXT}
         </button>

@@ -209,7 +209,7 @@ export function UploadResumeStep({
         </div>
 
         {uploadMode === UPLOAD_MODE.FILE && (
-          <div>
+          <div className="animate-in fade-in duration-300">
             <label className="block mb-3 text-sm font-semibold text-gray-900">
               {UI_TEXT.RESUME_PDF_LABEL}
             </label>
