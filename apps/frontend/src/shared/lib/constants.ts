@@ -146,8 +146,6 @@ export const UI_TEXT = {
   TAILORED_RESUME_PREVIEW_LABEL: "Transformed Resume Preview",
   LOADING_TEXT: "Loading...",
   LOADING_RESUME_PDF_TEXT: "Loading resume PDF...",
-  GENERATING_TAILORED_RESUME_TEXT: "Transforming your resume...",
-  GENERATING_EDITED_RESUME_TEXT: "Editing your resume...",
   GENERATION_FAILED_PREFIX: "Generation failed:",
   UNKNOWN_ERROR_TEXT: "Unknown error",
   NO_RESUME_AVAILABLE_TEXT: "No resume available yet.",
