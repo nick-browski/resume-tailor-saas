@@ -109,11 +109,11 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
                     type="button"
                     onClick={() => handleStepClick(stepNumber)}
                     disabled={!isStepAccessible}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm transition-all ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm transition-all duration-150 ${
                       isStepCurrent
                         ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-300"
                         : isStepAccessible
-                        ? "bg-blue-400 text-white hover:bg-blue-500 cursor-pointer hover:scale-110"
+                        ? "bg-blue-400 text-white hover:bg-blue-500 cursor-pointer hover:scale-110 active:scale-105"
                         : "bg-gray-200 text-gray-600 cursor-not-allowed"
                     }`}
                   >

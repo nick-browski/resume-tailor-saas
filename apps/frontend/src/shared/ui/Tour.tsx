@@ -703,7 +703,7 @@ export function Tour({
             >
               <button
                 onClick={handleSkipAll}
-                className={`text-gray-500 hover:text-gray-700 transition-colors rounded hover:bg-gray-100 touch-manipulation ${
+                className={`text-gray-500 hover:text-gray-700 hover:scale-[1.02] active:scale-[0.98] transition duration-150 rounded hover:bg-gray-100 touch-manipulation ${
                   isMobile
                     ? "text-xs px-2 py-1.5 min-w-[60px]"
                     : "text-xs px-2 py-1"
@@ -714,7 +714,7 @@ export function Tour({
               </button>
               <button
                 onClick={handleSkip}
-                className="text-gray-400 hover:text-gray-600 transition-colors touch-manipulation p-1"
+                className="text-gray-400 hover:text-gray-600 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation p-1"
                 aria-label="Skip tour"
               >
                 <svg
@@ -756,7 +756,7 @@ export function Tour({
               {currentStep > 0 && (
                 <button
                   onClick={handlePrevious}
-                  className={`font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors touch-manipulation ${
+                  className={`font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation ${
                     isMobile
                       ? "px-4 py-2.5 text-sm flex-1"
                       : "px-4 py-2 text-sm"
@@ -767,7 +767,7 @@ export function Tour({
               )}
               <button
                 onClick={handleNext}
-                className={`font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors touch-manipulation ${
+                className={`font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation ${
                   isMobile ? "px-4 py-2.5 text-sm flex-1" : "px-4 py-2 text-sm"
                 }`}
               >

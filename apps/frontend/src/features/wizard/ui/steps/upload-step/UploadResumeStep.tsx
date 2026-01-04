@@ -184,10 +184,10 @@ export function UploadResumeStep({
               !isGenerationInProgress && setUploadMode(UPLOAD_MODE.FILE)
             }
             disabled={isGenerationInProgress}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
               uploadMode === UPLOAD_MODE.FILE
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 hover:text-gray-700 hover:scale-[1.02] active:scale-[0.98]"
             }`}
           >
             {UI_TEXT.UPLOAD_PDF_BUTTON}
@@ -198,10 +198,10 @@ export function UploadResumeStep({
               !isGenerationInProgress && setUploadMode(UPLOAD_MODE.TEXT)
             }
             disabled={isGenerationInProgress}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
               uploadMode === UPLOAD_MODE.TEXT
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 hover:text-gray-700 hover:scale-[1.02] active:scale-[0.98]"
             }`}
           >
             {UI_TEXT.PASTE_TEXT_BUTTON}
@@ -281,7 +281,7 @@ export function UploadResumeStep({
           <button
             type="button"
             onClick={onPrevious}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>
@@ -289,7 +289,7 @@ export function UploadResumeStep({
             <button
               type="submit"
               disabled={isGenerationInProgress}
-              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
+              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
             >
               {UI_TEXT.CONTINUE_BUTTON}
             </button>

@@ -27,6 +27,10 @@ export const ANIMATION_CONSTANTS = {
   PDF_FADE_IN_DURATION_MS: 400,
   PDF_FADE_IN_DELAY_MS: 100,
   PDF_FADE_IN_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
+  BUTTON_HOVER_SCALE: 1.02,
+  BUTTON_ACTIVE_SCALE: 0.98,
+  BUTTON_TRANSITION_DURATION_MS: 150,
+  BUTTON_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
 } as const;
 
 export const SCENARIO = {

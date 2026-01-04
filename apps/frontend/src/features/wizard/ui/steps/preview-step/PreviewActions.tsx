@@ -40,14 +40,14 @@ export const PreviewActions = forwardRef<HTMLDivElement, PreviewActionsProps>(
           <button
             type="button"
             onClick={onPrevious}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>
           <button
             type="button"
             onClick={onReset}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.START_OVER_BUTTON}
           </button>
@@ -57,7 +57,7 @@ export const PreviewActions = forwardRef<HTMLDivElement, PreviewActionsProps>(
             type="button"
             onClick={onDownload}
             disabled={isDownloadDisabled}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation flex items-center justify-center gap-2"
           >
             {isDownloading && <Loader size="sm" />}
             {isDownloading

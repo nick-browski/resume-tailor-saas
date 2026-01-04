@@ -80,7 +80,7 @@ export function FileUploadArea({
         </svg>
         <div className="space-y-2 sm:space-y-1">
           <label className="relative inline-block w-full sm:w-auto">
-            <span className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 sm:px-4 sm:py-2 text-sm font-medium text-blue-600 bg-white border-2 border-blue-600 rounded-md cursor-pointer hover:bg-blue-50 active:bg-blue-100 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed">
+            <span className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 sm:px-4 sm:py-2 text-sm font-medium text-blue-600 bg-white border-2 border-blue-600 rounded-md cursor-pointer hover:bg-blue-50 hover:scale-[1.02] active:bg-blue-100 active:scale-[0.98] transition duration-150 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100">
               {UI_TEXT.UPLOAD_FILE_TEXT}
             </span>
             <input

@@ -187,7 +187,7 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
               type="button"
               onClick={handleTransformResume}
               disabled={isGenerating || isDocumentLoading || isTransforming}
-              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation flex items-center justify-center gap-2"
             >
               {(isGenerating || isTransforming) && (
                 <Loader size="sm" className="text-white" />
