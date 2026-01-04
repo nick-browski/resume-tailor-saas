@@ -19,6 +19,7 @@ import {
   getOriginalResumeDataForDiff,
 } from "../../../lib/resumeDataUtils";
 import { PreviewHeader } from "../preview-step/PreviewHeader";
+import { PrivacyNotice } from "../preview-step/PrivacyNotice";
 import { PreviewToggleButtons } from "../preview-step/PreviewToggleButtons";
 import { PreviewContent } from "../preview-step/PreviewContent";
 import { PreviewActions } from "../preview-step/PreviewActions";
@@ -149,6 +150,8 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <PreviewHeader />
+
+      <PrivacyNotice />
 
       {!documentData?.pdfResultPath && (
         <div className="flex justify-end">

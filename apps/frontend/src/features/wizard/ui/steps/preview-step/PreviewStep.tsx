@@ -18,6 +18,7 @@ import {
   getOriginalResumeDataForDiff,
 } from "../../../lib/resumeDataUtils";
 import { PreviewHeader } from "./PreviewHeader";
+import { PrivacyNotice } from "./PrivacyNotice";
 import { PreviewToggleButtons } from "./PreviewToggleButtons";
 import { PreviewContent } from "./PreviewContent";
 import { PreviewActions } from "./PreviewActions";
@@ -116,6 +117,8 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <PreviewHeader />
+
+      <PrivacyNotice />
 
       <PreviewToggleButtons
         documentStatus={documentData?.status}
