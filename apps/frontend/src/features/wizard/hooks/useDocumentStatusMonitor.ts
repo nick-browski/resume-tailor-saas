@@ -56,6 +56,12 @@ export function useDocumentStatusMonitor() {
       return;
     }
 
+    // Reset tracking when documentId changes (new document loaded)
+    if (processedDocumentIdRef.current !== documentId) {
+      processedDocumentIdRef.current = null;
+      processedStatusRef.current = null;
+    }
+
     if (!user || !isReady) {
       return;
     }
@@ -127,7 +133,7 @@ export function useDocumentStatusMonitor() {
           documentStatus === DOCUMENT_STATUS.GENERATED ||
           documentStatus === DOCUMENT_STATUS.FAILED;
 
-        // Initialize processedStatusRef on first snapshot if not set
+        // Initialize status tracking on first snapshot
         if (processedStatusRef.current === null) {
           processedStatusRef.current = documentStatus;
         }
@@ -174,16 +180,22 @@ export function useDocumentStatusMonitor() {
           }
 
           if (documentStatus === DOCUMENT_STATUS.GENERATED) {
-            // Determine scenario from URL if not set in store (fallback)
-            const scenarioFromUrl = getScenarioFromUrl();
-            const effectiveScenario = selectedScenario || scenarioFromUrl;
+            // Show success toast only when status changed from non-GENERATED to GENERATED
+            const statusChangedToGenerated =
+              previousStatus !== null &&
+              previousStatus !== DOCUMENT_STATUS.GENERATED;
 
-            const successMessage =
-              effectiveScenario === "edit"
-                ? TOAST_MESSAGES.RESUME_EDITED_SUCCESS
-                : TOAST_MESSAGES.RESUME_GENERATED_SUCCESS;
-            toast.showSuccess(successMessage);
+            if (statusChangedToGenerated) {
+              const scenarioFromUrl = getScenarioFromUrl();
+              const effectiveScenario = selectedScenario || scenarioFromUrl;
+              const successMessage =
+                effectiveScenario === "edit"
+                  ? TOAST_MESSAGES.RESUME_EDITED_SUCCESS
+                  : TOAST_MESSAGES.RESUME_GENERATED_SUCCESS;
+              toast.showSuccess(successMessage);
+            }
 
+            // Update store data and maxReachedStep for new documents
             if (isNewDocument) {
               if (documentData.resumeText) {
                 setResumeData({ file: null, text: documentData.resumeText });
@@ -194,25 +206,22 @@ export function useDocumentStatusMonitor() {
               if (maxReachedStep < lastStep) {
                 setMaxReachedStep(lastStep);
               }
-
-              const isOnPreviewStep = currentStep === lastStep;
-              const hasPdfReady = !!documentData.pdfResultPath;
-
-              // Auto-advance only if status changed from non-GENERATED to GENERATED (document became ready after subscription)
-              const documentBecameReadyAfterSubscription =
-                previousStatus !== null &&
-                previousStatus !== DOCUMENT_STATUS.GENERATED &&
-                documentStatus === DOCUMENT_STATUS.GENERATED;
-
-              if (
-                hasPdfReady &&
-                !isOnPreviewStep &&
-                documentBecameReadyAfterSubscription
-              ) {
-                nextStep();
-              }
             } else if (maxReachedStep < lastStep) {
               setMaxReachedStep(lastStep);
+            }
+
+            // Auto-advance to Preview if document is ready and not already on Preview
+            const isOnPreviewStep = currentStep === lastStep;
+            const hasPdfReady = !!documentData.pdfResultPath;
+            const isNewDocumentAlreadyReady =
+              isNewDocument && previousStatus === null;
+            const shouldAutoAdvance =
+              hasPdfReady &&
+              !isOnPreviewStep &&
+              (statusChangedToGenerated || isNewDocumentAlreadyReady);
+
+            if (shouldAutoAdvance) {
+              nextStep();
             }
           } else if (documentStatus === DOCUMENT_STATUS.FAILED) {
             const errorMessage =

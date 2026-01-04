@@ -33,7 +33,6 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const documentId = useWizardStore((state) => state.documentId);
   const setDocumentId = useWizardStore((state) => state.setDocumentId);
-  const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
   const generationToastId = useWizardStore((state) => state.generationToastId);
   const setGenerationToastId = useWizardStore(
     (state) => state.setGenerationToastId
@@ -135,7 +134,6 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         }
 
         setDocumentId(createdDocumentId);
-        setMaxReachedStep(2 as 1 | 2);
 
         const loadingToastId = toast.showLoading(
           TOAST_MESSAGES.STARTING_RESUME_GENERATION
@@ -170,7 +168,6 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       createDocument,
       generateResume,
       setDocumentId,
-      setMaxReachedStep,
       setGenerationToastId,
       toast,
       documentId,

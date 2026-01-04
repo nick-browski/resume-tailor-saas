@@ -149,7 +149,30 @@ export const useWizardStore = create<WizardState>((set) => {
       set({ documentId });
     },
     setResumeData: (data: { file: File | null; text: string } | null) => {
-      set({ resumeData: data });
+      set((state) => {
+        // Reset maxReachedStep when a new file is loaded (to prevent navigation to Preview)
+        if (data === null) {
+          return { resumeData: data };
+        }
+
+        const isNewFileLoaded =
+          data.file !== null &&
+          (state.resumeData?.file === null ||
+            state.resumeData?.file?.name !== data.file.name ||
+            state.resumeData?.file?.size !== data.file.size);
+        const isNewTextEntered =
+          data.text.trim() !== "" && state.resumeData?.text !== data.text;
+
+        if (isNewFileLoaded || isNewTextEntered) {
+          // Reset to current step (or first step if on initial step)
+          const newMaxReachedStep =
+            state.currentStep === WIZARD_CONSTANTS.INITIAL_STEP
+              ? WIZARD_CONSTANTS.FIRST_STEP
+              : (state.currentStep as 1 | 2 | 3);
+          return { resumeData: data, maxReachedStep: newMaxReachedStep };
+        }
+        return { resumeData: data };
+      });
     },
     setJobDescriptionText: (text: string) => {
       set({ jobDescriptionText: text });
@@ -182,14 +205,15 @@ export const useWizardStore = create<WizardState>((set) => {
             : WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO;
         const newStep = Math.min(state.currentStep + 1, maxStep) as WizardStep;
         updateUrlStep(newStep);
+        const updatedMaxReachedStep = Math.max(
+          state.maxReachedStep,
+          newStep === WIZARD_CONSTANTS.INITIAL_STEP
+            ? WIZARD_CONSTANTS.FIRST_STEP
+            : newStep
+        ) as 1 | 2 | 3;
         return {
           currentStep: newStep,
-          maxReachedStep: Math.max(
-            state.maxReachedStep,
-            newStep === WIZARD_CONSTANTS.INITIAL_STEP
-              ? WIZARD_CONSTANTS.FIRST_STEP
-              : newStep
-          ) as 1 | 2 | 3,
+          maxReachedStep: updatedMaxReachedStep,
         };
       }),
     previousStep: () =>
