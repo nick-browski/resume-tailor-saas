@@ -40,6 +40,9 @@ export const ANIMATION_CONSTANTS = {
   SELECT_EASING: "cubic-bezier(0.4, 0, 0.2, 1)",
   SELECT_HOVER_SCALE: 1.01,
   SELECT_FOCUS_SCALE: 1.02,
+  LOADER_BOUNCE_DURATION_MS: 2000,
+  LOADER_BOUNCE_DISTANCE_PX: 10,
+  LOADER_BOUNCE_EASING: "cubic-bezier(0.68, -0.55, 0.265, 1.55)",
 } as const;
 
 export const SCENARIO = {

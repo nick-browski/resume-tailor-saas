@@ -8,8 +8,9 @@ interface DocumentIconProps {
 
 function DocumentIcon({ gradientId, showDetails = true }: DocumentIconProps) {
   const bounceAnimation = {
-    animation: "bounce-contained 3s ease-in-out infinite",
-    animationDuration: "3s",
+    animation: `bounce-contained ${ANIMATION_CONSTANTS.LOADER_BOUNCE_DURATION_MS}ms ${ANIMATION_CONSTANTS.LOADER_BOUNCE_EASING} infinite`,
+    animationDuration: `${ANIMATION_CONSTANTS.LOADER_BOUNCE_DURATION_MS}ms`,
+    willChange: "transform",
   };
 
   return (
@@ -19,8 +20,18 @@ function DocumentIcon({ gradientId, showDetails = true }: DocumentIconProps) {
           0%, 100% {
             transform: translateY(0);
           }
+          25% {
+            transform: translateY(-${
+              ANIMATION_CONSTANTS.LOADER_BOUNCE_DISTANCE_PX
+            }px);
+          }
           50% {
-            transform: translateY(-10px);
+            transform: translateY(0);
+          }
+          75% {
+            transform: translateY(-${
+              ANIMATION_CONSTANTS.LOADER_BOUNCE_DISTANCE_PX * 0.6
+            }px);
           }
         }
       `}</style>
@@ -138,9 +149,28 @@ export function Loader({ size = "md", className = "" }: LoaderProps) {
 
 export function LoadingAnimation() {
   const uniqueId = useId();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Запускаем анимацию появления после монтирования
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    });
+  }, []);
+
   return (
     <div className="flex items-center justify-center w-full">
-      <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+      <div
+        className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? "scale(1)" : "scale(0.8)",
+          transition: `opacity ${ANIMATION_CONSTANTS.LOADER_OVERLAY_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.LOADER_OVERLAY_EASING}, transform ${ANIMATION_CONSTANTS.LOADER_OVERLAY_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.LOADER_OVERLAY_EASING}`,
+          willChange: "opacity, transform",
+        }}
+      >
         <DocumentIcon gradientId={uniqueId} showDetails={true} />
       </div>
     </div>
