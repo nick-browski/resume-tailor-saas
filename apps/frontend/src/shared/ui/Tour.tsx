@@ -5,14 +5,12 @@ import { MOBILE_CONSTANTS } from "@/shared/lib/constants";
 const DEFAULT_TOUR_STORAGE_KEY = "resume-tailor-tour-completed";
 
 // DOM readiness checking constants
-const MAX_DOM_READY_RETRIES = 10;
+const MAX_DOM_READY_RETRIES = 30; // Increased to allow time for scroll completion (500ms + stability checks)
 const DOM_READY_CHECK_INTERVAL_MS = 16;
 const DOM_READY_INITIAL_DELAY_MS = 100;
 const REQUIRED_STABLE_CHECKS_COUNT = 2;
 const POSITION_CHANGE_THRESHOLD_PX = 5;
 const SIZE_CHANGE_THRESHOLD_PX = 1;
-const VIEWPORT_CHECK_OFFSET_PX = 1000;
-const VIEWPORT_CHECK_NEGATIVE_OFFSET_PX = -1000;
 
 // Animation timing constants
 const HIGHLIGHT_APPEARANCE_FRAMES = 3;
@@ -46,6 +44,42 @@ const HIGHLIGHT_BORDER_RADIUS_DESKTOP_PX = 8;
 const HIGHLIGHT_BORDER_WIDTH_PX = 4;
 const HIGHLIGHT_BORDER_COLOR = "#3b82f6";
 const OVERLAY_BLACK_COLOR = "rgba(0, 0, 0, 0.6)";
+
+// LocalStorage values
+const TOUR_COMPLETED_VALUE = "true";
+
+// Default tooltip position
+const DEFAULT_TOOLTIP_POSITION = "bottom";
+
+// Scroll constants
+const MINIMUM_SCROLL_POSITION = 0;
+const SCROLL_BEHAVIOR_SMOOTH = "smooth";
+
+// CSS animation constants
+const CUBIC_BEZIER_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+const WILL_CHANGE_OPACITY_TRANSFORM = "opacity, transform";
+
+// Box shadow constants
+const OVERLAY_BOX_SHADOW_OFFSET = "0 0 0";
+const OVERLAY_BOX_SHADOW_SPREAD = "9999px";
+
+// SVG stroke width
+const SVG_STROKE_WIDTH = 2;
+
+// UI text constants
+const TOOLTIP_BUTTON_TEXT_NEXT = "Next";
+const TOOLTIP_BUTTON_TEXT_GOT_IT = "Got it!";
+
+// Transform constants
+const TRANSLATE_Y_ZERO = "0";
+const OPACITY_FULL = 1;
+const OPACITY_TRANSPARENT = 0;
+
+// Math constants
+const HALF_DIVISOR = 2;
+
+// SVG viewBox
+const SVG_VIEWBOX = "0 0 24 24";
 
 export interface TourStep {
   target: string | (() => HTMLElement | null); // CSS selector, data-tour-id, or function returning element ref
@@ -121,7 +155,7 @@ export function Tour({
     []
   );
 
-  // Wait for DOM to be fully rendered before showing tour
+  // Wait for DOM to be fully rendered and scrolled before showing tour
   useEffect(() => {
     if (!isVisible || steps.length === 0) {
       setIsDOMReady(false);
@@ -142,9 +176,74 @@ export function Tour({
       visibility?: string;
     } | null = null;
     let elementStabilityCheckCount = 0;
+    let scrollCompleted = false;
+
+    // Scroll to element if needed, then mark scroll as completed
+    const scrollToTargetElement = () => {
+      const currentTourStep = steps[currentStep];
+      const targetElement = getElementFromTarget(currentTourStep.target);
+      if (!targetElement) {
+        scrollCompleted = true;
+        return;
+      }
+
+      const elementBoundingRect = targetElement.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const tooltipHeight = isMobile
+        ? TOOLTIP_HEIGHT_MOBILE_PX
+        : TOOLTIP_HEIGHT_DESKTOP_PX;
+      const tooltipSpacing = isMobile
+        ? TOOLTIP_SPACING_MOBILE_PX
+        : TOOLTIP_SPACING_DESKTOP_PX;
+      const minimumSpaceForTooltip = tooltipHeight + tooltipSpacing;
+
+      const isElementFullyVisible =
+        elementBoundingRect.top >= 0 &&
+        elementBoundingRect.bottom <= viewportHeight;
+      const availableSpaceAbove = elementBoundingRect.top;
+      const availableSpaceBelow = viewportHeight - elementBoundingRect.bottom;
+
+      // Scroll if element is not fully visible OR if there's not enough space for tooltip
+      const needsScrolling =
+        !isElementFullyVisible ||
+        availableSpaceAbove < minimumSpaceForTooltip ||
+        availableSpaceBelow < minimumSpaceForTooltip;
+
+      if (needsScrolling) {
+        const currentScrollY = window.scrollY || window.pageYOffset;
+        const elementVerticalCenterPosition =
+          elementBoundingRect.top +
+          currentScrollY +
+          elementBoundingRect.height / HALF_DIVISOR;
+        const targetScrollYPosition =
+          elementVerticalCenterPosition - viewportHeight / HALF_DIVISOR;
+
+        const finalScrollYPosition =
+          availableSpaceAbove >= availableSpaceBelow
+            ? targetScrollYPosition - minimumSpaceForTooltip
+            : targetScrollYPosition + minimumSpaceForTooltip;
+
+        window.scrollTo({
+          top: Math.max(MINIMUM_SCROLL_POSITION, finalScrollYPosition),
+          behavior: SCROLL_BEHAVIOR_SMOOTH,
+        });
+
+        // Wait for smooth scroll to complete before starting stability checks
+        setTimeout(() => {
+          scrollCompleted = true;
+        }, SMOOTH_SCROLL_COMPLETION_TIMEOUT_MS);
+      } else {
+        scrollCompleted = true;
+      }
+    };
 
     // Check if element is ready and stable
     const checkDOMReady = (): boolean => {
+      // Don't check stability until scroll is completed
+      if (!scrollCompleted) {
+        return false;
+      }
+
       const currentTourStep = steps[currentStep];
       const targetElement = getElementFromTarget(currentTourStep.target);
 
@@ -172,18 +271,8 @@ export function Tour({
         return false;
       }
 
-      // Check that element is in the viewport or close to it
-      const isInViewport =
-        elementBoundingRect.top <
-          window.innerHeight + VIEWPORT_CHECK_OFFSET_PX &&
-        elementBoundingRect.bottom > VIEWPORT_CHECK_NEGATIVE_OFFSET_PX &&
-        elementBoundingRect.left <
-          window.innerWidth + VIEWPORT_CHECK_OFFSET_PX &&
-        elementBoundingRect.right > VIEWPORT_CHECK_NEGATIVE_OFFSET_PX;
-
-      if (!isInViewport) {
-        return false;
-      }
+      // After scroll is completed, element should be in viewport
+      // We trust that scroll brought element into viewport if scroll was needed
 
       // Check stability: element position, size, and properties should not change
       // Note: We allow small position changes (up to POSITION_CHANGE_THRESHOLD_PX) to account for smooth scrolling
@@ -244,7 +333,10 @@ export function Tour({
       }
     };
 
-    // Start checking after render cycle
+    // Start by scrolling to element, then check readiness after scroll completes
+    scrollToTargetElement();
+
+    // Start checking after render cycle and scroll completion
     domReadyCheckFrameId = requestAnimationFrame(() => {
       domReadyCheckTimeoutId = setTimeout(() => {
         attemptDOMReadyCheck();
@@ -264,8 +356,9 @@ export function Tour({
       previousElementState = null;
       elementStabilityCheckCount = 0;
       domReadyRetryCount = 0;
+      scrollCompleted = false;
     };
-  }, [isVisible, currentStep, steps, getElementFromTarget]);
+  }, [isVisible, currentStep, steps, getElementFromTarget, isMobile]);
 
   const updateTooltipPosition = useCallback(() => {
     if (currentStep >= steps.length) {
@@ -275,7 +368,8 @@ export function Tour({
 
     const currentTourStep = steps[currentStep];
     const targetElement = getElementFromTarget(currentTourStep.target);
-    const preferredTooltipPosition = currentTourStep.position || "bottom";
+    const tooltipPosition =
+      currentTourStep.position || DEFAULT_TOOLTIP_POSITION;
 
     if (!targetElement) {
       setTooltipStyle(null);
@@ -284,7 +378,7 @@ export function Tour({
 
     // Use getBoundingClientRect() directly for fixed positioning (relative to viewport)
     const elementBoundingRect = targetElement.getBoundingClientRect();
-    const elementPositionData = {
+    const elementPosition = {
       top: elementBoundingRect.top,
       left: elementBoundingRect.left,
       width: elementBoundingRect.width,
@@ -292,18 +386,16 @@ export function Tour({
       element: targetElement,
     };
 
-    const calculatedTooltipStyle = calculateTooltipPosition(
-      elementPositionData,
-      preferredTooltipPosition,
+    const tooltipPositionStyle = calculateTooltipPosition(
+      elementPosition,
+      tooltipPosition,
       isMobile,
       currentTourStep.target
     );
 
-    // Only set tooltipStyle if highlight is ready (to maintain sequence)
-    if (isHighlightReady) {
-      setTooltipStyle(calculatedTooltipStyle);
-    }
-  }, [currentStep, steps, isMobile, getElementFromTarget, isHighlightReady]);
+    // Always set tooltipStyle - sequence is controlled by useEffect for sequential appearance
+    setTooltipStyle(tooltipPositionStyle);
+  }, [currentStep, steps, isMobile, getElementFromTarget]);
 
   const updateHighlightPosition = useCallback(() => {
     if (currentStep >= steps.length || !highlightRef.current) return;
@@ -312,7 +404,6 @@ export function Tour({
     const targetElement = getElementFromTarget(currentTourStep.target);
 
     if (targetElement && highlightRef.current && isHighlightReady) {
-      // Use getBoundingClientRect() directly for fixed positioning (relative to viewport)
       const elementBoundingRect = targetElement.getBoundingClientRect();
       highlightRef.current.style.top = `${elementBoundingRect.top}px`;
       highlightRef.current.style.left = `${elementBoundingRect.left}px`;
@@ -336,54 +427,45 @@ export function Tour({
     setIsHighlightReady(false);
     setIsTooltipReady(false);
     setTooltipStyle(null);
-    setHighlightOpacity(0);
-    setTooltipOpacity(0);
+    setHighlightOpacity(OPACITY_TRANSPARENT);
+    setTooltipOpacity(OPACITY_TRANSPARENT);
 
     let highlightFrameId: number | null = null;
     let tooltipFrameId: number | null = null;
 
     // Queue: Step 1 - Show highlight after overlay
     // Using HIGHLIGHT_APPEARANCE_FRAMES frames for smooth delay (~50ms at 60fps) - optimal for visual quality
-    const showHighlightWithAnimation = () => {
-      let frameCount = 0;
-      const scheduleNextFrame = () => {
+    const animateHighlightAppearance = () => {
+      let highlightFrameCount = 0;
+      const scheduleHighlightFrame = () => {
         requestAnimationFrame(() => {
-          frameCount++;
-          if (frameCount < HIGHLIGHT_APPEARANCE_FRAMES) {
-            scheduleNextFrame();
+          highlightFrameCount++;
+          if (highlightFrameCount < HIGHLIGHT_APPEARANCE_FRAMES) {
+            scheduleHighlightFrame();
           } else {
             setIsHighlightReady(true);
 
-            // Wait for React to render highlight, then update position
-            requestAnimationFrame(() => {
-              updateHighlightPosition();
-
-              // Queue: Step 2 - Show tooltip after highlight appears
-              // Calculate tooltip position only after highlight is rendered
-              updateTooltipPosition();
-
-              // Show tooltip after additional frames (~80-100ms delay for smooth visual separation)
-              // TOOLTIP_APPEARANCE_FRAMES provides optimal balance between responsiveness and visual quality
-              let tooltipFrameCount = 0;
-              const scheduleTooltipFrame = () => {
-                requestAnimationFrame(() => {
-                  tooltipFrameCount++;
-                  if (tooltipFrameCount < TOOLTIP_APPEARANCE_FRAMES) {
-                    scheduleTooltipFrame();
-                  } else {
-                    setIsTooltipReady(true);
-                  }
-                });
-              };
-              tooltipFrameId = requestAnimationFrame(scheduleTooltipFrame);
-            });
+            // Queue: Step 2 - Show tooltip after highlight appears
+            // Show tooltip after additional frames (~80-100ms delay for smooth visual separation)
+            let tooltipFrameCount = 0;
+            const scheduleTooltipFrame = () => {
+              requestAnimationFrame(() => {
+                tooltipFrameCount++;
+                if (tooltipFrameCount < TOOLTIP_APPEARANCE_FRAMES) {
+                  scheduleTooltipFrame();
+                } else {
+                  setIsTooltipReady(true);
+                }
+              });
+            };
+            tooltipFrameId = requestAnimationFrame(scheduleTooltipFrame);
           }
         });
       };
-      scheduleNextFrame();
+      scheduleHighlightFrame();
     };
 
-    highlightFrameId = requestAnimationFrame(showHighlightWithAnimation);
+    highlightFrameId = requestAnimationFrame(animateHighlightAppearance);
 
     return () => {
       if (highlightFrameId !== null) {
@@ -396,17 +478,28 @@ export function Tour({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, isDOMReady, currentStep, steps.length]);
 
-  // Trigger fade-in animation when highlight becomes ready
+  // Trigger fade-in animation when highlight becomes ready and update tooltip position
   useEffect(() => {
     if (isHighlightReady) {
+      // Update highlight position again to ensure it's correct after React render
+      updateHighlightPosition();
+
+      // Update tooltip position now that highlight is ready
+      updateTooltipPosition();
+
       // Use requestAnimationFrame to ensure DOM is ready before animating
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setHighlightOpacity(1);
+          setHighlightOpacity(OPACITY_FULL);
         });
       });
     }
-  }, [isHighlightReady]);
+  }, [
+    isHighlightReady,
+    updateTooltipPosition,
+    updateHighlightPosition,
+    currentStep,
+  ]);
 
   // Trigger fade-in animation when tooltip becomes ready
   useEffect(() => {
@@ -414,12 +507,13 @@ export function Tour({
       // Use requestAnimationFrame to ensure DOM is ready before animating
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setTooltipOpacity(1);
+          setTooltipOpacity(OPACITY_FULL);
         });
       });
     }
   }, [isTooltipReady]);
 
+  // Handle viewport resize and scroll events to update positions
   useEffect(() => {
     if (!isVisible || !isDOMReady) {
       return;
@@ -447,10 +541,10 @@ export function Tour({
         if (previousElementPosition) {
           const hasPositionChanged =
             Math.abs(currentElementPosition.top - previousElementPosition.top) >
-              SIZE_CHANGE_THRESHOLD_PX ||
+              POSITION_CHANGE_THRESHOLD_PX ||
             Math.abs(
               currentElementPosition.left - previousElementPosition.left
-            ) > SIZE_CHANGE_THRESHOLD_PX;
+            ) > POSITION_CHANGE_THRESHOLD_PX;
           const hasSizeChanged =
             Math.abs(
               currentElementPosition.width - previousElementPosition.width
@@ -473,77 +567,6 @@ export function Tour({
       }
     };
 
-    // Scroll to element to ensure it's visible in viewport
-    const scrollToTargetElement = () => {
-      const currentTourStep = steps[currentStep];
-      const targetElement = getElementFromTarget(currentTourStep.target);
-      if (targetElement) {
-        const elementBoundingRect = targetElement.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
-        const tooltipHeight = isMobile
-          ? TOOLTIP_HEIGHT_MOBILE_PX
-          : TOOLTIP_HEIGHT_DESKTOP_PX;
-        const tooltipSpacing = isMobile
-          ? TOOLTIP_SPACING_MOBILE_PX
-          : TOOLTIP_SPACING_DESKTOP_PX;
-        const currentScrollY = window.scrollY || window.pageYOffset;
-
-        // Check if element is outside viewport or too close to edges
-        const isElementFullyVisible =
-          elementBoundingRect.top >= 0 &&
-          elementBoundingRect.bottom <= viewportHeight &&
-          elementBoundingRect.left >= 0 &&
-          elementBoundingRect.right <= viewportWidth;
-
-        // Check if element is partially visible but tooltip might be cut off
-        const availableSpaceAbove = elementBoundingRect.top;
-        const availableSpaceBelow = viewportHeight - elementBoundingRect.bottom;
-        const needsScrolling =
-          !isElementFullyVisible ||
-          (elementBoundingRect.top < tooltipHeight + tooltipSpacing &&
-            availableSpaceBelow < tooltipHeight + tooltipSpacing);
-
-        if (needsScrolling) {
-          // Calculate scroll position to center element with space for tooltip
-          const elementVerticalCenter =
-            elementBoundingRect.top +
-            currentScrollY +
-            elementBoundingRect.height / 2;
-          const targetScrollPosition =
-            elementVerticalCenter - viewportHeight / 2;
-
-          // Adjust for tooltip position (prefer showing tooltip above if space allows)
-          const finalScrollPosition =
-            availableSpaceAbove >= availableSpaceBelow
-              ? targetScrollPosition - tooltipHeight - tooltipSpacing
-              : targetScrollPosition + tooltipHeight + tooltipSpacing;
-
-          window.scrollTo({
-            top: Math.max(0, finalScrollPosition),
-            behavior: "smooth",
-          });
-        }
-      }
-    };
-
-    // Scroll to element first, then update highlight and tooltip after scroll completes
-    scrollToTargetElement();
-
-    // Wait for scroll to complete before checking stability
-    let scrollCompletionTimeoutId: NodeJS.Timeout | null = null;
-    let scrollCompletionFrameId: number | null = null;
-    scrollCompletionTimeoutId = setTimeout(() => {
-      scrollCompletionFrameId = requestAnimationFrame(() => {
-        // Only update if highlight is already ready (to maintain sequence)
-        if (isHighlightReady) {
-          updateHighlightPosition();
-          updateTooltipPosition();
-        }
-        checkElementPositionChanges();
-      });
-    }, SMOOTH_SCROLL_COMPLETION_TIMEOUT_MS); // Wait for smooth scroll to complete
-
     const handleViewportResize = () => {
       requestAnimationFrame(() => {
         // Only update if highlight is already ready (to maintain sequence)
@@ -563,12 +586,6 @@ export function Tour({
     }, POSITION_MONITORING_INTERVAL_MS);
 
     return () => {
-      if (scrollCompletionTimeoutId !== null) {
-        clearTimeout(scrollCompletionTimeoutId);
-      }
-      if (scrollCompletionFrameId !== null) {
-        cancelAnimationFrame(scrollCompletionFrameId);
-      }
       clearInterval(positionMonitoringIntervalId);
       window.removeEventListener("resize", handleViewportResize);
       window.removeEventListener("scroll", handleViewportResize, true);
@@ -579,7 +596,6 @@ export function Tour({
     updateHighlightPosition,
     updateTooltipPosition,
     currentStep,
-    isMobile,
     steps,
     getElementFromTarget,
     isHighlightReady,
@@ -600,13 +616,13 @@ export function Tour({
   };
 
   const handleComplete = () => {
-    localStorage.setItem(storageKey, "true");
+    localStorage.setItem(storageKey, TOUR_COMPLETED_VALUE);
     setIsVisible(false);
     onComplete?.();
   };
 
   const handleSkip = () => {
-    localStorage.setItem(storageKey, "true");
+    localStorage.setItem(storageKey, TOUR_COMPLETED_VALUE);
     setIsVisible(false);
     onSkip?.();
   };
@@ -637,7 +653,7 @@ export function Tour({
           width: "100vw",
           height: "100vh",
           minHeight: "100vh",
-          opacity: 1,
+          opacity: OPACITY_FULL,
           zIndex: OVERLAY_Z_INDEX,
           transitionDuration: `${HIGHLIGHT_TRANSITION_DURATION_MS}ms`,
         }}
@@ -650,16 +666,16 @@ export function Tour({
           ref={highlightRef}
           className="fixed pointer-events-none"
           style={{
-            boxShadow: `0 0 0 9999px ${OVERLAY_BLACK_COLOR}, 0 0 0 ${HIGHLIGHT_BORDER_WIDTH_PX}px ${HIGHLIGHT_BORDER_COLOR}`,
+            boxShadow: `${OVERLAY_BOX_SHADOW_OFFSET} ${OVERLAY_BOX_SHADOW_SPREAD} ${OVERLAY_BLACK_COLOR}, ${OVERLAY_BOX_SHADOW_OFFSET} ${HIGHLIGHT_BORDER_WIDTH_PX}px ${HIGHLIGHT_BORDER_COLOR}`,
             borderRadius: isMobile
               ? `${HIGHLIGHT_BORDER_RADIUS_MOBILE_PX}px`
               : `${HIGHLIGHT_BORDER_RADIUS_DESKTOP_PX}px`,
-            transition: `opacity ${HIGHLIGHT_TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${HIGHLIGHT_TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            transition: `opacity ${HIGHLIGHT_TRANSITION_DURATION_MS}ms ${CUBIC_BEZIER_EASING}, transform ${HIGHLIGHT_TRANSITION_DURATION_MS}ms ${CUBIC_BEZIER_EASING}`,
             opacity: highlightOpacity,
             transform: `scale(${
               HIGHLIGHT_INITIAL_SCALE + highlightOpacity * HIGHLIGHT_SCALE_DELTA
             })`,
-            willChange: "opacity, transform",
+            willChange: WILL_CHANGE_OPACITY_TRANSFORM,
             zIndex: HIGHLIGHT_Z_INDEX,
           }}
         />
@@ -673,14 +689,16 @@ export function Tour({
           }`}
           style={{
             ...tooltipStyle,
-            transition: `opacity ${TOOLTIP_TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1), transform ${TOOLTIP_TRANSITION_DURATION_MS}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+            transition: `opacity ${TOOLTIP_TRANSITION_DURATION_MS}ms ${CUBIC_BEZIER_EASING}, transform ${TOOLTIP_TRANSITION_DURATION_MS}ms ${CUBIC_BEZIER_EASING}`,
             opacity: tooltipOpacity,
             transform: `translateY(${
-              tooltipOpacity === 0 ? `${TOOLTIP_TRANSLATE_Y_PX}px` : "0"
+              tooltipOpacity === OPACITY_TRANSPARENT
+                ? `${TOOLTIP_TRANSLATE_Y_PX}px`
+                : TRANSLATE_Y_ZERO
             }) scale(${
               TOOLTIP_INITIAL_SCALE + tooltipOpacity * TOOLTIP_SCALE_DELTA
             })`,
-            willChange: "opacity, transform",
+            willChange: WILL_CHANGE_OPACITY_TRANSFORM,
             zIndex: TOOLTIP_Z_INDEX,
           }}
         >
@@ -721,12 +739,12 @@ export function Tour({
                   className={`${isMobile ? "w-6 h-6" : "w-5 h-5"}`}
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  viewBox={SVG_VIEWBOX}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={SVG_STROKE_WIDTH}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
@@ -771,7 +789,9 @@ export function Tour({
                   isMobile ? "px-4 py-2.5 text-sm flex-1" : "px-4 py-2 text-sm"
                 }`}
               >
-                {currentStep === steps.length - 1 ? "Got it!" : "Next"}
+                {currentStep === steps.length - 1
+                  ? TOOLTIP_BUTTON_TEXT_GOT_IT
+                  : TOOLTIP_BUTTON_TEXT_NEXT}
               </button>
             </div>
           </div>
@@ -782,14 +802,14 @@ export function Tour({
 }
 
 function calculateTooltipPosition(
-  elementPositionData: {
+  elementPosition: {
     top: number;
     left: number;
     width: number;
     height: number;
     element?: HTMLElement | null;
   },
-  preferredPosition: string,
+  tooltipPosition: string,
   isMobileDevice: boolean,
   stepTargetSelector?: string | (() => HTMLElement | null)
 ): { top: string; left?: string; right?: string; width?: string } {
@@ -805,8 +825,8 @@ function calculateTooltipPosition(
 
   // Get element position relative to viewport (for fixed positioning)
   let elementBoundingRect: DOMRect | null = null;
-  if (elementPositionData.element) {
-    elementBoundingRect = elementPositionData.element.getBoundingClientRect();
+  if (elementPosition.element) {
+    elementBoundingRect = elementPosition.element.getBoundingClientRect();
   } else if (stepTargetSelector) {
     const targetElement =
       typeof stepTargetSelector === "function"
@@ -815,48 +835,47 @@ function calculateTooltipPosition(
     elementBoundingRect = targetElement?.getBoundingClientRect() || null;
   }
 
-  // Fallback to elementPositionData if element not found (shouldn't happen, but just in case)
+  // Fallback to elementPosition if element not found (shouldn't happen, but just in case)
   if (!elementBoundingRect) {
     elementBoundingRect = {
-      top: elementPositionData.top,
-      left: elementPositionData.left,
-      width: elementPositionData.width,
-      height: elementPositionData.height,
-      bottom: elementPositionData.top + elementPositionData.height,
-      right: elementPositionData.left + elementPositionData.width,
+      top: elementPosition.top,
+      left: elementPosition.left,
+      width: elementPosition.width,
+      height: elementPosition.height,
+      bottom: elementPosition.top + elementPosition.height,
+      right: elementPosition.left + elementPosition.width,
     } as DOMRect;
   }
 
   // On mobile, prefer bottom or top positioning, full width with margins
   if (isMobileDevice) {
-    const elementTopRelativeToViewport = elementBoundingRect.top;
-    const elementBottomRelativeToViewport = elementBoundingRect.bottom;
+    const elementTopInViewport = elementBoundingRect.top;
+    const elementBottomInViewport = elementBoundingRect.bottom;
 
-    const availableSpaceBelow =
-      viewportHeight - elementBottomRelativeToViewport;
-    const availableSpaceAbove = elementTopRelativeToViewport;
-    const shouldPositionBelow = availableSpaceBelow >= availableSpaceAbove;
+    const availableSpaceBelow = viewportHeight - elementBottomInViewport;
+    const availableSpaceAbove = elementTopInViewport;
+    const shouldPlaceTooltipBelow = availableSpaceBelow >= availableSpaceAbove;
 
-    if (shouldPositionBelow) {
+    if (shouldPlaceTooltipBelow) {
       // Position below element, full width with margins
-      const calculatedTop = elementBottomRelativeToViewport + tooltipSpacing;
+      const tooltipTop = elementBottomInViewport + tooltipSpacing;
       // Ensure tooltip doesn't go below viewport
-      const maximumTop = viewportHeight - tooltipHeight - TOOLTIP_MARGIN_PX;
-      const finalTopPosition = Math.min(calculatedTop, maximumTop);
+      const maximumTooltipTop =
+        viewportHeight - tooltipHeight - TOOLTIP_MARGIN_PX;
+      const tooltipTopPosition = Math.min(tooltipTop, maximumTooltipTop);
       // Ensure tooltip is always visible
       return {
-        top: `${Math.max(TOOLTIP_MARGIN_PX, finalTopPosition)}px`,
+        top: `${Math.max(TOOLTIP_MARGIN_PX, tooltipTopPosition)}px`,
       };
     } else {
       // Position above element, full width with margins
-      const calculatedTop =
-        elementTopRelativeToViewport - tooltipHeight - tooltipSpacing;
+      const tooltipTop = elementTopInViewport - tooltipHeight - tooltipSpacing;
       // Ensure tooltip doesn't go above viewport
       return {
         top: `${Math.max(
           TOOLTIP_MARGIN_PX,
           Math.min(
-            calculatedTop,
+            tooltipTop,
             viewportHeight - tooltipHeight - TOOLTIP_MARGIN_PX
           )
         )}px`,
@@ -865,80 +884,80 @@ function calculateTooltipPosition(
   }
 
   // Desktop positioning (use viewport-relative positions)
-  switch (preferredPosition) {
+  switch (tooltipPosition) {
     case "top": {
-      const calculatedTop = Math.max(
+      const tooltipTop = Math.max(
         TOOLTIP_MARGIN_PX,
         elementBoundingRect.top - tooltipHeight - tooltipSpacing
       );
-      const calculatedLeft = Math.max(
+      const tooltipLeft = Math.max(
         TOOLTIP_MARGIN_PX,
         Math.min(
           elementBoundingRect.left +
-            elementBoundingRect.width / 2 -
-            tooltipWidth / 2,
+            elementBoundingRect.width / HALF_DIVISOR -
+            tooltipWidth / HALF_DIVISOR,
           viewportWidth - tooltipWidth - TOOLTIP_MARGIN_PX
         )
       );
-      return { top: `${calculatedTop}px`, left: `${calculatedLeft}px` };
+      return { top: `${tooltipTop}px`, left: `${tooltipLeft}px` };
     }
     case "bottom": {
-      const calculatedTop = elementBoundingRect.bottom + tooltipSpacing;
-      const calculatedLeft = Math.max(
+      const tooltipTop = elementBoundingRect.bottom + tooltipSpacing;
+      const tooltipLeft = Math.max(
         TOOLTIP_MARGIN_PX,
         Math.min(
           elementBoundingRect.left +
-            elementBoundingRect.width / 2 -
-            tooltipWidth / 2,
+            elementBoundingRect.width / HALF_DIVISOR -
+            tooltipWidth / HALF_DIVISOR,
           viewportWidth - tooltipWidth - TOOLTIP_MARGIN_PX
         )
       );
-      return { top: `${calculatedTop}px`, left: `${calculatedLeft}px` };
+      return { top: `${tooltipTop}px`, left: `${tooltipLeft}px` };
     }
     case "left": {
-      const calculatedTop = Math.max(
+      const tooltipTop = Math.max(
         TOOLTIP_MARGIN_PX,
         Math.min(
           elementBoundingRect.top +
-            elementBoundingRect.height / 2 -
-            tooltipHeight / 2,
+            elementBoundingRect.height / HALF_DIVISOR -
+            tooltipHeight / HALF_DIVISOR,
           viewportHeight - tooltipHeight - TOOLTIP_MARGIN_PX
         )
       );
-      const calculatedLeft = Math.max(
+      const tooltipLeft = Math.max(
         TOOLTIP_MARGIN_PX,
         elementBoundingRect.left - tooltipWidth - tooltipSpacing
       );
-      return { top: `${calculatedTop}px`, left: `${calculatedLeft}px` };
+      return { top: `${tooltipTop}px`, left: `${tooltipLeft}px` };
     }
     case "right": {
-      const calculatedTop = Math.max(
+      const tooltipTop = Math.max(
         TOOLTIP_MARGIN_PX,
         Math.min(
           elementBoundingRect.top +
-            elementBoundingRect.height / 2 -
-            tooltipHeight / 2,
+            elementBoundingRect.height / HALF_DIVISOR -
+            tooltipHeight / HALF_DIVISOR,
           viewportHeight - tooltipHeight - TOOLTIP_MARGIN_PX
         )
       );
-      const calculatedLeft = Math.min(
+      const tooltipLeft = Math.min(
         elementBoundingRect.right + tooltipSpacing,
         viewportWidth - tooltipWidth - TOOLTIP_MARGIN_PX
       );
-      return { top: `${calculatedTop}px`, left: `${calculatedLeft}px` };
+      return { top: `${tooltipTop}px`, left: `${tooltipLeft}px` };
     }
     default: {
-      const calculatedTop = elementBoundingRect.bottom + tooltipSpacing;
-      const calculatedLeft = Math.max(
+      const tooltipTop = elementBoundingRect.bottom + tooltipSpacing;
+      const tooltipLeft = Math.max(
         TOOLTIP_MARGIN_PX,
         Math.min(
           elementBoundingRect.left +
-            elementBoundingRect.width / 2 -
-            tooltipWidth / 2,
+            elementBoundingRect.width / HALF_DIVISOR -
+            tooltipWidth / HALF_DIVISOR,
           viewportWidth - tooltipWidth - TOOLTIP_MARGIN_PX
         )
       );
-      return { top: `${calculatedTop}px`, left: `${calculatedLeft}px` };
+      return { top: `${tooltipTop}px`, left: `${tooltipLeft}px` };
     }
   }
 }
