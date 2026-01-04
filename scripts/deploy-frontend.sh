@@ -87,6 +87,12 @@ fi
 BUILD_SIZE=$(du -sh "${DIST_DIR}" 2>/dev/null | cut -f1)
 log_success "Build output size: ${BUILD_SIZE}"
 
+# Deploy Firestore rules first (needed for frontend access)
+log_step "Deploying Firestore rules"
+
+run_with_spinner "Deploying Firestore rules" \
+  "firebase deploy --only firestore:rules --project ${PROJECT_ID} --non-interactive >/dev/null 2>&1"
+
 # Deploy to Firebase Hosting
 log_step "Deploying to Firebase Hosting"
 

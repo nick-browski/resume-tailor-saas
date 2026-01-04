@@ -10,12 +10,20 @@ service cloud.firestore {
       // - Updating documents directly (must use backend API)
       // - Reading documents they don't own
       
-      // Allow read if user is authenticated and owns the document
+      // Allow read if user is authenticated
+      // For existing documents: must own them
+      // For non-existing documents: allow to check existence (needed for TTL deletion handling)
       allow read: if request.auth != null 
         && request.auth.uid != null
-        && resource.data != null
-        && resource.data.ownerId != null
-        && request.auth.uid == resource.data.ownerId;
+        && (
+          // Document doesn't exist (allow to check - needed for TTL deletion)
+          !exists(/databases/$(database)/documents/documents/$(documentId))
+          ||
+          // Document exists and user owns it
+          (resource.data != null
+            && resource.data.ownerId != null
+            && request.auth.uid == resource.data.ownerId)
+        );
       
       // SECURITY: Deny all write operations from clients
       // Backend services (documents-api, generate-api) use Admin SDK
