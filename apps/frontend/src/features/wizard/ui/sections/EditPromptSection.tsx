@@ -1,8 +1,9 @@
-import { useCallback, forwardRef } from "react";
+import { useCallback, forwardRef, useEffect, useState } from "react";
 import {
   TEXTAREA_CONSTANTS,
   UI_TEXT,
   VALIDATION_CONSTANTS,
+  ANIMATION_CONSTANTS,
 } from "@/shared/lib/constants";
 import { TourTarget } from "@/shared/ui";
 import { validateEditPrompt } from "../../schemas";
@@ -64,6 +65,17 @@ export const EditPromptSection = forwardRef<
     [hasAttemptedSubmit, onEditPromptChange, onEditPromptError]
   );
 
+  const [isSelectVisible, setIsSelectVisible] = useState(false);
+
+  useEffect(() => {
+    // Запускаем анимацию появления после монтирования
+    const timer = setTimeout(() => {
+      setIsSelectVisible(true);
+    }, ANIMATION_CONSTANTS.SELECT_ENTER_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3">
@@ -79,7 +91,16 @@ export const EditPromptSection = forwardRef<
               }
               templateSelectEvent.target.value = "";
             }}
-            className="w-full sm:w-auto text-sm px-3 py-1.5 border border-gray-200 rounded-md bg-white text-gray-600 hover:text-gray-900 hover:border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full sm:w-auto text-sm px-3 py-1.5 border border-gray-200 rounded-md bg-white text-gray-600 hover:text-gray-900 hover:border-gray-300 hover:scale-[1.01] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:focus:scale-100 ${
+              isSelectVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-1"
+            }`}
+            style={{
+              transitionDuration: `${ANIMATION_CONSTANTS.SELECT_ENTER_DURATION_MS}ms`,
+              transitionTimingFunction: ANIMATION_CONSTANTS.SELECT_EASING,
+              willChange: "opacity, transform",
+            }}
             disabled={isEditing}
           >
             <option value="" className="text-gray-500">
