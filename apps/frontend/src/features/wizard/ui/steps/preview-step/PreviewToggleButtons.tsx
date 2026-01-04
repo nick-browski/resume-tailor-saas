@@ -33,7 +33,7 @@ export function PreviewToggleButtons({
           disabled={isDisabled}
           className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors touch-manipulation ${
             isDisabled
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              ? "bg-blue-600 text-white opacity-50 cursor-not-allowed"
               : !showDiff
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 active:bg-gray-200"
