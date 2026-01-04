@@ -1,12 +1,14 @@
 import { getDb, getStorage } from "../config/firebase-admin.js";
 import type { Document } from "../types/document.js";
 import type { Timestamp } from "firebase-admin/firestore";
+import { Timestamp as FirestoreTimestamp } from "firebase-admin/firestore";
 import { FIREBASE_CONFIG, STORAGE_CONFIG } from "../config/constants.js";
 
 const DOCUMENTS_COLLECTION_NAME = FIREBASE_CONFIG.DOCUMENTS_COLLECTION_NAME;
 const EMPTY_STRING = "";
 const DEFAULT_JOB_TEXT = EMPTY_STRING;
 const DEFAULT_PDF_PATH = EMPTY_STRING;
+const TTL_EXPIRY_MS = 2 * 60 * 60 * 1000; // TTL: 2 hours
 
 // Creates a new document with resume text and optional PDF file
 export async function createDocument(
@@ -35,7 +37,13 @@ export async function createDocument(
     originalPdfPath = storageFile.name;
   }
 
-  const documentData = {
+  // Check if running in emulator mode (TTL not supported in emulator)
+  const isEmulatorMode =
+    process.env.FIREBASE_AUTH_EMULATOR_HOST ||
+    process.env.FIRESTORE_EMULATOR_HOST ||
+    process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+
+  const documentData: Record<string, unknown> = {
     ownerId,
     jobText: jobText || DEFAULT_JOB_TEXT,
     resumeText: finalResumeText,
@@ -48,6 +56,12 @@ export async function createDocument(
     createdAt: new Date(),
     error: null,
   };
+
+  // Only add expireAt in production (TTL not supported in emulator)
+  if (!isEmulatorMode) {
+    const expireAtDate = new Date(Date.now() + TTL_EXPIRY_MS);
+    documentData.expireAt = FirestoreTimestamp.fromDate(expireAtDate);
+  }
 
   const documentReference = await database
     .collection(DOCUMENTS_COLLECTION_NAME)
