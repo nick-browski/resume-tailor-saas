@@ -16,9 +16,19 @@ export function hasSkippedAllTours(): boolean {
 
 export function skipAllTours(): void {
   localStorage.setItem(SKIP_ALL_TOURS_KEY, "true");
-  // Mark all individual tours as completed
   ALL_TOUR_KEYS.forEach((key) => {
     localStorage.setItem(key, "true");
   });
 }
 
+export function isAnyTourActive(): boolean {
+  if (hasSkippedAllTours()) {
+    return false;
+  }
+
+  const allToursCompleted = ALL_TOUR_KEYS.every(
+    (key) => localStorage.getItem(key) === "true"
+  );
+
+  return !allToursCompleted;
+}

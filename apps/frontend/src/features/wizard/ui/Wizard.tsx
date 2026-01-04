@@ -6,6 +6,13 @@ import {
 } from "@/shared/lib/constants";
 import { useWizardStore } from "../model/wizardStore";
 import { useDocumentById } from "../api/useDocuments";
+import { isAnyTourActive } from "@/shared/lib/tourUtils";
+
+// Animation constants for Wizard
+const OPACITY_FULL = 1;
+const OPACITY_TRANSPARENT = 0;
+const TRANSLATE_X_ZERO = "translateX(0)";
+const WILL_CHANGE_OPACITY_TRANSFORM = "opacity, transform";
 
 interface WizardProps {
   currentStep: number;
@@ -19,26 +26,55 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
   const { data: currentDocument } = useDocumentById(documentId);
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayChildren, setDisplayChildren] = useState(children);
+  const [shouldShowAnimation, setShouldShowAnimation] = useState(
+    !isAnyTourActive()
+  );
   const previousStepRef = useRef(currentStep);
   const slideDirectionRef = useRef<"forward" | "backward">("forward");
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle step transitions with animation
   useEffect(() => {
+    const checkTourStatus = () => {
+      setShouldShowAnimation(!isAnyTourActive());
+    };
+
+    checkTourStatus();
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (
+        event.key?.startsWith("resume-tailor-tour") ||
+        event.key === "resume-tailor-tour-skipped-all"
+      ) {
+        checkTourStatus();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    const checkInterval = setInterval(checkTourStatus, 100);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(checkInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldShowAnimation) {
+      setDisplayChildren(children);
+      previousStepRef.current = currentStep;
+      return;
+    }
+
     if (previousStepRef.current !== currentStep) {
-      // Determine slide direction before animation starts
       slideDirectionRef.current =
         currentStep > previousStepRef.current ? "forward" : "backward";
 
-      // Start exit animation
       setIsAnimating(true);
 
-      // After exit animation completes, update content and start enter animation
       animationTimeoutRef.current = setTimeout(() => {
         setDisplayChildren(children);
         previousStepRef.current = currentStep;
 
-        // Start enter animation
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setIsAnimating(false);
@@ -46,7 +82,6 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
         });
       }, ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS);
     } else {
-      // No step change, just update children
       setDisplayChildren(children);
     }
 
@@ -55,7 +90,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
         clearTimeout(animationTimeoutRef.current);
       }
     };
-  }, [currentStep, children]);
+  }, [currentStep, children, shouldShowAnimation]);
 
   if (currentStep === 0) {
     return (
@@ -136,21 +171,27 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 relative overflow-hidden">
-        <div
-          key={currentStep}
-          style={{
-            opacity: isAnimating ? 0 : 1,
-            transform: isAnimating
-              ? `translateX(${
-                  slideDirectionRef.current === "forward" ? "20px" : "-20px"
-                })`
-              : "translateX(0)",
-            transition: `opacity ${ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS}ms ${ANIMATION_CONSTANTS.WIZARD_STEP_EASING}, transform ${ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS}ms ${ANIMATION_CONSTANTS.WIZARD_STEP_EASING}`,
-            willChange: "opacity, transform",
-          }}
-        >
-          {displayChildren}
-        </div>
+        {shouldShowAnimation ? (
+          <div
+            key={currentStep}
+            style={{
+              opacity: isAnimating ? OPACITY_TRANSPARENT : OPACITY_FULL,
+              transform: isAnimating
+                ? `translateX(${
+                    slideDirectionRef.current === "forward"
+                      ? ANIMATION_CONSTANTS.WIZARD_STEP_SLIDE_DISTANCE_PX
+                      : -ANIMATION_CONSTANTS.WIZARD_STEP_SLIDE_DISTANCE_PX
+                  }px)`
+                : TRANSLATE_X_ZERO,
+              transition: `opacity ${ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS}ms ${ANIMATION_CONSTANTS.WIZARD_STEP_EASING}, transform ${ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS}ms ${ANIMATION_CONSTANTS.WIZARD_STEP_EASING}`,
+              willChange: WILL_CHANGE_OPACITY_TRANSFORM,
+            }}
+          >
+            {displayChildren}
+          </div>
+        ) : (
+          <div key={currentStep}>{children}</div>
+        )}
       </div>
     </div>
   );
