@@ -1,5 +1,5 @@
 export { ToastContainer, type Toast, type ToastType } from "./Toast";
-export { Loader, LoaderOverlay, LoadingAnimation } from "./Loader";
+export { Loader, LoadingAnimation } from "./Loader";
 export { FileUploadArea } from "./FileUploadArea";
 export { Tour } from "./Tour";
 export type { TourStep } from "./Tour";
