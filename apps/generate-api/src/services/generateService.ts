@@ -4,10 +4,8 @@ import {
   parseResumeToStructure,
   editResumeWithPrompt,
   type ResumeData,
-} from "./openRouterService.js";
+} from "./mistralService.js";
 import { generatePDFFromResumeData } from "./pdfService.js";
-// @ts-expect-error - pdf-parse doesn't have types
-import pdfParse from "pdf-parse";
 import {
   FIREBASE_CONFIG,
   DOCUMENT_STATUS,
@@ -17,6 +15,8 @@ import {
   PARSE_RESPONSE_STATUS,
 } from "../config/constants.js";
 import type { DocumentReference, DocumentData } from "firebase-admin/firestore";
+import { safeJsonParse } from "../utils/jsonUtils.js";
+import { extractTextFromPdfBuffer } from "../utils/pdfUtils.js";
 
 const DOCUMENTS_COLLECTION_NAME = FIREBASE_CONFIG.DOCUMENTS_COLLECTION_NAME;
 const EXPECTED_STATUS_FOR_GENERATION = DOCUMENT_STATUS.PARSED;
@@ -26,14 +26,18 @@ interface DocumentAccessResult {
   documentData: DocumentData;
 }
 
+function getDocumentReference(
+  documentId: string
+): DocumentReference<DocumentData> {
+  const database = getDb();
+  return database.collection(DOCUMENTS_COLLECTION_NAME).doc(documentId);
+}
+
 async function validateDocumentAccess(
   documentId: string,
   ownerId: string
 ): Promise<DocumentAccessResult> {
-  const database = getDb();
-  const documentReference = database
-    .collection(DOCUMENTS_COLLECTION_NAME)
-    .doc(documentId);
+  const documentReference = getDocumentReference(documentId);
   const documentSnapshot = await documentReference.get();
 
   if (!documentSnapshot.exists) {
@@ -88,10 +92,7 @@ export async function processGeneration(
   jobText: string,
   ownerId: string
 ): Promise<void> {
-  const database = getDb();
-  const documentReference = database
-    .collection(DOCUMENTS_COLLECTION_NAME)
-    .doc(documentId);
+  const documentReference = getDocumentReference(documentId);
 
   try {
     const resumeData = await generateTailoredResume(resumeText, jobText);
@@ -100,9 +101,9 @@ export async function processGeneration(
       ownerId,
       documentId
     );
+
     await documentReference.update({
       status: DOCUMENT_STATUS.GENERATED,
-      tailoredText: JSON.stringify(resumeData),
       tailoredResumeData: JSON.stringify(resumeData),
       pdfResultPath: pdfPath,
       error: null,
@@ -128,6 +129,26 @@ export async function processGeneration(
   }
 }
 
+async function handleTaskEnqueueError(
+  documentReference: DocumentReference<DocumentData>,
+  documentId: string,
+  taskEnqueueError: unknown
+): Promise<never> {
+  const enqueueErrorMessage =
+    taskEnqueueError instanceof Error
+      ? taskEnqueueError.message
+      : ERROR_MESSAGES.FAILED_TO_ENQUEUE_GENERATION_TASK;
+
+  await updateStatusToFailed(
+    documentReference,
+    documentId,
+    enqueueErrorMessage,
+    ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED
+  );
+
+  throw taskEnqueueError;
+}
+
 // Starts generation (dev: sync, prod: enqueue task)
 export async function startGeneration(
   documentId: string,
@@ -151,10 +172,12 @@ export async function startGeneration(
     error: null,
   });
 
+  const resumeTextForGeneration = await getResumeTextForParsing(documentData);
+
   if (IS_DEV) {
     await processGeneration(
       documentId,
-      documentData.resumeText,
+      resumeTextForGeneration,
       documentData.jobText,
       ownerId
     );
@@ -165,34 +188,26 @@ export async function startGeneration(
     const { createGenerationTask } = await import("./cloudTasksService.js");
     await createGenerationTask(
       documentId,
-      documentData.resumeText,
+      resumeTextForGeneration,
       documentData.jobText,
       ownerId
     );
     return { status: DOCUMENT_STATUS.GENERATING };
   } catch (taskEnqueueError) {
-    const enqueueErrorMessage =
-      taskEnqueueError instanceof Error
-        ? taskEnqueueError.message
-        : ERROR_MESSAGES.FAILED_TO_ENQUEUE_GENERATION_TASK;
-
-    await updateStatusToFailed(
+    return handleTaskEnqueueError(
       documentReference,
       documentId,
-      enqueueErrorMessage,
-      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED
+      taskEnqueueError
     );
-
-    throw taskEnqueueError;
   }
 }
 
+// Extracts text from PDF file stored in Firebase Storage
 async function extractTextFromPdfFile(pdfStoragePath: string): Promise<string> {
   const storageBucket = getStorage().bucket();
   const pdfStorageFile = storageBucket.file(pdfStoragePath);
   const [pdfFileBuffer] = await pdfStorageFile.download();
-  const parsedPdfResult = await pdfParse(pdfFileBuffer);
-  return parsedPdfResult.text;
+  return extractTextFromPdfBuffer(pdfFileBuffer);
 }
 
 // Processes parse original (called by Cloud Tasks, always updates Firestore)
@@ -201,24 +216,20 @@ export async function processParseOriginal(
   resumeText: string,
   ownerId: string
 ): Promise<void> {
-  const database = getDb();
-  const documentReference = database
-    .collection(DOCUMENTS_COLLECTION_NAME)
-    .doc(documentId);
+  const documentReference = getDocumentReference(documentId);
 
   try {
     const parsedResume = await parseResumeToStructure(resumeText);
-    const currentDocumentData = (await documentReference.get()).data();
+    const currentDocumentSnapshot = await documentReference.get();
+    const currentDocumentData = currentDocumentSnapshot.data();
 
     const updateData: Record<string, unknown> = {
       originalParseStatus: FIRESTORE_PARSE_STATUS.PARSED,
+      originalResumeData: JSON.stringify(parsedResume),
     };
 
     if (!currentDocumentData?.initialOriginalResumeData) {
       updateData.initialOriginalResumeData = JSON.stringify(parsedResume);
-      if (!currentDocumentData?.originalResumeData) {
-        updateData.originalResumeData = JSON.stringify(parsedResume);
-      }
     }
 
     await documentReference.update(updateData);
@@ -241,11 +252,21 @@ async function getResumeTextForParsing(
 ): Promise<string> {
   let resumeText = documentData.resumeText || null;
 
+  // If resumeText is already a JSON string (parsed data), try to extract text from PDF
   if (isJsonString(resumeText) && documentData.pdfOriginalPath) {
     try {
       resumeText = await extractTextFromPdfFile(documentData.pdfOriginalPath);
     } catch (pdfExtractionError) {
       console.error("Failed to extract text from PDF:", pdfExtractionError);
+      // If PDF extraction fails, throw an error instead of using JSON string
+      // The JSON string is already parsed data, not raw resume text
+      throw new Error(
+        `${ERROR_MESSAGES.FAILED_TO_EXTRACT_TEXT_FROM_PDF}: ${
+          pdfExtractionError instanceof Error
+            ? pdfExtractionError.message
+            : ERROR_MESSAGES.UNKNOWN_ERROR
+        }`
+      );
     }
   }
 
@@ -267,19 +288,25 @@ export async function startParseOriginal(
   );
 
   if (documentData.initialOriginalResumeData) {
+    const parsed = safeJsonParse<ResumeData>(
+      documentData.initialOriginalResumeData
+    );
     return {
       status: PARSE_RESPONSE_STATUS.CACHED,
-      originalResumeData: JSON.parse(documentData.initialOriginalResumeData),
+      originalResumeData: parsed,
     };
   }
 
+  // Skip parsing if both exist and resumeText is not JSON (already parsed)
   if (
     documentData.originalResumeData &&
-    !isJsonString(documentData.resumeText)
+    !isJsonString(documentData.resumeText) &&
+    documentData.initialOriginalResumeData
   ) {
+    const parsed = safeJsonParse<ResumeData>(documentData.originalResumeData);
     return {
       status: PARSE_RESPONSE_STATUS.CACHED,
-      originalResumeData: JSON.parse(documentData.originalResumeData),
+      originalResumeData: parsed,
     };
   }
 
@@ -293,14 +320,16 @@ export async function startParseOriginal(
     await processParseOriginal(documentId, resumeTextForParsing, ownerId);
     const updatedDocumentSnapshot = await documentReference.get();
     const updatedDocumentData = updatedDocumentSnapshot.data();
+
     if (updatedDocumentData?.initialOriginalResumeData) {
       return {
         status: PARSE_RESPONSE_STATUS.PARSED,
-        originalResumeData: JSON.parse(
+        originalResumeData: safeJsonParse<ResumeData>(
           updatedDocumentData.initialOriginalResumeData
         ),
       };
     }
+
     return { status: PARSE_RESPONSE_STATUS.PARSED };
   }
 
@@ -315,51 +344,20 @@ export async function processEditResume(
   editPrompt: string,
   ownerId: string
 ): Promise<void> {
-  const database = getDb();
-  const documentReference = database
-    .collection(DOCUMENTS_COLLECTION_NAME)
-    .doc(documentId);
+  const { documentReference, documentData } = await validateDocumentAccess(
+    documentId,
+    ownerId
+  );
 
   try {
-    const documentSnapshot = await documentReference.get();
-    if (!documentSnapshot.exists) {
-      throw new Error(ERROR_MESSAGES.DOCUMENT_NOT_FOUND);
-    }
-
-    const documentData = documentSnapshot.data()!;
-    if (documentData.ownerId !== ownerId) {
-      throw new Error(ERROR_MESSAGES.DOCUMENT_NOT_FOUND_OR_ACCESS_DENIED);
-    }
-
     let currentResumeData: ResumeData;
 
     if (documentData.originalResumeData) {
-      try {
-        currentResumeData = JSON.parse(documentData.originalResumeData);
-      } catch (jsonParsingError) {
-        throw new Error(ERROR_MESSAGES.FAILED_TO_PARSE_EXISTING_RESUME_DATA);
-      }
+      currentResumeData = safeJsonParse<ResumeData>(
+        documentData.originalResumeData
+      );
     } else {
-      let resumeTextForParsing = documentData.resumeText || null;
-
-      if (
-        (!resumeTextForParsing || resumeTextForParsing.trim().length === 0) &&
-        documentData.pdfOriginalPath
-      ) {
-        try {
-          resumeTextForParsing = await extractTextFromPdfFile(
-            documentData.pdfOriginalPath
-          );
-        } catch (pdfExtractionError) {
-          console.error("Failed to extract text from PDF:", pdfExtractionError);
-          throw new Error(ERROR_MESSAGES.FAILED_TO_EXTRACT_TEXT_FROM_PDF);
-        }
-      }
-
-      if (!resumeTextForParsing || resumeTextForParsing.trim().length === 0) {
-        throw new Error(ERROR_MESSAGES.DOCUMENT_HAS_NO_RESUME_TEXT);
-      }
-
+      const resumeTextForParsing = await getResumeTextForParsing(documentData);
       currentResumeData = await parseResumeToStructure(resumeTextForParsing);
     }
 
@@ -376,10 +374,10 @@ export async function processEditResume(
       documentId
     );
 
-    // Update document with edited resume data and PDF
+    // Save to both fields: originalResumeData (current state) and tailoredResumeData (for DIFF)
     await documentReference.update({
       originalResumeData: JSON.stringify(editedResumeData),
-      resumeText: JSON.stringify(editedResumeData),
+      tailoredResumeData: JSON.stringify(editedResumeData),
       pdfResultPath: pdfPath,
       status: DOCUMENT_STATUS.GENERATED,
       error: null,
@@ -411,7 +409,7 @@ export async function startEditResume(
   editPrompt: string,
   ownerId: string
 ): Promise<{ status: string }> {
-  const { documentReference, documentData } = await validateDocumentAccess(
+  const { documentReference } = await validateDocumentAccess(
     documentId,
     ownerId
   );
@@ -432,18 +430,10 @@ export async function startEditResume(
     await createEditResumeTask(documentId, editPrompt, ownerId);
     return { status: DOCUMENT_STATUS.GENERATING };
   } catch (taskEnqueueError) {
-    const enqueueErrorMessage =
-      taskEnqueueError instanceof Error
-        ? taskEnqueueError.message
-        : ERROR_MESSAGES.FAILED_TO_ENQUEUE_GENERATION_TASK;
-
-    await updateStatusToFailed(
+    return handleTaskEnqueueError(
       documentReference,
       documentId,
-      enqueueErrorMessage,
-      ERROR_MESSAGES.FAILED_TO_UPDATE_STATUS_TO_FAILED
+      taskEnqueueError
     );
-
-    throw taskEnqueueError;
   }
 }

@@ -16,8 +16,7 @@ import {
   classifyMultipartBodySchemaForTailor,
   classifyMultipartBodySchemaForEdit,
 } from "../schemas/classifySchemas.js";
-// @ts-expect-error - pdf-parse doesn't have types
-import pdfParse from "pdf-parse";
+import { extractTextFromPdfBuffer } from "../utils/pdfUtils.js";
 
 export const classifyRouter: express.Router = express.Router();
 
@@ -91,8 +90,9 @@ classifyRouter.post(
 
       let extractedResumeText: string;
       if (uploadedFile) {
-        const parsedPdfResult = await pdfParse(uploadedFile.buffer);
-        extractedResumeText = parsedPdfResult.text;
+        extractedResumeText = await extractTextFromPdfBuffer(
+          uploadedFile.buffer
+        );
       } else {
         extractedResumeText = resumeTextFromRequest!;
       }

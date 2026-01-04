@@ -1,41 +1,18 @@
 import {
-  OPENROUTER_CONFIG,
   ERROR_MESSAGES,
-  REQUEST_HEADERS,
-  HTTP_METHODS,
+  MISTRAL_CONFIG,
+  MISTRAL_MESSAGE_ROLES,
 } from "../config/constants.js";
-
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL =
-  process.env.OPENROUTER_MODEL || OPENROUTER_CONFIG.DEFAULT_MODEL;
-const OPENROUTER_API_URL = OPENROUTER_CONFIG.API_URL;
-const MAX_TOKENS = 512;
-
-interface OpenRouterMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
-
-interface OpenRouterRequest {
-  model: string;
-  messages: OpenRouterMessage[];
-  max_tokens?: number;
-}
-
-interface OpenRouterChoice {
-  message: {
-    role: string;
-    content: string;
-  };
-}
-
-interface OpenRouterResponse {
-  choices: OpenRouterChoice[];
-}
+import {
+  callMistralAPI,
+  extractJsonFromResponse,
+  type MistralMessage,
+} from "../utils/mistralClient.js";
+import { safeJsonParse } from "../utils/jsonUtils.js";
 
 interface ClassificationResponse {
-  isResume: boolean;
-  isJobDescription: boolean;
+  isResume?: boolean;
+  isJobDescription?: boolean;
   confidence: number;
   reason: string;
 }
@@ -107,66 +84,59 @@ Return ONLY a valid JSON object with this structure:
 Text to classify:
 {text}`;
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function extractJsonFromResponse(responseText: string): string {
-  const cleanedText = responseText.trim();
-  const firstBraceIndex = cleanedText.indexOf("{");
-  const lastBraceIndex = cleanedText.lastIndexOf("}");
-
-  if (
-    firstBraceIndex !== -1 &&
-    lastBraceIndex !== -1 &&
-    lastBraceIndex > firstBraceIndex
-  ) {
-    return cleanedText.substring(firstBraceIndex, lastBraceIndex + 1);
+async function classifyTextWithPrompt(
+  textToClassify: string,
+  classificationPromptTemplate: string
+): Promise<{ isValid: boolean; reason?: string }> {
+  if (!textToClassify || !textToClassify.trim()) {
+    return {
+      isValid: false,
+      reason: ERROR_MESSAGES.RESUME_TEXT_EMPTY,
+    };
   }
 
-  return cleanedText;
-}
+  const truncatedText = textToClassify.substring(
+    0,
+    MISTRAL_CONFIG.CLASSIFICATION_MAX_TEXT_LENGTH
+  );
+  const formattedPrompt = classificationPromptTemplate.replace(
+    "{text}",
+    truncatedText
+  );
+  const mistralMessages: MistralMessage[] = [
+    { role: MISTRAL_MESSAGE_ROLES.USER, content: formattedPrompt },
+  ];
 
-async function makeOpenRouterRequest(
-  requestBody: OpenRouterRequest,
-  attemptNumber: number = 1
-): Promise<Response> {
-  const httpReferer = process.env.OPENROUTER_HTTP_REFERER || "";
-  const apiResponse = await fetch(OPENROUTER_API_URL, {
-    method: HTTP_METHODS.POST,
-    headers: {
-      Authorization: `${REQUEST_HEADERS.AUTHORIZATION_PREFIX}${OPENROUTER_API_KEY}`,
-      "Content-Type": REQUEST_HEADERS.CONTENT_TYPE_JSON,
-      [REQUEST_HEADERS.HTTP_REFERER]: httpReferer,
-      [REQUEST_HEADERS.X_TITLE]: OPENROUTER_CONFIG.APPLICATION_TITLE,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (apiResponse.ok) {
-    return apiResponse;
-  }
-
-  const isRetriableError = (
-    OPENROUTER_CONFIG.RETRIABLE_STATUS_CODES as readonly number[]
-  ).includes(apiResponse.status);
-  const hasRetriesLeft = attemptNumber < OPENROUTER_CONFIG.MAX_RETRIES;
-
-  if (isRetriableError && hasRetriesLeft) {
-    const retryDelayMs = OPENROUTER_CONFIG.RETRY_DELAY_MS * attemptNumber;
-    console.warn(
-      `OpenRouter API error ${apiResponse.status}, retrying in ${retryDelayMs}ms (attempt ${attemptNumber}/${OPENROUTER_CONFIG.MAX_RETRIES})`
+  try {
+    const mistralApiResponse = await callMistralAPI(
+      mistralMessages,
+      MISTRAL_CONFIG.CLASSIFICATION_MAX_TOKENS
     );
-    await delay(retryDelayMs);
-    return makeOpenRouterRequest(requestBody, attemptNumber + 1);
-  }
+    const responseContent = mistralApiResponse.choices[0].message.content;
+    const extractedJsonString = extractJsonFromResponse(responseContent);
+    const classificationResult = safeJsonParse<ClassificationResponse>(
+      extractedJsonString,
+      "Failed to parse classification response"
+    );
 
-  const errorResponseText = await apiResponse.text();
-  const apiErrorMessage = ERROR_MESSAGES.OPENROUTER_API_ERROR.replace(
-    "{status}",
-    apiResponse.status.toString()
-  ).replace("{errorText}", errorResponseText);
-  throw new Error(apiErrorMessage);
+    const isValid = Boolean(
+      (classificationResult.isResume ||
+        classificationResult.isJobDescription) &&
+        classificationResult.confidence >
+          MISTRAL_CONFIG.MINIMUM_CONFIDENCE_THRESHOLD
+    );
+
+    return {
+      isValid,
+      reason: isValid ? undefined : classificationResult.reason,
+    };
+  } catch (classificationError) {
+    console.error("Failed to parse classification JSON:", classificationError);
+    return {
+      isValid: false,
+      reason: ERROR_MESSAGES.FAILED_TO_ANALYZE_RESUME_CONTENT,
+    };
+  }
 }
 
 export interface ClassificationResult {
@@ -181,143 +151,47 @@ export async function classifyResume(
   resumeText: string,
   useEditPrompt: boolean = false
 ): Promise<{ isValid: boolean; reason?: string }> {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error(ERROR_MESSAGES.OPENROUTER_API_KEY_NOT_CONFIGURED);
-  }
-
-  if (!resumeText || !resumeText.trim()) {
-    return {
-      isValid: false,
-      reason: ERROR_MESSAGES.RESUME_TEXT_EMPTY,
-    };
-  }
-
-  const promptTemplate = useEditPrompt
+  const classificationPromptTemplate = useEditPrompt
     ? RESUME_CLASSIFICATION_PROMPT_FOR_EDIT
     : RESUME_CLASSIFICATION_PROMPT;
-  const prompt = promptTemplate.replace("{text}", resumeText.substring(0, 2000));
-
-  const requestBody: OpenRouterRequest = {
-    model: OPENROUTER_MODEL,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    max_tokens: MAX_TOKENS,
-  };
 
   try {
-    const apiResponse = await makeOpenRouterRequest(requestBody);
-    const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
-    const firstChoice = chatResponse.choices[0];
-    const responseContent = firstChoice?.message?.content;
-
-    if (!responseContent) {
-      throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
-    }
-
-    const extractedJsonString = extractJsonFromResponse(responseContent);
-
-    try {
-      const classification = JSON.parse(
-        extractedJsonString
-      ) as ClassificationResponse;
-      const isValid = classification.isResume && classification.confidence > 0.5;
-      return {
-        isValid,
-        reason: isValid ? undefined : classification.reason,
-      };
-    } catch (jsonParsingError) {
-      console.error("Failed to parse classification JSON:", jsonParsingError);
-      console.error("Response content:", extractedJsonString);
-      return {
-        isValid: false,
-        reason: ERROR_MESSAGES.FAILED_TO_ANALYZE_RESUME_CONTENT,
-      };
-    }
+    return await classifyTextWithPrompt(
+      resumeText,
+      classificationPromptTemplate
+    );
   } catch (classificationError) {
     console.error("Error classifying resume:", classificationError);
-    const classificationErrorMessage =
+    const errorMessage =
       classificationError instanceof Error
         ? classificationError.message
         : ERROR_MESSAGES.UNKNOWN_ERROR;
-    throw new Error(
-      `Failed to classify resume: ${classificationErrorMessage}`
-    );
+    throw new Error(`Failed to classify resume: ${errorMessage}`);
   }
 }
 
 export async function classifyJobDescription(
   jobDescriptionText: string
 ): Promise<{ isValid: boolean; reason?: string }> {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error(ERROR_MESSAGES.OPENROUTER_API_KEY_NOT_CONFIGURED);
-  }
-
   if (!jobDescriptionText || !jobDescriptionText.trim()) {
-    return { isValid: false, reason: "Job description text is empty" };
+    return {
+      isValid: false,
+      reason: ERROR_MESSAGES.JOB_DESCRIPTION_TEXT_EMPTY,
+    };
   }
-
-  const prompt = JOB_DESCRIPTION_CLASSIFICATION_PROMPT.replace(
-    "{text}",
-    jobDescriptionText.substring(0, 2000)
-  );
-
-  const requestBody: OpenRouterRequest = {
-    model: OPENROUTER_MODEL,
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    max_tokens: MAX_TOKENS,
-  };
 
   try {
-    const apiResponse = await makeOpenRouterRequest(requestBody);
-    const chatResponse = (await apiResponse.json()) as OpenRouterResponse;
-    const firstChoice = chatResponse.choices[0];
-    const responseContent = firstChoice?.message?.content;
-
-    if (!responseContent) {
-      throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_OPENROUTER);
-    }
-
-    const extractedJsonString = extractJsonFromResponse(responseContent);
-
-    try {
-      const classification = JSON.parse(
-        extractedJsonString
-      ) as ClassificationResponse;
-      const isValid =
-        classification.isJobDescription && classification.confidence > 0.5;
-      return {
-        isValid,
-        reason: isValid ? undefined : classification.reason,
-      };
-    } catch (jsonParsingError) {
-      console.error(
-        "Failed to parse classification JSON:",
-        jsonParsingError
-      );
-      console.error("Response content:", extractedJsonString);
-      return {
-        isValid: false,
-        reason: ERROR_MESSAGES.FAILED_TO_ANALYZE_JOB_DESCRIPTION_CONTENT,
-      };
-    }
+    return await classifyTextWithPrompt(
+      jobDescriptionText,
+      JOB_DESCRIPTION_CLASSIFICATION_PROMPT
+    );
   } catch (classificationError) {
     console.error("Error classifying job description:", classificationError);
-    const classificationErrorMessage =
+    const errorMessage =
       classificationError instanceof Error
         ? classificationError.message
         : ERROR_MESSAGES.UNKNOWN_ERROR;
-    throw new Error(
-      `Failed to classify job description: ${classificationErrorMessage}`
-    );
+    throw new Error(`Failed to classify job description: ${errorMessage}`);
   }
 }
 
@@ -326,17 +200,15 @@ export async function classifyContent(
   jobDescriptionText: string,
   mode: ClassificationMode = ClassificationMode.TAILOR
 ): Promise<ClassificationResult> {
-  // For EDIT mode: only classify resume with stricter prompt, skip job description
   if (mode === ClassificationMode.EDIT) {
     const resumeClassification = await classifyResume(resumeText, true);
     return {
       isResumeValid: resumeClassification.isValid,
-      isJobDescriptionValid: true, // Skip validation for edit mode
+      isJobDescriptionValid: true,
       resumeReason: resumeClassification.reason,
     };
   }
 
-  // For TAILOR mode: classify both resume and job description
   const [resumeClassification, jobDescriptionClassification] =
     await Promise.all([
       classifyResume(resumeText, false),
@@ -350,4 +222,3 @@ export async function classifyContent(
     jobDescriptionReason: jobDescriptionClassification.reason,
   };
 }
-

@@ -24,9 +24,9 @@ export const ERROR_MESSAGES = {
   DOCUMENT_NOT_FOUND: "Document not found",
   DOCUMENT_NOT_FOUND_OR_ACCESS_DENIED: "Document not found or access denied",
   DOCUMENT_STATUS_INVALID: "Document status is {status}, expected 'parsed'",
-  OPENROUTER_API_KEY_NOT_CONFIGURED: "OpenRouter API key is not configured",
-  OPENROUTER_API_ERROR: "OpenRouter API error: {status} - {errorText}",
-  EMPTY_RESPONSE_FROM_OPENROUTER: "Empty response from OpenRouter API",
+  MISTRAL_API_KEY_NOT_CONFIGURED: "Mistral API key is not configured",
+  MISTRAL_API_ERROR: "Mistral API error: {status} - {errorText}",
+  EMPTY_RESPONSE_FROM_MISTRAL: "Empty response from Mistral API",
   FAILED_TO_GENERATE_RESUME: "Failed to generate resume",
   SERVICE_ACCOUNT_KEY_REQUIRED:
     "FIREBASE_SERVICE_ACCOUNT_KEY environment variable is required",
@@ -76,19 +76,36 @@ export const FIREBASE_CONFIG = {
 export const REQUEST_HEADERS = {
   AUTHORIZATION_PREFIX: "Bearer ",
   CONTENT_TYPE_JSON: "application/json",
-  HTTP_REFERER: "HTTP-Referer",
-  X_TITLE: "X-Title",
 } as const;
 
-// OpenRouter Configuration
-export const OPENROUTER_CONFIG = {
-  API_URL: "https://openrouter.ai/api/v1/chat/completions",
-  DEFAULT_MODEL: "mistralai/devstral-2512:free",
+// Mistral Configuration
+export const MISTRAL_CONFIG = {
+  API_URL: "https://api.mistral.ai/v1/chat/completions",
+  DEFAULT_MODEL: "mistral-small-latest",
   MAX_TOKENS: 1024,
-  APPLICATION_TITLE: "Resume Tailor SaaS",
   MAX_RETRIES: 3,
   RETRY_DELAY_MS: 1000,
   RETRIABLE_STATUS_CODES: [429, 500, 502, 503, 504],
+  UNAUTHORIZED_STATUS_CODE: 401,
+  CLASSIFICATION_MAX_TOKENS: 512,
+  CLASSIFICATION_MAX_TEXT_LENGTH: 2000,
+  MINIMUM_CONFIDENCE_THRESHOLD: 0.5,
+} as const;
+
+// JSON Extraction Patterns
+export const JSON_EXTRACTION_PATTERNS = {
+  MARKDOWN_JSON_START: /^```json\s*/i,
+  MARKDOWN_CODE_START: /^```\s*/,
+  MARKDOWN_CODE_END: /\s*```\s*$/,
+  JSON_START_CHARACTER: "{",
+  JSON_END_CHARACTER: "}",
+} as const;
+
+// Mistral Message Roles
+export const MISTRAL_MESSAGE_ROLES = {
+  USER: "user",
+  ASSISTANT: "assistant",
+  SYSTEM: "system",
 } as const;
 
 // Document Status

@@ -5,7 +5,7 @@ import {
   PDF_CONFIG,
   ERROR_MESSAGES,
 } from "../config/constants.js";
-import type { ResumeData } from "./openRouterService.js";
+import type { ResumeData } from "./mistralService.js";
 
 // Generates CSS styles with dynamic scale for single-page optimization
 function generateResumeCSS(scale: number = 1.0): string {
