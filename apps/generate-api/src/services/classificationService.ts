@@ -3,11 +3,8 @@ import {
   MISTRAL_CONFIG,
   MISTRAL_MESSAGE_ROLES,
 } from "../config/constants.js";
-import {
-  callMistralAPI,
-  extractJsonFromResponse,
-  type MistralMessage,
-} from "../utils/mistralClient.js";
+import { callMistralAPI, type MistralMessage } from "../utils/mistralClient.js";
+import { extractJsonFromResponse } from "../utils/jsonUtils.js";
 import { safeJsonParse } from "../utils/jsonUtils.js";
 
 interface ClassificationResponse {

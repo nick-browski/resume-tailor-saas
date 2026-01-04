@@ -3,7 +3,6 @@ import {
   ERROR_MESSAGES,
   REQUEST_HEADERS,
   HTTP_METHODS,
-  JSON_EXTRACTION_PATTERNS,
 } from "../config/constants.js";
 
 // Configuration
@@ -39,39 +38,6 @@ export interface MistralResponse {
 // Utilities
 function delayExecution(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-export function extractJsonFromResponse(responseText: string): string {
-  let cleanedResponseText = responseText.trim();
-  cleanedResponseText = cleanedResponseText.replace(
-    JSON_EXTRACTION_PATTERNS.MARKDOWN_JSON_START,
-    ""
-  );
-  cleanedResponseText = cleanedResponseText.replace(
-    JSON_EXTRACTION_PATTERNS.MARKDOWN_CODE_START,
-    ""
-  );
-  cleanedResponseText = cleanedResponseText.replace(
-    JSON_EXTRACTION_PATTERNS.MARKDOWN_CODE_END,
-    ""
-  );
-
-  const jsonStartIndex = cleanedResponseText.indexOf(
-    JSON_EXTRACTION_PATTERNS.JSON_START_CHARACTER
-  );
-  const jsonEndIndex = cleanedResponseText.lastIndexOf(
-    JSON_EXTRACTION_PATTERNS.JSON_END_CHARACTER
-  );
-
-  if (
-    jsonStartIndex !== -1 &&
-    jsonEndIndex !== -1 &&
-    jsonEndIndex > jsonStartIndex
-  ) {
-    return cleanedResponseText.substring(jsonStartIndex, jsonEndIndex + 1);
-  }
-
-  return cleanedResponseText;
 }
 
 // API Client
