@@ -1,6 +1,7 @@
 import { useMobilePdfScale } from "../../../hooks/useMobilePdfScale";
 import { useState, useEffect } from "react";
 import { PdfSkeleton } from "@/shared/ui";
+import { ANIMATION_CONSTANTS } from "@/shared/lib/constants";
 
 // Container dimensions constants
 const CONTAINER_HEIGHT_MOBILE = "50vh";
@@ -13,7 +14,6 @@ const PDF_VIEWER_PARAMS_DESKTOP =
   "#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width";
 
 // Animation constants
-const PDF_LOAD_TRANSITION = "opacity 0.3s ease-in-out";
 const TRANSFORM_ORIGIN_TOP_LEFT = "top left";
 
 // CSS dimension constants
@@ -29,6 +29,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
   const { isMobile, mobileScale } = useMobilePdfScale();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   // Fixed height for container to prevent layout shift
   const containerHeight = isMobile
@@ -40,11 +41,16 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
     if (pdfPreviewUrl) {
       setIsLoading(true);
       setHasError(false);
+      setIsVisible(false);
     }
   }, [pdfPreviewUrl]);
 
   const handleLoad = () => {
     setIsLoading(false);
+    // Trigger fade-in animation after a short delay
+    setTimeout(() => {
+      setIsVisible(true);
+    }, ANIMATION_CONSTANTS.PDF_FADE_IN_DELAY_MS);
   };
 
   const handleError = () => {
@@ -133,8 +139,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                           width: FULL_WIDTH_PERCENT,
                           height: FULL_HEIGHT_PERCENT,
                           minHeight: MIN_CONTAINER_HEIGHT_PX,
-                          opacity: isLoading ? 0 : 1,
-                          transition: PDF_LOAD_TRANSITION,
+                          opacity: isVisible ? 1 : 0,
+                          transform: isVisible ? "scale(1)" : "scale(0.98)",
+                          transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
+                          willChange: "opacity, transform",
                         }}
                         onLoad={handleLoad}
                         onError={handleError}
@@ -164,8 +172,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                       width: FULL_WIDTH_PERCENT,
                       height: FULL_HEIGHT_PERCENT,
                       WebkitOverflowScrolling: "touch",
-                      opacity: isLoading ? 0 : 1,
-                      transition: PDF_LOAD_TRANSITION,
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? "scale(1)" : "scale(0.98)",
+                      transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
+                      willChange: "opacity, transform",
                     }}
                     onLoad={handleLoad}
                     onError={handleError}

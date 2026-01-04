@@ -15,13 +15,16 @@ export function FullscreenModal({
   const { isMobile } = useMobilePdfScale();
   const [isExiting, setIsExiting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isPdfLoaded, setIsPdfLoaded] = useState(false);
 
   useEffect(() => {
     // Trigger enter animation after mount
     requestAnimationFrame(() => {
       setIsVisible(true);
     });
-  }, []);
+    // Reset PDF loaded state when URL changes
+    setIsPdfLoaded(false);
+  }, [pdfPreviewUrl]);
 
   const handleClose = useCallback(() => {
     setIsExiting(true);
@@ -48,9 +51,7 @@ export function FullscreenModal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
-        backgroundColor: isVisible
-          ? "rgba(0, 0, 0, 0.95)"
-          : "rgba(0, 0, 0, 0)",
+        backgroundColor: isVisible ? "rgba(0, 0, 0, 0.95)" : "rgba(0, 0, 0, 0)",
         transition: `background-color ${
           isExiting
             ? ANIMATION_CONSTANTS.MODAL_EXIT_DURATION_MS
@@ -137,6 +138,15 @@ export function FullscreenModal({
               display: "block",
               width: "100%",
               maxWidth: "100%",
+              opacity: isPdfLoaded ? 1 : 0,
+              transform: isPdfLoaded ? "scale(1)" : "scale(0.98)",
+              transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
+              willChange: "opacity, transform",
+            }}
+            onLoad={() => {
+              setTimeout(() => {
+                setIsPdfLoaded(true);
+              }, ANIMATION_CONSTANTS.PDF_FADE_IN_DELAY_MS);
             }}
             aria-label="Resume Preview Fullscreen"
           >
@@ -161,6 +171,15 @@ export function FullscreenModal({
               display: "block",
               width: "100%",
               maxWidth: "100%",
+              opacity: isPdfLoaded ? 1 : 0,
+              transform: isPdfLoaded ? "scale(1)" : "scale(0.98)",
+              transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
+              willChange: "opacity, transform",
+            }}
+            onLoad={() => {
+              setTimeout(() => {
+                setIsPdfLoaded(true);
+              }, ANIMATION_CONSTANTS.PDF_FADE_IN_DELAY_MS);
             }}
             allow="fullscreen"
             scrolling="yes"
@@ -170,4 +189,3 @@ export function FullscreenModal({
     </div>
   );
 }
-
