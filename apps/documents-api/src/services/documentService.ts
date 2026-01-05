@@ -1,5 +1,5 @@
 import { getDb, getStorage } from "../config/firebase-admin.js";
-import type { Document } from "../types/document.js";
+import type { Document, MatchCheckResult } from "../types/document.js";
 import type { Timestamp } from "firebase-admin/firestore";
 import { Timestamp as FirestoreTimestamp } from "firebase-admin/firestore";
 import { FIREBASE_CONFIG, STORAGE_CONFIG } from "../config/constants.js";
@@ -16,7 +16,8 @@ export async function createDocument(
   resumeText: string,
   jobText?: string,
   pdfBuffer?: Buffer,
-  pdfFileName?: string
+  pdfFileName?: string,
+  matchCheckResult?: MatchCheckResult | null
 ): Promise<string> {
   const database = getDb();
   const storage = getStorage();
@@ -55,6 +56,7 @@ export async function createDocument(
     pdfResultPath: null,
     createdAt: new Date(),
     error: null,
+    matchCheckResult: matchCheckResult || null,
   };
 
   // Only add expireAt in production (TTL not supported in emulator)
@@ -105,6 +107,7 @@ export async function getDocumentById(
     pdfResultPath: documentData.pdfResultPath,
     createdAt: createdAtTimestamp.toDate().toISOString(),
     error: documentData.error,
+    matchCheckResult: documentData.matchCheckResult || null,
   };
 }
 
@@ -134,6 +137,7 @@ export async function getAllDocuments(ownerId: string): Promise<Document[]> {
       pdfResultPath: documentData.pdfResultPath,
       createdAt: createdAtTimestamp.toDate().toISOString(),
       error: documentData.error,
+      matchCheckResult: documentData.matchCheckResult || null,
     };
   });
 }

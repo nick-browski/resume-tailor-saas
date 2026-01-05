@@ -9,6 +9,7 @@ import {
   getDocumentById,
   getAllDocuments,
 } from "../services/documentService.js";
+import { parseMatchCheckResult } from "../utils/matchCheckUtils.js";
 import {
   HTTP_STATUS,
   ERROR_MESSAGES,
@@ -42,13 +43,17 @@ documentsRouter.post(
       const uploadedFile = request.file;
       const resumeTextFromBody = request.body.resumeText;
       const jobTextFromBody = request.body.jobText;
+      const matchCheckResult = parseMatchCheckResult(
+        request.body.matchCheckResult
+      );
 
       const createdDocumentId = await createDocument(
         userId,
         resumeTextFromBody || "",
         jobTextFromBody,
         uploadedFile?.buffer,
-        uploadedFile?.originalname
+        uploadedFile?.originalname,
+        matchCheckResult
       );
 
       response.status(HTTP_STATUS.CREATED).json({

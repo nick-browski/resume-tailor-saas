@@ -63,3 +63,22 @@ export const optionalJobTextSchema = z
   })
   .optional();
 
+const matchCheckResultObjectSchema = z.object({
+  isMatch: z.boolean(),
+  matchScore: z.number().min(0).max(1),
+  reasons: z.array(z.string()).optional(),
+  missingSkills: z.array(z.string()).optional(),
+  matchingSkills: z.array(z.string()).optional(),
+});
+
+export const matchCheckResultSchema = z.preprocess((val) => {
+  if (!val) return null;
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}, matchCheckResultObjectSchema.nullable().optional());

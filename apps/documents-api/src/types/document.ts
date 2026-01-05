@@ -5,6 +5,14 @@ export type DocumentStatus =
   | "generated"
   | "failed";
 
+export interface MatchCheckResult {
+  isMatch: boolean;
+  matchScore: number;
+  reasons?: string[];
+  missingSkills?: string[];
+  matchingSkills?: string[];
+}
+
 export interface Document {
   id: string;
   ownerId: string;
@@ -19,5 +27,6 @@ export interface Document {
   pdfResultPath: string | null;
   createdAt: string;
   error: string | null;
+  matchCheckResult?: MatchCheckResult | null;
 }
 
