@@ -39,12 +39,6 @@ export function useToast() {
     [showToast]
   );
 
-  const showError = useCallback(
-    (message: string, duration?: number) => {
-      return showToast(message, "error", duration);
-    },
-    [showToast]
-  );
 
   const showInfo = useCallback(
     (message: string, duration?: number) => {
@@ -72,6 +66,20 @@ export function useToast() {
     });
   }, []);
 
+  const dismissAllLoading = useCallback(() => {
+    setToasts((previousToasts) =>
+      previousToasts.filter((toast) => toast.type !== "loading")
+    );
+  }, []);
+
+  const showError = useCallback(
+    (message: string, duration?: number) => {
+      dismissAllLoading();
+      return showToast(message, "error", duration);
+    },
+    [showToast, dismissAllLoading]
+  );
+
   return {
     toasts,
     showToast,
@@ -81,5 +89,6 @@ export function useToast() {
     showInfo,
     showLoading,
     dismissLoading,
+    dismissAllLoading,
   };
 }
