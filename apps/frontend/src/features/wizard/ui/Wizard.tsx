@@ -8,7 +8,6 @@ import { useWizardStore } from "../model/wizardStore";
 import { useDocumentById } from "../api/useDocuments";
 import { isAnyTourActive } from "@/shared/lib/tourUtils";
 
-// Animation constants for Wizard
 const OPACITY_FULL = 1;
 const OPACITY_TRANSPARENT = 0;
 const TRANSLATE_X_ZERO = "translateX(0)";
@@ -27,7 +26,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [displayChildren, setDisplayChildren] = useState(children);
   const [shouldShowAnimation, setShouldShowAnimation] = useState(
-    !isAnyTourActive()
+    !isAnyTourActive(selectedScenario)
   );
   const previousStepRef = useRef(currentStep);
   const slideDirectionRef = useRef<"forward" | "backward">("forward");
@@ -35,7 +34,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
 
   useEffect(() => {
     const checkTourStatus = () => {
-      setShouldShowAnimation(!isAnyTourActive());
+      setShouldShowAnimation(!isAnyTourActive(selectedScenario));
     };
 
     checkTourStatus();
@@ -56,7 +55,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
       window.removeEventListener("storage", handleStorageChange);
       clearInterval(checkInterval);
     };
-  }, []);
+  }, [selectedScenario]);
 
   useEffect(() => {
     if (!shouldShowAnimation) {
@@ -83,6 +82,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
       }, ANIMATION_CONSTANTS.WIZARD_STEP_TRANSITION_DURATION_MS);
     } else {
       setDisplayChildren(children);
+      setIsAnimating(false);
     }
 
     return () => {

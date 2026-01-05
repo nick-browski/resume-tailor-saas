@@ -1,13 +1,18 @@
 const SKIP_ALL_TOURS_KEY = "resume-tailor-tour-skipped-all";
 
-// Tour storage keys for different steps
-const ALL_TOUR_KEYS = [
+const EDIT_TOUR_KEYS = [
   "resume-tailor-tour-initial-step",
   "resume-tailor-tour-upload-edit-step",
-  "resume-tailor-tour-job-description-step",
-  "resume-tailor-tour-preview-step",
   "resume-tailor-tour-edit-preview-step",
 ];
+
+const TAILOR_TOUR_KEYS = [
+  "resume-tailor-tour-initial-step",
+  "resume-tailor-tour-job-description-step",
+  "resume-tailor-tour-preview-step",
+];
+
+const ALL_TOUR_KEYS = [...new Set([...EDIT_TOUR_KEYS, ...TAILOR_TOUR_KEYS])];
 
 export function hasSkippedAllTours(): boolean {
   return localStorage.getItem(SKIP_ALL_TOURS_KEY) === "true";
@@ -20,12 +25,18 @@ export function skipAllTours(): void {
   });
 }
 
-export function isAnyTourActive(): boolean {
+export function isAnyTourActive(scenario: "edit" | "tailor" | null): boolean {
   if (hasSkippedAllTours()) {
     return false;
   }
 
-  const allToursCompleted = ALL_TOUR_KEYS.every(
+  const tourKeys = scenario
+    ? scenario === "edit"
+      ? EDIT_TOUR_KEYS
+      : TAILOR_TOUR_KEYS
+    : ALL_TOUR_KEYS;
+
+  const allToursCompleted = tourKeys.every(
     (key) => localStorage.getItem(key) === "true"
   );
 
