@@ -14,10 +14,8 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // A4 page height at 96 DPI: 297mm = 1123px
-  // Mobile: use viewport height for flexibility
-  // Desktop: use fixed A4 page height for one-page preview
-  const containerHeight = isMobile ? "50vh" : "1123px";
+  // Mobile: 60vh, Desktop: A4 height (1123px)
+  const containerHeight = isMobile ? "60vh" : "1123px";
 
   useEffect(() => {
     if (pdfPreviewUrl) {
@@ -57,7 +55,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                     width: "100%",
                     maxWidth: "100%",
                     height: containerHeight,
-                    minHeight: isMobile ? "400px" : "1123px",
+                    minHeight: isMobile ? "500px" : "1123px",
                   }}
                 >
                   <PdfSkeleton />
@@ -114,13 +112,13 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                       }}
                     >
                       <iframe
-                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
+                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=Fit`}
                         className="border-0"
                         style={{
                           display: "block",
                           width: "100%",
                           height: "100%",
-                          minHeight: "400px",
+                          minHeight: "500px",
                           opacity: isVisible ? 1 : 0,
                           transform: isVisible ? "scale(1)" : "scale(0.98)",
                           transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
@@ -137,7 +135,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                   </div>
                 ) : (
                   <iframe
-                    src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
+                    src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=Fit`}
                     className="w-full h-full border-0"
                     title="Resume Preview"
                     style={{
