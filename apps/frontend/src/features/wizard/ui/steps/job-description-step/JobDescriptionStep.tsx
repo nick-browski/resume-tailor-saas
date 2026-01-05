@@ -67,7 +67,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const {
     classificationErrors,
     isClassifying,
-    classifyContent,
+    classifyContentForTailor,
     clearClassificationErrors,
   } = useClassifyContent();
   const { matchErrors, isCheckingMatch, checkMatch, clearMatchErrors } =
@@ -153,7 +153,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
 
       try {
         // First, classify content (validate resume and job description)
-        const classificationResult = await classifyContent(
+        const classificationResult = await classifyContentForTailor(
           resumeData,
           jobDescriptionText
         );
@@ -224,7 +224,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       generationToastId,
       enableMatchCheck,
       checkMatch,
-      classifyContent,
+      classifyContentForTailor,
       createDocument,
       generateResume,
       setDocumentId,

@@ -52,6 +52,7 @@ export const ERROR_MESSAGES = {
   FILE_OR_RESUME_TEXT_REQUIRED: "Either file or resumeText is required",
   FAILED_TO_CLASSIFY_CONTENT: "Failed to classify content",
   FAILED_TO_EDIT_RESUME: "Failed to edit resume",
+  EDIT_PROMPT_EMPTY: "Edit prompt cannot be empty",
   RESUME_TEXT_EMPTY: "Resume text is empty",
   JOB_DESCRIPTION_TEXT_EMPTY: "Job description text is empty",
   FAILED_TO_ANALYZE_RESUME_CONTENT: "Failed to analyze resume content",

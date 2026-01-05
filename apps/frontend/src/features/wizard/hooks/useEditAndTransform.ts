@@ -21,11 +21,10 @@ interface UseEditAndTransformProps {
   uploadMode: "file" | "text";
   resumeData: ResumeInputData | null;
   documentId: string | null;
-  editPrompt: string;
-  classifyContent: (
+  editRequestText: string;
+  classifyContentForEdit: (
     resumeData: ResumeInputData | null,
-    jobDescriptionText: string,
-    mode?: "edit" | "tailor"
+    editRequestText: string
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
   onValidationError: (error: string | null) => void;
   onEditPromptError: (error: string | null) => void;
@@ -36,8 +35,8 @@ export function useEditAndTransform({
   uploadMode,
   resumeData,
   documentId,
-  editPrompt,
-  classifyContent,
+  editRequestText,
+  classifyContentForEdit,
   onValidationError,
   onEditPromptError,
   onNext,
@@ -78,23 +77,23 @@ export function useEditAndTransform({
       }
     }
 
-    // Validate edit prompt (required)
-    if (!editPrompt || !editPrompt.trim()) {
+    // Validate edit request (required) - basic Zod validation
+    if (!editRequestText || !editRequestText.trim()) {
       onEditPromptError(UI_TEXT.EDIT_PROMPT_REQUIRED_ERROR);
       toast.showError(UI_TEXT.EDIT_PROMPT_REQUIRED_ERROR);
       return false;
     }
-    const editPromptValidationResult = validateEditPrompt(editPrompt);
-    if (!editPromptValidationResult.success) {
-      onEditPromptError(editPromptValidationResult.error || null);
+    const editRequestValidationResult = validateEditPrompt(editRequestText);
+    if (!editRequestValidationResult.success) {
+      onEditPromptError(editRequestValidationResult.error || null);
       return false;
     }
 
     try {
-      const classificationResult = await classifyContent(
+      // AI validation of edit request happens in classifyContentForEdit
+      const classificationResult = await classifyContentForEdit(
         resumeData,
-        "",
-        "edit"
+        editRequestText
       );
 
       if (!classificationResult || !classificationResult.isValid) {
@@ -125,7 +124,7 @@ export function useEditAndTransform({
       try {
         await generateApi.editResume({
           documentId: currentDocumentId,
-          prompt: editPrompt,
+          prompt: editRequestText,
         });
       } catch (editError) {
         const errorMessage = formatServerError(editError);
@@ -146,11 +145,11 @@ export function useEditAndTransform({
     uploadMode,
     resumeData,
     documentId,
-    editPrompt,
+    editRequestText,
     createDocument,
     setDocumentId,
     setEditPromptInStore,
-    classifyContent,
+    classifyContentForEdit,
     onNext,
     toast,
     onValidationError,

@@ -60,6 +60,30 @@ Return ONLY a valid JSON object with this structure:
 Text to classify:
 {text}`;
 
+export const EDIT_REQUEST_VALIDATION_PROMPT = `You are a validator for resume edit requests. Analyze the provided text and determine if it is a specific, logical description of changes that need to be made to a resume.
+
+A valid edit request must:
+- Be specific about what needs to be changed (e.g., "Update the job title for the position at Company X from 'Developer' to 'Senior Developer'")
+- Describe concrete modifications (e.g., "Add Python to the skills section", "Update the summary to emphasize backend development experience")
+- Be actionable and clear (e.g., "Change the start date of my current position to January 2023", "Remove the certification section")
+- Focus on resume content modifications
+
+Invalid edit requests include:
+- Vague or generic requests (e.g., "make it better", "improve it", "update resume")
+- Non-specific instructions (e.g., "change some things", "fix errors")
+- Requests that don't describe concrete changes (e.g., "review this", "check my resume")
+- Random text or unrelated content
+
+Return ONLY a valid JSON object with this structure:
+{
+  "isValid": boolean,
+  "confidence": number (0-1),
+  "reason": "string explaining your decision in one sentence"
+}
+
+Edit request to validate:
+{text}`;
+
 export const CLASSIFICATION_PROMPT_PLACEHOLDERS = {
   TEXT: "{text}",
 } as const;

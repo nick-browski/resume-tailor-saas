@@ -96,15 +96,18 @@ export interface ApiError {
 export interface ClassifyContentRequest {
   file?: File;
   resumeText?: string;
-  jobText: string;
+  jobText?: string;
+  editPrompt?: string;
 }
 
 export interface ClassifyContentResponse {
   isResumeValid: boolean;
-  isJobDescriptionValid: boolean;
+  isJobDescriptionValid?: boolean;
   resumeReason?: string;
   jobDescriptionReason?: string;
   extractedResumeText?: string;
+  isEditRequestValid?: boolean;
+  editRequestReason?: string;
 }
 
 export interface MatchCheckRequest {

@@ -24,7 +24,7 @@ export function UploadResumeEditStep({
   const documentId = useWizardStore((state) => state.documentId);
   const generationToastId = useWizardStore((state) => state.generationToastId);
   const { data: currentDocument } = useDocumentById(documentId);
-  const { classificationErrors, classifyContent } = useClassifyContent();
+  const { classificationErrors, classifyContentForEdit } = useClassifyContent();
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -68,8 +68,8 @@ export function UploadResumeEditStep({
       uploadMode,
       resumeData,
       documentId,
-      editPrompt,
-      classifyContent,
+      editRequestText: editPrompt,
+      classifyContentForEdit,
       onValidationError: setValidationError,
       onEditPromptError: setEditPromptError,
       onNext,
@@ -113,6 +113,13 @@ export function UploadResumeEditStep({
           <ValidationWarning
             title={UI_TEXT.INVALID_RESUME_TITLE}
             message={classificationErrors.resumeError}
+          />
+        )}
+
+        {classificationErrors.editRequestError && (
+          <ValidationWarning
+            title="Invalid Edit Request"
+            message={classificationErrors.editRequestError}
           />
         )}
 

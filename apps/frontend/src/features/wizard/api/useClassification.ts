@@ -12,6 +12,7 @@ import type {
 interface ClassificationErrors {
   resumeError?: string;
   jobDescriptionError?: string;
+  editRequestError?: string;
 }
 
 interface UseClassifyContentResult {
@@ -20,7 +21,16 @@ interface UseClassifyContentResult {
   classifyContent: (
     resumeData: ResumeInputData | null,
     jobDescriptionText: string,
-    mode?: "edit" | "tailor"
+    mode?: "edit" | "tailor",
+    editPrompt?: string
+  ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
+  classifyContentForEdit: (
+    resumeData: ResumeInputData | null,
+    editRequestText: string
+  ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
+  classifyContentForTailor: (
+    resumeData: ResumeInputData | null,
+    jobDescriptionText: string
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
   clearClassificationErrors: () => void;
 }
@@ -40,11 +50,72 @@ export function useClassifyContent(): UseClassifyContentResult {
         classificationApi.classify(request, mode),
     });
 
-  const classifyContent = useCallback(
+  const classifyContentForEdit = useCallback(
     async (
       resumeData: ResumeInputData | null,
-      jobDescriptionText: string,
-      mode?: "edit" | "tailor"
+      editRequestText: string
+    ): Promise<{
+      extractedResumeText: string | null;
+      isValid: boolean;
+    } | null> => {
+      if (!resumeData || (!resumeData.text && !resumeData.file)) {
+        toast.showError(UI_TEXT.RESUME_NOT_SELECTED_WARNING);
+        return null;
+      }
+
+      const classificationToastId = toast.showLoading(
+        TOAST_MESSAGES.CLASSIFYING_CONTENT
+      );
+
+      try {
+        const classificationResult = await classifyContentApi({
+          request: {
+            file: resumeData.file || undefined,
+            resumeText: resumeData.text || undefined,
+            editPrompt: editRequestText,
+          },
+          mode: "edit",
+        });
+
+        toast.dismissLoading(classificationToastId);
+
+        const extractedResumeText =
+          classificationResult.extractedResumeText || resumeData.text || null;
+
+        const isResumeValid = classificationResult.isResumeValid;
+        const isEditRequestValid =
+          classificationResult.isEditRequestValid !== false;
+
+        if (!isResumeValid || !isEditRequestValid) {
+          setClassificationErrors({
+            resumeError: isResumeValid
+              ? undefined
+              : classificationResult.resumeReason ||
+                UI_TEXT.RESUME_CLASSIFICATION_FAILED,
+            editRequestError: !isEditRequestValid
+              ? classificationResult.editRequestReason ||
+                "Edit request must be a specific, logical description of changes"
+              : undefined,
+          });
+          return { extractedResumeText, isValid: false };
+        }
+
+        setClassificationErrors({});
+        return { extractedResumeText, isValid: true };
+      } catch (classificationError) {
+        toast.dismissLoading(classificationToastId);
+        toast.showError(TOAST_MESSAGES.CLASSIFICATION_FAILED);
+        console.error("Classification error:", classificationError);
+        return null;
+      }
+    },
+    [classifyContentApi, toast]
+  );
+
+  const classifyContentForTailor = useCallback(
+    async (
+      resumeData: ResumeInputData | null,
+      jobDescriptionText: string
     ): Promise<{
       extractedResumeText: string | null;
       isValid: boolean;
@@ -65,35 +136,34 @@ export function useClassifyContent(): UseClassifyContentResult {
             resumeText: resumeData.text || undefined,
             jobText: jobDescriptionText,
           },
-          mode,
+          mode: "tailor",
         });
 
         toast.dismissLoading(classificationToastId);
 
-        const extractedText =
+        const extractedResumeText =
           classificationResult.extractedResumeText || resumeData.text || null;
 
-        // For edit mode, only check resume validity
+        const isResumeValid = classificationResult.isResumeValid;
         const isJobDescriptionValid =
-          mode === "edit" || classificationResult.isJobDescriptionValid;
+          classificationResult.isJobDescriptionValid !== false;
 
-        if (!classificationResult.isResumeValid || !isJobDescriptionValid) {
+        if (!isResumeValid || !isJobDescriptionValid) {
           setClassificationErrors({
-            resumeError: classificationResult.isResumeValid
+            resumeError: isResumeValid
               ? undefined
               : classificationResult.resumeReason ||
                 UI_TEXT.RESUME_CLASSIFICATION_FAILED,
-            jobDescriptionError:
-              mode === "edit" || classificationResult.isJobDescriptionValid
-                ? undefined
-                : classificationResult.jobDescriptionReason ||
-                  UI_TEXT.JOB_DESCRIPTION_CLASSIFICATION_FAILED,
+            jobDescriptionError: isJobDescriptionValid
+              ? undefined
+              : classificationResult.jobDescriptionReason ||
+                UI_TEXT.JOB_DESCRIPTION_CLASSIFICATION_FAILED,
           });
-          return { extractedResumeText: extractedText, isValid: false };
+          return { extractedResumeText, isValid: false };
         }
 
         setClassificationErrors({});
-        return { extractedResumeText: extractedText, isValid: true };
+        return { extractedResumeText, isValid: true };
       } catch (classificationError) {
         toast.dismissLoading(classificationToastId);
         toast.showError(TOAST_MESSAGES.CLASSIFICATION_FAILED);
@@ -104,6 +174,29 @@ export function useClassifyContent(): UseClassifyContentResult {
     [classifyContentApi, toast]
   );
 
+  const classifyContent = useCallback(
+    async (
+      resumeData: ResumeInputData | null,
+      jobDescriptionText: string,
+      mode?: "edit" | "tailor",
+      editPrompt?: string
+    ): Promise<{
+      extractedResumeText: string | null;
+      isValid: boolean;
+    } | null> => {
+      if (mode === "edit") {
+        if (!editPrompt) {
+          toast.showError(UI_TEXT.EDIT_PROMPT_REQUIRED_ERROR);
+          return null;
+        }
+        return classifyContentForEdit(resumeData, editPrompt);
+      }
+
+      return classifyContentForTailor(resumeData, jobDescriptionText);
+    },
+    [classifyContentForEdit, classifyContentForTailor, toast]
+  );
+
   const clearClassificationErrors = useCallback(() => {
     setClassificationErrors({});
   }, []);
@@ -112,6 +205,8 @@ export function useClassifyContent(): UseClassifyContentResult {
     classificationErrors,
     isClassifying,
     classifyContent,
+    classifyContentForEdit,
+    classifyContentForTailor,
     clearClassificationErrors,
   };
 }

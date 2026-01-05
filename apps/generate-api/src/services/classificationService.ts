@@ -10,12 +10,19 @@ import {
   RESUME_CLASSIFICATION_PROMPT,
   RESUME_CLASSIFICATION_PROMPT_FOR_EDIT,
   JOB_DESCRIPTION_CLASSIFICATION_PROMPT,
+  EDIT_REQUEST_VALIDATION_PROMPT,
   CLASSIFICATION_PROMPT_PLACEHOLDERS,
 } from "../prompts/index.js";
 
 interface ClassificationResponse {
   isResume?: boolean;
   isJobDescription?: boolean;
+  confidence: number;
+  reason: string;
+}
+
+interface EditRequestValidationResponse {
+  isValid: boolean;
   confidence: number;
   reason: string;
 }
@@ -82,10 +89,12 @@ async function classifyTextWithPrompt(
 
 export interface ClassificationResult {
   isResumeValid: boolean;
-  isJobDescriptionValid: boolean;
+  isJobDescriptionValid?: boolean;
   resumeReason?: string;
   jobDescriptionReason?: string;
   extractedResumeText?: string;
+  isEditRequestValid?: boolean;
+  editRequestReason?: string;
 }
 
 export async function classifyResume(
@@ -136,30 +145,116 @@ export async function classifyJobDescription(
   }
 }
 
-export async function classifyContent(
-  resumeText: string,
-  jobDescriptionText: string,
-  mode: ClassificationMode = ClassificationMode.TAILOR
-): Promise<ClassificationResult> {
-  if (mode === ClassificationMode.EDIT) {
-    const resumeClassification = await classifyResume(resumeText, true);
+export async function validateEditRequest(
+  editRequestText: string
+): Promise<{ isValid: boolean; reason?: string }> {
+  if (!editRequestText || !editRequestText.trim()) {
     return {
-      isResumeValid: resumeClassification.isValid,
-      isJobDescriptionValid: true,
-      resumeReason: resumeClassification.reason,
+      isValid: false,
+      reason: ERROR_MESSAGES.EDIT_PROMPT_EMPTY,
     };
   }
 
-  const [resumeClassification, jobDescriptionClassification] =
+  const truncatedEditRequestText = editRequestText.substring(
+    0,
+    MISTRAL_CONFIG.CLASSIFICATION_MAX_TEXT_LENGTH
+  );
+  const formattedValidationPrompt = EDIT_REQUEST_VALIDATION_PROMPT.replace(
+    CLASSIFICATION_PROMPT_PLACEHOLDERS.TEXT,
+    truncatedEditRequestText
+  );
+  const mistralMessages: MistralMessage[] = [
+    { role: MISTRAL_MESSAGE_ROLES.USER, content: formattedValidationPrompt },
+  ];
+
+  try {
+    const mistralApiResponse = await callMistralAPI(
+      mistralMessages,
+      MISTRAL_CONFIG.CLASSIFICATION_MAX_TOKENS
+    );
+    const responseContent = mistralApiResponse.choices[0].message.content;
+    const extractedJsonString = extractJsonFromResponse(responseContent);
+    const editRequestValidationResult =
+      safeJsonParse<EditRequestValidationResponse>(
+        extractedJsonString,
+        "Failed to parse edit request validation response"
+      );
+
+    const isEditRequestValid = Boolean(
+      editRequestValidationResult.isValid &&
+        editRequestValidationResult.confidence >
+          MISTRAL_CONFIG.MINIMUM_CONFIDENCE_THRESHOLD
+    );
+
+    return {
+      isValid: isEditRequestValid,
+      reason: isEditRequestValid
+        ? undefined
+        : editRequestValidationResult.reason,
+    };
+  } catch (validationError) {
+    console.error("Error validating edit request:", validationError);
+    const errorMessage =
+      validationError instanceof Error
+        ? validationError.message
+        : ERROR_MESSAGES.UNKNOWN_ERROR;
+    throw new Error(`Failed to validate edit request: ${errorMessage}`);
+  }
+}
+
+export async function classifyContentForEdit(
+  resumeText: string,
+  editRequestText?: string
+): Promise<ClassificationResult> {
+  if (editRequestText) {
+    const [resumeClassificationResult, editRequestValidationResult] =
+      await Promise.all([
+        classifyResume(resumeText, true),
+        validateEditRequest(editRequestText),
+      ]);
+
+    return {
+      isResumeValid: resumeClassificationResult.isValid,
+      resumeReason: resumeClassificationResult.reason,
+      isEditRequestValid: editRequestValidationResult.isValid,
+      editRequestReason: editRequestValidationResult.reason,
+    };
+  }
+
+  const resumeClassificationResult = await classifyResume(resumeText, true);
+  return {
+    isResumeValid: resumeClassificationResult.isValid,
+    resumeReason: resumeClassificationResult.reason,
+  };
+}
+
+export async function classifyContentForTailor(
+  resumeText: string,
+  jobDescriptionText: string
+): Promise<ClassificationResult> {
+  const [resumeClassificationResult, jobDescriptionClassificationResult] =
     await Promise.all([
       classifyResume(resumeText, false),
       classifyJobDescription(jobDescriptionText),
     ]);
 
   return {
-    isResumeValid: resumeClassification.isValid,
-    isJobDescriptionValid: jobDescriptionClassification.isValid,
-    resumeReason: resumeClassification.reason,
-    jobDescriptionReason: jobDescriptionClassification.reason,
+    isResumeValid: resumeClassificationResult.isValid,
+    isJobDescriptionValid: jobDescriptionClassificationResult.isValid,
+    resumeReason: resumeClassificationResult.reason,
+    jobDescriptionReason: jobDescriptionClassificationResult.reason,
   };
+}
+
+export async function classifyContent(
+  resumeText: string,
+  jobDescriptionText: string,
+  mode: ClassificationMode = ClassificationMode.TAILOR,
+  editRequestText?: string
+): Promise<ClassificationResult> {
+  if (mode === ClassificationMode.EDIT) {
+    return classifyContentForEdit(resumeText, editRequestText);
+  }
+
+  return classifyContentForTailor(resumeText, jobDescriptionText);
 }

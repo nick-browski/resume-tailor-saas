@@ -5,7 +5,8 @@ import {
   AuthenticatedRequest,
 } from "../middleware/auth.js";
 import {
-  classifyContent,
+  classifyContentForEdit,
+  classifyContentForTailor,
   ClassificationMode,
 } from "../services/classificationService.js";
 import { HTTP_STATUS, ERROR_MESSAGES } from "../config/constants.js";
@@ -49,18 +50,21 @@ classifyRouter.post(
   },
   async (request: AuthenticatedRequest, response) => {
     try {
-      const jobTextFromRequest = request.body.jobText;
       const classificationMode = getClassificationMode(
         request.query.mode as string
       );
       const extractedResumeText = await extractResumeTextFromRequest(request);
-      const jobDescriptionText = jobTextFromRequest || "";
 
-      const classificationResult = await classifyContent(
-        extractedResumeText,
-        jobDescriptionText,
-        classificationMode
-      );
+      const classificationResult =
+        classificationMode === ClassificationMode.EDIT
+          ? await classifyContentForEdit(
+              extractedResumeText,
+              request.body.editPrompt
+            )
+          : await classifyContentForTailor(
+              extractedResumeText,
+              request.body.jobText || ""
+            );
 
       const responseData = createResponseWithExtractedText(
         classificationResult,

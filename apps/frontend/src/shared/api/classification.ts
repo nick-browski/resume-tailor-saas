@@ -26,17 +26,27 @@ export const classificationApi = {
           classifyRequest.jobText
         );
       }
+      if (classificationMode === SCENARIO.EDIT && classifyRequest.editPrompt) {
+        multipartFormData.append("editPrompt", classifyRequest.editPrompt);
+      }
       return classificationApiClient.postFormData<ClassifyContentResponse>(
         classifyEndpoint,
         multipartFormData
       );
     }
 
-    const jsonRequestBody: { resumeText?: string; jobText?: string } = {
+    const jsonRequestBody: {
+      resumeText?: string;
+      jobText?: string;
+      editPrompt?: string;
+    } = {
       resumeText: classifyRequest.resumeText,
     };
     if (classificationMode !== SCENARIO.EDIT && classifyRequest.jobText) {
       jsonRequestBody.jobText = classifyRequest.jobText;
+    }
+    if (classificationMode === SCENARIO.EDIT && classifyRequest.editPrompt) {
+      jsonRequestBody.editPrompt = classifyRequest.editPrompt;
     }
     return classificationApiClient.post<ClassifyContentResponse>(
       classifyEndpoint,
