@@ -1,3 +1,11 @@
+/**
+ * Appends a nested object/array field to FormData as a JSON string.
+ *
+ * Note: FormData doesn't support nested objects directly, so we serialize them to JSON strings.
+ * The backend uses z.preprocess to parse these strings back to objects.
+ *
+ * For JSON body requests, objects are sent directly (no serialization needed).
+ */
 export function appendOptionalJsonField<T>(
   formData: FormData,
   fieldName: string,

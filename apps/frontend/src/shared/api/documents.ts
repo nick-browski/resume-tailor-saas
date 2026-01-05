@@ -21,6 +21,7 @@ export const documentsApi = {
     createRequest: CreateDocumentRequest
   ): Promise<CreateDocumentResponse> {
     if (createRequest.file) {
+      // FormData: nested objects must be JSON-stringified (FormData limitation)
       const requestFormData = createMultipartFormData(
         createRequest.file,
         createRequest.resumeText,
@@ -36,6 +37,7 @@ export const documentsApi = {
         requestFormData
       );
     } else {
+      // JSON body: objects are sent directly (standard REST API practice)
       return documentsApiClient.post<CreateDocumentResponse>(
         DOCUMENTS_ENDPOINT,
         {

@@ -71,6 +71,14 @@ const matchCheckResultObjectSchema = z.object({
   matchingSkills: z.array(z.string()).optional(),
 });
 
+/**
+ * Schema for matchCheckResult that handles both input formats:
+ * - JSON string (from FormData multipart requests) - needs parsing
+ * - Object (from JSON body requests) - used directly
+ * 
+ * This normalization allows the same schema to work with both request types,
+ * which is a standard practice when supporting both multipart and JSON endpoints.
+ */
 export const matchCheckResultSchema = z.preprocess((val) => {
   if (!val) return null;
   if (typeof val === "string") {
