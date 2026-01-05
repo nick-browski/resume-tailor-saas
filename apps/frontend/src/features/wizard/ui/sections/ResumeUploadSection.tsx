@@ -108,13 +108,15 @@ export const ResumeUploadSection = forwardRef<
 
           {resumeData?.file ? (
             <div className="space-y-3">
-              <UploadedFileCard
-                fileName={resumeData.file.name}
-                fileSizeBytes={resumeData.file.size}
-                onReplace={handleFileSelect}
-                onRemove={handleRemoveFile}
-                disabled={isGenerationInProgress}
-              />
+              <TourTarget ref={ref}>
+                <UploadedFileCard
+                  fileName={resumeData.file.name}
+                  fileSizeBytes={resumeData.file.size}
+                  onReplace={handleFileSelect}
+                  onRemove={handleRemoveFile}
+                  disabled={isGenerationInProgress}
+                />
+              </TourTarget>
               <ValidationHint
                 hasAttemptedSubmit={hasAttemptedSubmit}
                 validationError={validationError}
