@@ -14,6 +14,7 @@ import {
   VALIDATION_CONSTANTS,
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
+import { formatServerError } from "@/shared/lib/errorFormatter";
 
 interface ResumeData {
   file: File | null;
@@ -47,6 +48,7 @@ export function useEditAndTransform({
 }: UseEditAndTransformProps) {
   const setDocumentId = useWizardStore((state) => state.setDocumentId);
   const setEditPromptInStore = useWizardStore((state) => state.setEditPrompt);
+  const reset = useWizardStore((state) => state.reset);
   const toast = useToastContext();
   const { mutateAsync: createDocument } = useCreateDocument();
 
@@ -118,9 +120,8 @@ export function useEditAndTransform({
           setDocumentId(currentDocumentId);
         } catch (createDocumentError) {
           toast.dismissLoading(createDocumentToastId);
-          toast.showError(
-            TOAST_MESSAGES.CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED
-          );
+          const errorMessage = formatServerError(createDocumentError);
+          toast.showError(errorMessage);
           return false;
         }
       }
@@ -131,7 +132,8 @@ export function useEditAndTransform({
           prompt: editPrompt,
         });
       } catch (editError) {
-        toast.showError(UI_TEXT.RESUME_EDIT_FAILED);
+        const errorMessage = formatServerError(editError);
+        toast.showError(errorMessage);
         return false;
       }
 
@@ -139,7 +141,9 @@ export function useEditAndTransform({
       onNext();
       return true;
     } catch (error) {
-      toast.showError(TOAST_MESSAGES.RESUME_GENERATION_FAILED);
+      const errorMessage = formatServerError(error);
+      toast.showError(errorMessage);
+      reset();
       return false;
     }
   }, [
@@ -155,6 +159,7 @@ export function useEditAndTransform({
     toast,
     onValidationError,
     onEditPromptError,
+    reset,
   ]);
 
   return { handleEditAndTransform };

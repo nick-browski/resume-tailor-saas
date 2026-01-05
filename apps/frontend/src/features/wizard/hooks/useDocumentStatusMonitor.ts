@@ -11,6 +11,7 @@ import {
   DOCUMENT_STATUS,
   ORIGINAL_PARSE_STATUS,
 } from "@/shared/lib/constants";
+import { formatServerError } from "@/shared/lib/errorFormatter";
 
 export function useDocumentStatusMonitor() {
   const { user, isReady } = useAuthReady();
@@ -224,9 +225,16 @@ export function useDocumentStatusMonitor() {
               nextStep();
             }
           } else if (documentStatus === DOCUMENT_STATUS.FAILED) {
-            const errorMessage =
-              documentData.error || TOAST_MESSAGES.RESUME_GENERATION_FAILED;
+            if (generationToastId) {
+              toast.dismissLoading(generationToastId);
+              setGenerationToastId(null);
+            }
+
+            const errorMessage = formatServerError(
+              documentData.error ? new Error(documentData.error) : null
+            );
             toast.showError(errorMessage);
+            reset();
           }
         }
       },

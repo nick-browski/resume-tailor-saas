@@ -108,13 +108,13 @@ export const VALIDATION_CONSTANTS = {
 export const TOAST_MESSAGES = {
   RESUME_GENERATED_SUCCESS: "Resume transformed successfully!",
   RESUME_EDITED_SUCCESS: "Resume edited successfully!",
-  RESUME_GENERATION_FAILED: "Failed to transform resume",
+  RESUME_GENERATION_FAILED: "Failed to transform resume. Please try again.",
   DOCUMENT_LOAD_FAILED: "Failed to load document",
   CREATING_DOCUMENT: "Creating document...",
   STARTING_RESUME_GENERATION: "Resume transformation in progress...",
   STARTING_RESUME_EDIT: "Resume editing in progress...",
   CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED:
-    "Failed to create document or transform resume",
+    "Failed to create document or transform resume. Please try again.",
   RESUME_DOWNLOADED_SUCCESS: "Resume downloaded successfully",
   RESUME_DOWNLOAD_FAILED: "Failed to download resume",
   PARSING_ORIGINAL_RESUME: "Parsing original resume...",

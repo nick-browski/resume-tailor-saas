@@ -4,6 +4,7 @@ import { ResumeDiff } from "../../diff";
 import { PdfPreview } from "./PdfPreview";
 import type { ResumeData } from "@/shared/api/types";
 import type { Document } from "@/shared/api/types";
+import { formatServerError } from "@/shared/lib/errorFormatter";
 
 interface PreviewContentProps {
   showDiff: boolean;
@@ -84,11 +85,13 @@ export function PreviewContent({
 
   // Failed state
   if (documentData?.status === DOCUMENT_STATUS.FAILED) {
+    const errorMessage = formatServerError(
+      documentData.error ? new Error(documentData.error) : null
+    );
     return (
       <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
         <p className="text-sm text-red-600">
-          {UI_TEXT.GENERATION_FAILED_PREFIX}{" "}
-          {documentData.error || UI_TEXT.UNKNOWN_ERROR_TEXT}
+          {UI_TEXT.GENERATION_FAILED_PREFIX} {errorMessage}
         </p>
       </div>
     );

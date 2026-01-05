@@ -19,6 +19,7 @@ import { useResumeValidation } from "../../../hooks/useResumeValidation";
 import { ResumeUploadSection } from "../../sections";
 import { useTourSteps } from "../../../hooks/useTourSteps";
 import { JOB_DESCRIPTION_TOUR_KEY } from "@/shared/lib/tourUtils";
+import { formatServerError } from "@/shared/lib/errorFormatter";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -39,6 +40,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const setGenerationToastId = useWizardStore(
     (state) => state.setGenerationToastId
   );
+  const reset = useWizardStore((state) => state.reset);
   const { mutateAsync: createDocument, isPending: isCreatingDocument } =
     useCreateDocument();
   const { mutateAsync: generateResume, isPending: isStartingGeneration } =
@@ -167,15 +169,9 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           setGenerationToastId(null);
         }
 
-        const errorMessage =
-          generationError instanceof Error
-            ? generationError.message
-            : TOAST_MESSAGES.CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED;
+        const errorMessage = formatServerError(generationError);
         toast.showError(errorMessage);
-        console.error(
-          TOAST_MESSAGES.CREATE_DOCUMENT_OR_GENERATE_RESUME_FAILED,
-          generationError
-        );
+        reset();
       }
     },
     [
@@ -192,6 +188,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       queryClient,
       resumeValidationError,
       resumeValidationErrorFromHook,
+      reset,
     ]
   );
 
