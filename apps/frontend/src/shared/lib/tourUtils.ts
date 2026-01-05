@@ -1,9 +1,8 @@
 const SKIP_ALL_TOURS_KEY = "resume-tailor-tour-skipped-all";
 
-// All tour storage keys for different steps
+// Tour storage keys for different steps
 const ALL_TOUR_KEYS = [
   "resume-tailor-tour-initial-step",
-  "resume-tailor-tour-upload-step",
   "resume-tailor-tour-upload-edit-step",
   "resume-tailor-tour-job-description-step",
   "resume-tailor-tour-preview-step",
