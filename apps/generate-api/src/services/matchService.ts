@@ -6,6 +6,10 @@ import {
 import { callMistralAPI, type MistralMessage } from "../utils/mistralClient.js";
 import { extractJsonFromResponse } from "../utils/jsonUtils.js";
 import { safeJsonParse } from "../utils/jsonUtils.js";
+import {
+  MATCH_CHECK_PROMPT_TEMPLATE,
+  MATCH_CHECK_PROMPT_PLACEHOLDERS,
+} from "../prompts/index.js";
 
 interface MatchAnalysisResponse {
   isMatch: boolean;
@@ -37,11 +41,11 @@ export async function checkResumeJobMatch(
     MISTRAL_CONFIG.CLASSIFICATION_MAX_TEXT_LENGTH
   );
 
-  const formattedPrompt = MATCH_CHECK_CONFIG.PROMPT_TEMPLATE.replace(
-    MATCH_CHECK_CONFIG.PROMPT_PLACEHOLDER_RESUME_TEXT,
+  const formattedPrompt = MATCH_CHECK_PROMPT_TEMPLATE.replace(
+    MATCH_CHECK_PROMPT_PLACEHOLDERS.RESUME_TEXT,
     truncatedResumeText
   ).replace(
-    MATCH_CHECK_CONFIG.PROMPT_PLACEHOLDER_JOB_TEXT,
+    MATCH_CHECK_PROMPT_PLACEHOLDERS.JOB_TEXT,
     truncatedJobDescriptionText
   );
 
