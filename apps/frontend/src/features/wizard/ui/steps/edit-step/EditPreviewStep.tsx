@@ -3,12 +3,11 @@ import {
   DOCUMENT_STATUS,
   ORIGINAL_PARSE_STATUS,
   TOAST_MESSAGES,
-  UI_TEXT,
 } from "@/shared/lib/constants";
 import { useDocumentById } from "../../../api/useDocuments";
 import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
-import { documentsApi, generateApi } from "@/shared/api";
+import { documentsApi } from "@/shared/api";
 import {
   usePdfPreview,
   useResumeDownload,
@@ -24,7 +23,7 @@ import { PreviewToggleButtons } from "../preview-step/PreviewToggleButtons";
 import { PreviewContent } from "../preview-step/PreviewContent";
 import { PreviewActions } from "../preview-step/PreviewActions";
 import { FullscreenModal } from "../preview-step/FullscreenModal";
-import { Loader, Tour } from "@/shared/ui";
+import { Tour } from "@/shared/ui";
 import { useTourSteps } from "../../../hooks/useTourSteps";
 
 interface EditPreviewStepProps {
@@ -35,11 +34,8 @@ interface EditPreviewStepProps {
 export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
   const [showDiff, setShowDiff] = useState(false);
   const [isParsingLocal, setIsParsingLocal] = useState(false);
-  const [isTransforming, setIsTransforming] = useState(false);
   const documentId = useWizardStore((state) => state.documentId);
-  const editPrompt = useWizardStore((state) => state.editPrompt);
   const setParseToastId = useWizardStore((state) => state.setParseToastId);
-  const setEditPrompt = useWizardStore((state) => state.setEditPrompt);
   const { data: documentData, isLoading } = useDocumentById(documentId);
   const toast = useToastContext();
 
@@ -57,9 +53,8 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
     pdfResultPath: documentData?.pdfResultPath || null,
   });
 
-  const { handleToggleFullscreen, shouldShowModal } = usePdfFullscreen(
-    pdfPreviewUrl
-  );
+  const { handleToggleFullscreen, shouldShowModal } =
+    usePdfFullscreen(pdfPreviewUrl);
 
   // Create tour steps with refs
   const { refs, steps: tourSteps } = useTourSteps({
@@ -116,32 +111,6 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
     setParseToastId,
   ]);
 
-  const handleTransformResume = useCallback(async () => {
-    if (!documentId) {
-      toast.showError(TOAST_MESSAGES.DOCUMENT_LOAD_FAILED);
-      return;
-    }
-
-    if (!editPrompt?.trim()) {
-      toast.showError(UI_TEXT.EDIT_PROMPT_REQUIRED_ERROR);
-      return;
-    }
-
-    setIsTransforming(true);
-
-    try {
-      await generateApi.editResume({
-        documentId,
-        prompt: editPrompt.trim(),
-      });
-      setEditPrompt(null);
-    } catch (transformationError) {
-      toast.showError(UI_TEXT.RESUME_EDIT_FAILED);
-    } finally {
-      setIsTransforming(false);
-    }
-  }, [documentId, editPrompt, setEditPrompt, toast]);
-
   useEffect(() => {
     if (baselineResumeData && currentResumeData) {
       setIsParsingLocal(false);
@@ -182,24 +151,6 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
         <PreviewHeader />
 
         <PrivacyNotice />
-
-        {!documentData?.pdfResultPath && (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleTransformResume}
-              disabled={isGenerating || isDocumentLoading || isTransforming}
-              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation flex items-center justify-center gap-2"
-            >
-              {(isGenerating || isTransforming) && (
-                <Loader size="sm" className="text-white" />
-              )}
-              {isGenerating || isTransforming
-                ? UI_TEXT.EDITING_RESUME_BUTTON
-                : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
-            </button>
-          </div>
-        )}
 
         <PreviewToggleButtons
           documentStatus={documentData?.status}
