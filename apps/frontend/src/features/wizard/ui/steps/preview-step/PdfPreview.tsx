@@ -3,23 +3,6 @@ import { useState, useEffect } from "react";
 import { PdfSkeleton } from "@/shared/ui";
 import { ANIMATION_CONSTANTS } from "@/shared/lib/constants";
 
-// Container dimensions constants
-const CONTAINER_HEIGHT_MOBILE = "50vh";
-const CONTAINER_HEIGHT_DESKTOP = "60vh";
-const MIN_CONTAINER_HEIGHT_PX = "400px";
-
-// PDF viewer configuration constants
-const PDF_VIEWER_PARAMS_MOBILE = "#toolbar=0&navpanes=0&scrollbar=1&view=FitV";
-const PDF_VIEWER_PARAMS_DESKTOP =
-  "#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width";
-
-// Animation constants
-const TRANSFORM_ORIGIN_TOP_LEFT = "top left";
-
-// CSS dimension constants
-const FULL_WIDTH_PERCENT = "100%";
-const FULL_HEIGHT_PERCENT = "100%";
-
 interface PdfPreviewProps {
   pdfPreviewUrl: string;
 }
@@ -31,11 +14,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Fixed height for container to prevent layout shift
-  const containerHeight = isMobile
-    ? CONTAINER_HEIGHT_MOBILE
-    : CONTAINER_HEIGHT_DESKTOP;
-  const minHeight = MIN_CONTAINER_HEIGHT_PX;
+  const containerHeight = isMobile ? "50vh" : "60vh";
 
   useEffect(() => {
     if (pdfPreviewUrl) {
@@ -47,10 +26,12 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
 
   const handleLoad = () => {
     setIsLoading(false);
-    // Trigger fade-in animation after a short delay
-    setTimeout(() => {
-      setIsVisible(true);
-    }, ANIMATION_CONSTANTS.PDF_FADE_IN_DELAY_MS);
+    // Use requestAnimationFrame for smooth animation trigger
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+    });
   };
 
   const handleError = () => {
@@ -70,10 +51,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                 <div
                   className="relative overflow-auto"
                   style={{
-                    width: FULL_WIDTH_PERCENT,
-                    maxWidth: FULL_WIDTH_PERCENT,
+                    width: "100%",
+                    maxWidth: "100%",
                     height: containerHeight,
-                    minHeight: minHeight,
+                    minHeight: "400px",
                   }}
                 >
                   <PdfSkeleton />
@@ -98,10 +79,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
               <div
                 className="relative"
                 style={{
-                  width: FULL_WIDTH_PERCENT,
-                  maxWidth: FULL_WIDTH_PERCENT,
+                  width: "100%",
+                  maxWidth: "100%",
                   height: containerHeight,
-                  minHeight: minHeight,
+                  minHeight: "400px",
                   overflow: isMobile ? "hidden" : "auto",
                 }}
               >
@@ -112,12 +93,11 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                   </div>
                 )}
 
-                {/* PDF content */}
                 {isMobile ? (
                   <div
                     style={{
-                      width: FULL_WIDTH_PERCENT,
-                      height: FULL_HEIGHT_PERCENT,
+                      width: "100%",
+                      height: "100%",
                       overflow: "hidden",
                       position: "relative",
                     }}
@@ -125,19 +105,19 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                     <div
                       style={{
                         transform: `scale(${mobileScale})`,
-                        transformOrigin: TRANSFORM_ORIGIN_TOP_LEFT,
+                        transformOrigin: "top left",
                         width: `${100 / mobileScale}%`,
                         height: `${100 / mobileScale}%`,
                       }}
                     >
                       <iframe
-                        src={`${pdfPreviewUrl}${PDF_VIEWER_PARAMS_MOBILE}`}
+                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
                         className="border-0"
                         style={{
                           display: "block",
-                          width: FULL_WIDTH_PERCENT,
-                          height: FULL_HEIGHT_PERCENT,
-                          minHeight: MIN_CONTAINER_HEIGHT_PX,
+                          width: "100%",
+                          height: "100%",
+                          minHeight: "400px",
                           opacity: isVisible ? 1 : 0,
                           transform: isVisible ? "scale(1)" : "scale(0.98)",
                           transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
@@ -154,13 +134,13 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                   </div>
                 ) : (
                   <iframe
-                    src={`${pdfPreviewUrl}${PDF_VIEWER_PARAMS_DESKTOP}`}
+                    src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
                     className="w-full h-full border-0"
                     title="Resume Preview"
                     style={{
                       display: "block",
-                      width: FULL_WIDTH_PERCENT,
-                      height: FULL_HEIGHT_PERCENT,
+                      width: "100%",
+                      height: "100%",
                       WebkitOverflowScrolling: "touch",
                       opacity: isVisible ? 1 : 0,
                       transform: isVisible ? "scale(1)" : "scale(0.98)",

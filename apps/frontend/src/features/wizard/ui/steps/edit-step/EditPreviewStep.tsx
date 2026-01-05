@@ -12,7 +12,7 @@ import { documentsApi, generateApi } from "@/shared/api";
 import {
   usePdfPreview,
   useResumeDownload,
-  useFullscreen,
+  usePdfFullscreen,
 } from "../../../hooks";
 import {
   getResumeDataFromDocument,
@@ -57,7 +57,9 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
     pdfResultPath: documentData?.pdfResultPath || null,
   });
 
-  const { isFullscreen, handleToggleFullscreen } = useFullscreen();
+  const { handleToggleFullscreen, shouldShowModal } = usePdfFullscreen(
+    pdfPreviewUrl
+  );
 
   // Create tour steps with refs
   const { refs, steps: tourSteps } = useTourSteps({
@@ -220,7 +222,7 @@ export function EditPreviewStep({ onPrevious, onReset }: EditPreviewStepProps) {
           onToggleFullscreen={handleToggleFullscreen}
         />
 
-        {isFullscreen && pdfPreviewUrl && (
+        {shouldShowModal && pdfPreviewUrl && (
           <FullscreenModal
             pdfPreviewUrl={pdfPreviewUrl}
             onClose={handleToggleFullscreen}

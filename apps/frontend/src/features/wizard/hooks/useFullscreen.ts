@@ -14,23 +14,9 @@ export function useFullscreen() {
       return;
     }
 
-    const handleEscapeKeyPress = (keyboardEvent: KeyboardEvent) => {
-      if (keyboardEvent.key === DOM_CONSTANTS.ESCAPE_KEY) {
-        setIsFullscreen(false);
-      }
-    };
-
     document.body.style.overflow = DOM_CONSTANTS.OVERFLOW_HIDDEN;
-    document.addEventListener(
-      DOM_CONSTANTS.KEYDOWN_EVENT,
-      handleEscapeKeyPress
-    );
 
     return () => {
-      document.removeEventListener(
-        DOM_CONSTANTS.KEYDOWN_EVENT,
-        handleEscapeKeyPress
-      );
       document.body.style.overflow = DOM_CONSTANTS.OVERFLOW_AUTO;
     };
   }, [isFullscreen]);

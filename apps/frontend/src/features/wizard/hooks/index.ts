@@ -6,4 +6,5 @@ export { useEditAndTransform } from "./useEditAndTransform";
 export { usePdfPreview } from "./usePdfPreview";
 export { useResumeDownload } from "./useResumeDownload";
 export { useFullscreen } from "./useFullscreen";
+export { usePdfFullscreen } from "./usePdfFullscreen";
 export { useTourSteps } from "./useTourSteps";
