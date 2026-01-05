@@ -1,5 +1,4 @@
 // PDF loading skeleton matching resume structure: header, summary, experience, education, skills
-const HEADER_LINES = [95, 60, 55]; // Name, email, phone
 const SUMMARY_LINES = [100, 98, 85, 92]; // Summary section
 const EXPERIENCE_BULLETS = [90, 88, 85, 82]; // Bullet points in experience
 const SKILL_TAG_WIDTHS = [18, 22, 20, 19, 25, 18, 20, 24, 19, 21]; // Skill tags
