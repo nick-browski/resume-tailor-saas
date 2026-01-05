@@ -1,36 +1,83 @@
-// PDF loading skeleton with fixed widths for hydration safety
-const LINE_WIDTHS = [88, 92, 85, 90, 87, 93, 89, 91];
-const BOTTOM_LINE_WIDTHS = [82, 88, 75, 90, 85, 87];
+// PDF loading skeleton matching resume structure: header, summary, experience, education, skills
+const HEADER_LINES = [95, 60, 55]; // Name, email, phone
+const SUMMARY_LINES = [100, 98, 85, 92]; // Summary section
+const EXPERIENCE_BULLETS = [90, 88, 85, 82]; // Bullet points in experience
+const SKILL_TAG_WIDTHS = [18, 22, 20, 19, 25, 18, 20, 24, 19, 21]; // Skill tags
 
 export function PdfSkeleton() {
   return (
     <div className="w-full h-full bg-gray-100">
-      <div className="h-full flex flex-col gap-3 sm:gap-4 p-3 sm:p-6">
-        {/* Simulated PDF page lines */}
-        {LINE_WIDTHS.map((width, i) => (
-          <div
-            key={i}
-            className="h-3 sm:h-4 skeleton-shimmer rounded"
-            style={{
-              width: `${width}%`,
-              marginLeft: i % 2 === 0 ? "0" : "5%",
-            }}
-          />
-        ))}
-        {/* Simulated PDF page blocks */}
-        <div className="flex gap-2 sm:gap-4 mt-2 sm:mt-4">
-          <div className="flex-1 h-24 sm:h-32 skeleton-shimmer rounded" />
-          <div className="flex-1 h-24 sm:h-32 skeleton-shimmer rounded" />
+      <div className="h-full flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
+        {/* Header: Name, Email, Phone */}
+        <div className="flex flex-col gap-2 sm:gap-2.5">
+          <div className="h-6 sm:h-7 skeleton-shimmer rounded" style={{ width: "95%" }} />
+          <div className="h-3.5 sm:h-4 skeleton-shimmer rounded" style={{ width: "60%" }} />
+          <div className="h-3.5 sm:h-4 skeleton-shimmer rounded" style={{ width: "55%" }} />
         </div>
-        {BOTTOM_LINE_WIDTHS.map((width, i) => (
-          <div
-            key={`line-${i}`}
-            className="h-2.5 sm:h-3 skeleton-shimmer rounded"
-            style={{
-              width: `${width}%`,
-            }}
-          />
-        ))}
+
+        {/* Summary Section */}
+        <div className="flex flex-col gap-2.5 sm:gap-3 mt-1 sm:mt-2">
+          <div className="h-4 sm:h-5 skeleton-shimmer rounded font-semibold" style={{ width: "25%" }} />
+          {SUMMARY_LINES.map((width, i) => (
+            <div
+              key={`summary-${i}`}
+              className="h-3 sm:h-3.5 skeleton-shimmer rounded"
+              style={{ width: `${width}%` }}
+            />
+          ))}
+        </div>
+
+        {/* Experience Section */}
+        <div className="flex flex-col gap-3 sm:gap-4 mt-1 sm:mt-2">
+          <div className="h-4 sm:h-5 skeleton-shimmer rounded font-semibold" style={{ width: "30%" }} />
+          
+          {/* Experience Item 1 */}
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <div className="h-4 sm:h-4.5 skeleton-shimmer rounded" style={{ width: "70%" }} />
+            <div className="h-3 sm:h-3.5 skeleton-shimmer rounded" style={{ width: "45%" }} />
+            {EXPERIENCE_BULLETS.map((width, i) => (
+              <div
+                key={`exp1-${i}`}
+                className="h-3 sm:h-3.5 skeleton-shimmer rounded ml-4 sm:ml-5"
+                style={{ width: `${width}%` }}
+              />
+            ))}
+          </div>
+
+          {/* Experience Item 2 */}
+          <div className="flex flex-col gap-1.5 sm:gap-2 mt-2 sm:mt-3">
+            <div className="h-4 sm:h-4.5 skeleton-shimmer rounded" style={{ width: "65%" }} />
+            <div className="h-3 sm:h-3.5 skeleton-shimmer rounded" style={{ width: "50%" }} />
+            {EXPERIENCE_BULLETS.slice(0, 3).map((width, i) => (
+              <div
+                key={`exp2-${i}`}
+                className="h-3 sm:h-3.5 skeleton-shimmer rounded ml-4 sm:ml-5"
+                style={{ width: `${width}%` }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Education Section */}
+        <div className="flex flex-col gap-2 sm:gap-2.5 mt-1 sm:mt-2">
+          <div className="h-4 sm:h-5 skeleton-shimmer rounded font-semibold" style={{ width: "28%" }} />
+          <div className="h-3 sm:h-3.5 skeleton-shimmer rounded" style={{ width: "75%" }} />
+          <div className="h-3 sm:h-3.5 skeleton-shimmer rounded" style={{ width: "60%" }} />
+        </div>
+
+        {/* Skills Section */}
+        <div className="flex flex-col gap-2.5 sm:gap-3 mt-1 sm:mt-2">
+          <div className="h-4 sm:h-5 skeleton-shimmer rounded font-semibold" style={{ width: "20%" }} />
+          <div className="flex flex-wrap gap-2 sm:gap-2.5">
+            {SKILL_TAG_WIDTHS.map((width, i) => (
+              <div
+                key={`skill-${i}`}
+                className="h-5 sm:h-6 skeleton-shimmer rounded"
+                style={{ width: `${width}%`, minWidth: "60px" }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
