@@ -8,6 +8,7 @@ import { useClassifyContent } from "../../../api/useClassification";
 import { ResumeUploadSection, EditPromptSection } from "../../sections";
 import { ValidationWarning } from "../../validation";
 import { useTourSteps } from "../../../hooks/useTourSteps";
+import { EDIT_UPLOAD_TOUR_KEY } from "@/shared/lib/tourUtils";
 
 interface UploadResumeEditStepProps {
   onNext: () => void;
@@ -89,10 +90,7 @@ export function UploadResumeEditStep({
 
   return (
     <>
-      <Tour
-        steps={tourSteps}
-        storageKey="resume-tailor-tour-upload-edit-step"
-      />
+      <Tour steps={tourSteps} storageKey={EDIT_UPLOAD_TOUR_KEY} />
       <div className="space-y-4 sm:space-y-6">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">

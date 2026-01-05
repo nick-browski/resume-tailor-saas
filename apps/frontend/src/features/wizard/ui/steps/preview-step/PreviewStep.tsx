@@ -25,6 +25,7 @@ import { PreviewActions } from "./PreviewActions";
 import { FullscreenModal } from "./FullscreenModal";
 import { Tour } from "@/shared/ui";
 import { useTourSteps } from "../../../hooks/useTourSteps";
+import { PREVIEW_TOUR_KEY } from "@/shared/lib/tourUtils";
 
 interface PreviewStepProps {
   onPrevious: () => void;
@@ -141,7 +142,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
 
   return (
     <>
-      <Tour steps={tourSteps} storageKey="resume-tailor-tour-preview-step" />
+      <Tour steps={tourSteps} storageKey={PREVIEW_TOUR_KEY} />
       <div className="space-y-4 sm:space-y-6">
         <PreviewHeader />
 

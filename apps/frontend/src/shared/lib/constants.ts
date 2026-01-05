@@ -234,15 +234,15 @@ export const UI_TEXT = {
     "The provided text does not appear to be a job description. Please provide a valid job description with job title, responsibilities, and requirements.",
   EDIT_RESUME_MODAL_TITLE: "Edit Resume",
   EDIT_RESUME_MODAL_DESCRIPTION:
-    "Describe the changes you want to make to your resume. For example: 'Change phone number to +1*** **** ***' or 'Update email address'.",
+    "Describe the changes you want to make to your resume. For example: 'Change phone number to +1*** *** ****' or 'Update email address'.",
   EDIT_PROMPT_LABEL: "Edit Instructions",
   EDIT_PROMPT_PLACEHOLDER:
-    "Enter your edit instructions here... (e.g., 'Change phone number to +1*** **** ***')",
+    "Enter your edit instructions here... (e.g., 'Change phone number to +1*** *** ****')",
   EDIT_PROMPT_REQUIRED_ERROR: "Edit instructions are required",
   EDIT_PROMPT_VALIDATION_HINT: (minLength: number, maxLength: number) =>
     `Edit instructions must be between ${minLength} and ${maxLength.toLocaleString()} characters`,
   EDIT_PROMPT_TEMPLATES: {
-    CHANGE_CONTACT_INFO: "Change phone number to +1*** **** ***",
+    CHANGE_CONTACT_INFO: "Change phone number to +1*** *** ****",
     ADD_CERTIFICATION:
       "Add certification: AWS Certified Solutions Architect (2024)",
     UPDATE_EXPERIENCE: "Update work experience: Add new project details",

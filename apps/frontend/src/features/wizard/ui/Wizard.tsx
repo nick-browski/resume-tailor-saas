@@ -6,7 +6,11 @@ import {
 } from "@/shared/lib/constants";
 import { useWizardStore } from "../model/wizardStore";
 import { useDocumentById } from "../api/useDocuments";
-import { isAnyTourActive } from "@/shared/lib/tourUtils";
+import {
+  isAnyTourActive,
+  ALL_TOUR_KEYS,
+  SKIP_ALL_TOURS_KEY,
+} from "@/shared/lib/tourUtils";
 
 const OPACITY_FULL = 1;
 const OPACITY_TRANSPARENT = 0;
@@ -39,11 +43,10 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
 
     checkTourStatus();
 
+    const tourKeys = [SKIP_ALL_TOURS_KEY, ...ALL_TOUR_KEYS];
+
     const handleStorageChange = (event: StorageEvent) => {
-      if (
-        event.key?.startsWith("resume-tailor-tour") ||
-        event.key === "resume-tailor-tour-skipped-all"
-      ) {
+      if (event.key && tourKeys.includes(event.key)) {
         checkTourStatus();
       }
     };

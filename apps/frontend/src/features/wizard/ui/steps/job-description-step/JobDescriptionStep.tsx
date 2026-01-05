@@ -18,6 +18,7 @@ import { ValidationHint, ValidationWarning } from "../../validation";
 import { useResumeValidation } from "../../../hooks/useResumeValidation";
 import { ResumeUploadSection } from "../../sections";
 import { useTourSteps } from "../../../hooks/useTourSteps";
+import { JOB_DESCRIPTION_TOUR_KEY } from "@/shared/lib/tourUtils";
 
 interface JobDescriptionStepProps {
   onPrevious: () => void;
@@ -196,10 +197,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
 
   return (
     <>
-      <Tour
-        steps={tourSteps}
-        storageKey="resume-tailor-tour-job-description-step"
-      />
+      <Tour steps={tourSteps} storageKey={JOB_DESCRIPTION_TOUR_KEY} />
       <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">

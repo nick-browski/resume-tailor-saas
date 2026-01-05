@@ -16,6 +16,7 @@ import { useToastContext } from "@/app/providers/ToastProvider";
 import { validateFile, validateResumeText } from "../../../schemas";
 import { ValidationHint } from "../../validation";
 import { useTourSteps } from "../../../hooks/useTourSteps";
+import { INITIAL_TOUR_KEY } from "@/shared/lib/tourUtils";
 
 interface InitialStepProps {
   onSelectEdit: () => void;
@@ -160,7 +161,7 @@ export function InitialStep({
 
   return (
     <>
-      <Tour steps={tourSteps} storageKey="resume-tailor-tour-initial-step" />
+      <Tour steps={tourSteps} storageKey={INITIAL_TOUR_KEY} />
       <div className="space-y-4 sm:space-y-6">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">

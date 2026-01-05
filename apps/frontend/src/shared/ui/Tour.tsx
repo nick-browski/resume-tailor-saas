@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { hasSkippedAllTours, skipAllTours } from "@/shared/lib/tourUtils";
 import { MOBILE_CONSTANTS } from "@/shared/lib/constants";
 
-const DEFAULT_TOUR_STORAGE_KEY = "resume-tailor-tour-completed";
+const DEFAULT_TOUR_STORAGE_KEY = "tour-completed";
 
 // DOM readiness checking constants
 const MAX_DOM_READY_RETRIES = 30; // Increased to allow time for scroll completion (500ms + stability checks)
