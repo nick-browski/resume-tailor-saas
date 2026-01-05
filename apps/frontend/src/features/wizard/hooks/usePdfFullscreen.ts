@@ -1,25 +1,15 @@
 import { useCallback } from "react";
-import { useFullscreen } from "./useFullscreen";
-import { useMobilePdfScale } from "./useMobilePdfScale";
 
-/** Hook for handling PDF fullscreen (opens in new tab on mobile) */
+/** Hook for handling PDF fullscreen (always opens in new tab) */
 export function usePdfFullscreen(pdfPreviewUrl: string | null) {
-  const { isFullscreen, handleToggleFullscreen: baseHandleToggleFullscreen } =
-    useFullscreen();
-  const { isMobile } = useMobilePdfScale();
-
   const handleToggleFullscreen = useCallback(() => {
-    if (isMobile && pdfPreviewUrl) {
-      // Open PDF in new tab for mobile devices
+    if (pdfPreviewUrl) {
+      // Always open PDF in new tab (both mobile and desktop)
       window.open(pdfPreviewUrl, "_blank", "noopener,noreferrer");
-      return;
     }
-    baseHandleToggleFullscreen();
-  }, [isMobile, pdfPreviewUrl, baseHandleToggleFullscreen]);
+  }, [pdfPreviewUrl]);
 
   return {
-    isFullscreen,
     handleToggleFullscreen,
-    shouldShowModal: isFullscreen && pdfPreviewUrl && !isMobile,
   };
 }

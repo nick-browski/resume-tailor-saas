@@ -22,7 +22,6 @@ import { PrivacyNotice } from "./PrivacyNotice";
 import { PreviewToggleButtons } from "./PreviewToggleButtons";
 import { PreviewContent } from "./PreviewContent";
 import { PreviewActions } from "./PreviewActions";
-import { FullscreenModal } from "./FullscreenModal";
 import { Tour } from "@/shared/ui";
 import { useTourSteps } from "../../../hooks/useTourSteps";
 import { PREVIEW_TOUR_KEY } from "@/shared/lib/tourUtils";
@@ -54,8 +53,7 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     pdfResultPath: documentData?.pdfResultPath || null,
   });
 
-  const { handleToggleFullscreen, shouldShowModal } =
-    usePdfFullscreen(pdfPreviewUrl);
+  const { handleToggleFullscreen } = usePdfFullscreen(pdfPreviewUrl);
 
   // Create tour steps with refs
   const { refs, steps: tourSteps } = useTourSteps({
@@ -168,13 +166,6 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           pdfPreviewUrl={pdfPreviewUrl}
           onToggleFullscreen={handleToggleFullscreen}
         />
-
-        {shouldShowModal && pdfPreviewUrl && (
-          <FullscreenModal
-            pdfPreviewUrl={pdfPreviewUrl}
-            onClose={handleToggleFullscreen}
-          />
-        )}
 
         <PreviewActions
           ref={refs.downloadButton}
