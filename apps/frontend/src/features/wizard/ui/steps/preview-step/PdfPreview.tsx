@@ -130,9 +130,8 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                         height: `${100 / mobileScale}%`,
                       }}
                     >
-                      <object
-                        data={`${pdfPreviewUrl}${PDF_VIEWER_PARAMS_MOBILE}`}
-                        type="application/pdf"
+                      <iframe
+                        src={`${pdfPreviewUrl}${PDF_VIEWER_PARAMS_MOBILE}`}
                         className="border-0"
                         style={{
                           display: "block",
@@ -143,23 +142,14 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                           transform: isVisible ? "scale(1)" : "scale(0.98)",
                           transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
                           willChange: "opacity, transform",
+                          WebkitOverflowScrolling: "touch",
                         }}
                         onLoad={handleLoad}
                         onError={handleError}
-                        aria-label="Resume Preview"
-                      >
-                        <p className="p-4 text-sm text-gray-600">
-                          Your browser does not support PDFs.{" "}
-                          <a
-                            href={pdfPreviewUrl || ""}
-                            download
-                            className="text-blue-600 hover:underline"
-                          >
-                            Download the PDF
-                          </a>
-                          .
-                        </p>
-                      </object>
+                        title="Resume Preview"
+                        allow="fullscreen"
+                        scrolling="yes"
+                      />
                     </div>
                   </div>
                 ) : (

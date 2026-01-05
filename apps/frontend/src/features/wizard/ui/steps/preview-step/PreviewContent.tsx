@@ -94,7 +94,7 @@ export function PreviewContent({
     );
   }
 
-  // PDF preview state - show container with skeleton even if PDF URL is not ready yet
+  // PDF preview state - show PDF when document is generated
   if (
     documentData?.pdfResultPath &&
     documentData.status === DOCUMENT_STATUS.GENERATED

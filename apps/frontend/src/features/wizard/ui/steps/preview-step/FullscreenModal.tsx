@@ -130,10 +130,10 @@ export function FullscreenModal({
         }}
       >
         {isMobile ? (
-          <object
-            data={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
-            type="application/pdf"
+          <iframe
+            src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitV`}
             className="w-full h-full border-0"
+            title="Resume Preview Fullscreen"
             style={{
               display: "block",
               width: "100%",
@@ -142,26 +142,16 @@ export function FullscreenModal({
               transform: isPdfLoaded ? "scale(1)" : "scale(0.98)",
               transition: `opacity ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}, transform ${ANIMATION_CONSTANTS.PDF_FADE_IN_DURATION_MS}ms ${ANIMATION_CONSTANTS.PDF_FADE_IN_EASING}`,
               willChange: "opacity, transform",
+              WebkitOverflowScrolling: "touch",
             }}
             onLoad={() => {
               setTimeout(() => {
                 setIsPdfLoaded(true);
               }, ANIMATION_CONSTANTS.PDF_FADE_IN_DELAY_MS);
             }}
-            aria-label="Resume Preview Fullscreen"
-          >
-            <p className="p-4 text-sm text-white">
-              Your browser does not support PDFs.{" "}
-              <a
-                href={pdfPreviewUrl || ""}
-                download
-                className="text-blue-300 hover:underline"
-              >
-                Download the PDF
-              </a>
-              .
-            </p>
-          </object>
+            allow="fullscreen"
+            scrolling="yes"
+          />
         ) : (
           <iframe
             src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
