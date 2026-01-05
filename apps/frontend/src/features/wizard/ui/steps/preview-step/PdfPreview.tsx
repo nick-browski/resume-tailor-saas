@@ -14,7 +14,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const containerHeight = isMobile ? "50vh" : "60vh";
+  // A4 page height at 96 DPI: 297mm = 1123px
+  // Mobile: use viewport height for flexibility
+  // Desktop: use fixed A4 page height for one-page preview
+  const containerHeight = isMobile ? "50vh" : "1123px";
 
   useEffect(() => {
     if (pdfPreviewUrl) {
@@ -54,7 +57,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                     width: "100%",
                     maxWidth: "100%",
                     height: containerHeight,
-                    minHeight: "400px",
+                    minHeight: isMobile ? "400px" : "1123px",
                   }}
                 >
                   <PdfSkeleton />
@@ -82,7 +85,7 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                   width: "100%",
                   maxWidth: "100%",
                   height: containerHeight,
-                  minHeight: "400px",
+                  minHeight: isMobile ? "400px" : "1123px",
                   overflow: isMobile ? "hidden" : "auto",
                 }}
               >
