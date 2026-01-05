@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { generateRouter } from "./routes/generate.js";
 import { classifyRouter } from "./routes/classify.js";
+import { matchRouter } from "./routes/match.js";
 import { initializeFirebaseAdmin } from "./config/firebase-admin.js";
 import {
   SUCCESS_MESSAGES,
@@ -38,6 +39,7 @@ app.use(
 app.use(express.json());
 app.use(API_ROUTES.DOCUMENTS, generateRouter);
 app.use("/classify", classifyRouter);
+app.use("/match", matchRouter);
 
 // Generation processing handler (Cloud Tasks, requires OIDC auth)
 app.post(

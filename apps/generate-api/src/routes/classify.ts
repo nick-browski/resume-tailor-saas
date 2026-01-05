@@ -1,6 +1,5 @@
-import express, { Response, NextFunction } from "express";
+import express from "express";
 import multer from "multer";
-import { z } from "zod";
 import {
   verifyFirebaseToken,
   AuthenticatedRequest,
@@ -16,7 +15,11 @@ import {
   classifyMultipartBodySchemaForTailor,
   classifyMultipartBodySchemaForEdit,
 } from "../schemas/classifySchemas.js";
-import { extractTextFromPdfBuffer } from "../utils/pdfUtils.js";
+import {
+  extractResumeTextFromRequest,
+  createResponseWithExtractedText,
+} from "../utils/requestUtils.js";
+import { validateMultipartRequest } from "../utils/validationUtils.js";
 
 export const classifyRouter: express.Router = express.Router();
 
@@ -31,83 +34,39 @@ function getClassificationMode(
     : ClassificationMode.TAILOR;
 }
 
-function validateClassifyRequest(
-  request: AuthenticatedRequest,
-  response: Response,
-  next: NextFunction
-) {
-  const mode = getClassificationMode(request.query.mode as string);
-  const schema =
-    mode === ClassificationMode.EDIT
-      ? classifyMultipartBodySchemaForEdit
-      : classifyMultipartBodySchemaForTailor;
-
-  try {
-    if (!request.file && !request.body.resumeText) {
-      response.status(HTTP_STATUS.BAD_REQUEST).json({
-        error: ERROR_MESSAGES.VALIDATION_FAILED,
-        details: [
-          {
-            path: FILE_FIELD_NAME,
-            message: ERROR_MESSAGES.FILE_OR_RESUME_TEXT_REQUIRED,
-          },
-        ],
-      });
-      return;
-    }
-
-    schema.parse(request.body);
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      response.status(HTTP_STATUS.BAD_REQUEST).json({
-        error: ERROR_MESSAGES.VALIDATION_FAILED,
-        details: error.issues.map((validationIssue) => ({
-          path: validationIssue.path.join("."),
-          message: validationIssue.message,
-        })),
-      });
-      return;
-    }
-    next(error);
-  }
-}
-
 classifyRouter.post(
   "/",
   verifyFirebaseToken,
   uploadMiddleware.single(FILE_FIELD_NAME),
   validateFile(),
-  validateClassifyRequest,
+  (request: AuthenticatedRequest, response, next) => {
+    const mode = getClassificationMode(request.query.mode as string);
+    const schema =
+      mode === ClassificationMode.EDIT
+        ? classifyMultipartBodySchemaForEdit
+        : classifyMultipartBodySchemaForTailor;
+    return validateMultipartRequest(schema, true)(request, response, next);
+  },
   async (request: AuthenticatedRequest, response) => {
     try {
-      const uploadedFile = request.file;
-      const resumeTextFromRequest = request.body.resumeText;
       const jobTextFromRequest = request.body.jobText;
       const classificationMode = getClassificationMode(
         request.query.mode as string
       );
-
-      let extractedResumeText: string;
-      if (uploadedFile) {
-        extractedResumeText = await extractTextFromPdfBuffer(
-          uploadedFile.buffer
-        );
-      } else {
-        extractedResumeText = resumeTextFromRequest!;
-      }
-
+      const extractedResumeText = await extractResumeTextFromRequest(request);
       const jobDescriptionText = jobTextFromRequest || "";
+
       const classificationResult = await classifyContent(
         extractedResumeText,
         jobDescriptionText,
         classificationMode
       );
 
-      const responseData = {
-        ...classificationResult,
-        extractedResumeText: uploadedFile ? extractedResumeText : undefined,
-      };
+      const responseData = createResponseWithExtractedText(
+        classificationResult,
+        extractedResumeText,
+        !!request.file
+      );
 
       response.status(HTTP_STATUS.OK).json(responseData);
     } catch (error) {
