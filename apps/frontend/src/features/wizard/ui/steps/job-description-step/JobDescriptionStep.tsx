@@ -64,9 +64,14 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
     resumeData,
     uploadMode
   );
-  const { classificationErrors, isClassifying, classifyContent } =
-    useClassifyContent();
-  const { matchErrors, isCheckingMatch, checkMatch } = useMatchCheck();
+  const {
+    classificationErrors,
+    isClassifying,
+    classifyContent,
+    clearClassificationErrors,
+  } = useClassifyContent();
+  const { matchErrors, isCheckingMatch, checkMatch, clearMatchErrors } =
+    useMatchCheck();
 
   // Create tour steps with refs
   const { refs, steps: tourSteps } = useTourSteps({
@@ -118,6 +123,10 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   const handleFormSubmit = useCallback(
     async (formSubmitEventHandler: React.FormEvent) => {
       formSubmitEventHandler.preventDefault();
+
+      clearClassificationErrors();
+      clearMatchErrors();
+
       const effectiveResumeValidationError =
         resumeValidationError || resumeValidationErrorFromHook;
       if (!resumeData || generationToastId || effectiveResumeValidationError) {
@@ -226,6 +235,8 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       resumeValidationError,
       resumeValidationErrorFromHook,
       reset,
+      clearClassificationErrors,
+      clearMatchErrors,
     ]
   );
 
@@ -249,35 +260,38 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           onValidationError={setResumeValidationError}
         />
 
-        {(resumeValidationErrorFromHook || resumeValidationError) && (
-          <ValidationWarning
-            title={UI_TEXT.RESUME_VALIDATION_REQUIRED_TITLE}
-            message={
-              resumeValidationErrorFromHook || resumeValidationError || ""
-            }
-          />
-        )}
+        {!isProcessing &&
+          (resumeValidationErrorFromHook || resumeValidationError) && (
+            <ValidationWarning
+              title={UI_TEXT.RESUME_VALIDATION_REQUIRED_TITLE}
+              message={
+                resumeValidationErrorFromHook || resumeValidationError || ""
+              }
+            />
+          )}
 
-        {classificationErrors.resumeError && (
+        {!isProcessing && classificationErrors.resumeError && (
           <ValidationWarning
             title={UI_TEXT.INVALID_RESUME_TITLE}
             message={classificationErrors.resumeError}
           />
         )}
 
-        {classificationErrors.jobDescriptionError && (
+        {!isProcessing && classificationErrors.jobDescriptionError && (
           <ValidationWarning
             title={UI_TEXT.INVALID_JOB_DESCRIPTION_TITLE}
             message={classificationErrors.jobDescriptionError}
           />
         )}
 
-        {shouldShowMatchCheckErrorCard && matchErrors.matchResult && (
-          <MatchCheckCard
-            matchCheckResult={matchErrors.matchResult}
-            variant="error"
-          />
-        )}
+        {!isProcessing &&
+          shouldShowMatchCheckErrorCard &&
+          matchErrors.matchResult && (
+            <MatchCheckCard
+              matchCheckResult={matchErrors.matchResult}
+              variant="error"
+            />
+          )}
 
         <div>
           <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -289,7 +303,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
               onChange={handleJobDescriptionTextChange}
               rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
               className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
-                hasAttemptedSubmit && validationError
+                !isProcessing && hasAttemptedSubmit && validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                   : "border-gray-300"
               }`}
@@ -300,6 +314,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           <ValidationHint
             hasAttemptedSubmit={hasAttemptedSubmit}
             validationError={validationError}
+            isProcessing={isProcessing}
             hintText={UI_TEXT.JOB_DESCRIPTION_VALIDATION_HINT(
               VALIDATION_CONSTANTS.JOB_DESCRIPTION_MIN_LENGTH,
               VALIDATION_CONSTANTS.JOB_DESCRIPTION_MAX_LENGTH

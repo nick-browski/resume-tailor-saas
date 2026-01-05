@@ -25,6 +25,7 @@ interface UseMatchCheckResult {
     isMatch: boolean;
     matchResult?: MatchCheckResponse;
   } | null>;
+  clearMatchErrors: () => void;
 }
 
 export function useMatchCheck(): UseMatchCheckResult {
@@ -103,9 +104,14 @@ export function useMatchCheck(): UseMatchCheckResult {
     [matchCheckApi, toast]
   );
 
+  const clearMatchErrors = useCallback(() => {
+    setMatchErrors({});
+  }, []);
+
   return {
     matchErrors,
     isCheckingMatch,
     checkMatch,
+    clearMatchErrors,
   };
 }

@@ -22,6 +22,7 @@ interface UseClassifyContentResult {
     jobDescriptionText: string,
     mode?: "edit" | "tailor"
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
+  clearClassificationErrors: () => void;
 }
 
 export function useClassifyContent(): UseClassifyContentResult {
@@ -103,9 +104,14 @@ export function useClassifyContent(): UseClassifyContentResult {
     [classifyContentApi, toast]
   );
 
+  const clearClassificationErrors = useCallback(() => {
+    setClassificationErrors({});
+  }, []);
+
   return {
     classificationErrors,
     isClassifying,
     classifyContent,
+    clearClassificationErrors,
   };
 }

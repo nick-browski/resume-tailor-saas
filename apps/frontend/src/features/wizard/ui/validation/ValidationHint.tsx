@@ -6,6 +6,7 @@ interface ValidationHintProps {
   hintText: string;
   currentLength?: number;
   maxLength?: number;
+  isProcessing?: boolean;
 }
 
 export function ValidationHint({
@@ -14,11 +15,12 @@ export function ValidationHint({
   hintText,
   currentLength,
   maxLength,
+  isProcessing = false,
 }: ValidationHintProps) {
   return (
     <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
       <div className="flex-1 min-w-0 pr-2 sm:pr-0">
-        {hasAttemptedSubmit && validationError ? (
+        {!isProcessing && hasAttemptedSubmit && validationError ? (
           <p className="text-xs sm:text-sm text-red-600 break-words leading-relaxed">
             {validationError}
           </p>
