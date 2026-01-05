@@ -10,15 +10,12 @@ import { ValidationWarning } from "../../validation";
 import { useTourSteps } from "../../../hooks/useTourSteps";
 import { EDIT_UPLOAD_TOUR_KEY } from "@/shared/lib/tourUtils";
 
-interface UploadResumeEditStepProps {
+interface EditResumeStepProps {
   onNext: () => void;
   onPrevious: () => void;
 }
 
-export function UploadResumeEditStep({
-  onNext,
-  onPrevious,
-}: UploadResumeEditStepProps) {
+export function EditResumeStep({ onNext, onPrevious }: EditResumeStepProps) {
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
   const documentId = useWizardStore((state) => state.documentId);

@@ -1,7 +1,7 @@
 import { useWizardStore } from "../model/wizardStore";
 import { SCENARIO } from "@/shared/lib/constants";
 import { InitialStep } from "../ui/steps/initial-step";
-import { UploadResumeEditStep } from "../ui/steps/upload-step";
+import { EditResumeStep } from "../ui/steps/upload-step";
 import { EditPreviewStep } from "../ui/steps/edit-step";
 import { JobDescriptionStep } from "../ui/steps/job-description-step";
 import { PreviewStep } from "../ui/steps/preview-step";
@@ -42,9 +42,7 @@ export function useWizardStepRenderer({ onReset }: UseWizardStepRendererProps) {
     if (selectedScenario === SCENARIO.EDIT) {
       switch (currentStep) {
         case 1:
-          return (
-            <UploadResumeEditStep onNext={nextStep} onPrevious={previousStep} />
-          );
+          return <EditResumeStep onNext={nextStep} onPrevious={previousStep} />;
         case 2:
           return (
             <EditPreviewStep onPrevious={previousStep} onReset={onReset} />
