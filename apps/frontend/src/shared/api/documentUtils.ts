@@ -23,5 +23,6 @@ export function convertFirestoreSnapshotToDocument(
     createdAt:
       data.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
     error: data.error || null,
+    matchCheckResult: data.matchCheckResult || null,
   };
 }

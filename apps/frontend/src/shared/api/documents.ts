@@ -1,5 +1,9 @@
 import { createApiClient } from "./client";
 import { API_CONFIG } from "@/shared/config";
+import {
+  createMultipartFormData,
+  appendOptionalJsonField,
+} from "@/shared/lib/formDataUtils";
 import type {
   Document,
   CreateDocumentRequest,
@@ -17,14 +21,16 @@ export const documentsApi = {
     createRequest: CreateDocumentRequest
   ): Promise<CreateDocumentResponse> {
     if (createRequest.file) {
-      const requestFormData = new FormData();
-      requestFormData.append("file", createRequest.file);
-      if (createRequest.resumeText) {
-        requestFormData.append("resumeText", createRequest.resumeText);
-      }
-      if (createRequest.jobText) {
-        requestFormData.append("jobText", createRequest.jobText);
-      }
+      const requestFormData = createMultipartFormData(
+        createRequest.file,
+        createRequest.resumeText,
+        createRequest.jobText
+      );
+      appendOptionalJsonField(
+        requestFormData,
+        "matchCheckResult",
+        createRequest.matchCheckResult
+      );
       return documentsApiClient.postFormData<CreateDocumentResponse>(
         DOCUMENTS_ENDPOINT,
         requestFormData
@@ -35,6 +41,7 @@ export const documentsApi = {
         {
           resumeText: createRequest.resumeText,
           jobText: createRequest.jobText,
+          matchCheckResult: createRequest.matchCheckResult || null,
         }
       );
     }

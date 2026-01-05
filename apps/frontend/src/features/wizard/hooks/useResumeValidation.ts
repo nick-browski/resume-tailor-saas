@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { UI_TEXT } from "@/shared/lib/constants";
 import { validateFile, validateResumeText } from "../schemas";
-
-interface ResumeData {
-  file: File | null;
-  text: string;
-}
+import type { ResumeInputData } from "@/shared/api/types";
 
 export function useResumeValidation(
-  resumeData: ResumeData | null,
+  resumeData: ResumeInputData | null,
   uploadMode: "file" | "text"
 ): string | null {
   const [resumeValidationError, setResumeValidationError] = useState<

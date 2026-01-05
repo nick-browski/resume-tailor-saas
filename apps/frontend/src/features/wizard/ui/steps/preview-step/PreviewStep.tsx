@@ -22,6 +22,7 @@ import { PrivacyNotice } from "./PrivacyNotice";
 import { PreviewToggleButtons } from "./PreviewToggleButtons";
 import { PreviewContent } from "./PreviewContent";
 import { PreviewActions } from "./PreviewActions";
+import { MatchCheckCard } from "./MatchCheckCard";
 import { Tour } from "@/shared/ui";
 import { useTourSteps } from "../../../hooks/useTourSteps";
 import { PREVIEW_TOUR_KEY } from "@/shared/lib/tourUtils";
@@ -138,6 +139,11 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
     currentResumeData
   );
 
+  const shouldShowMatchCheckSuccessCard =
+    !showDiff &&
+    documentData?.status === DOCUMENT_STATUS.GENERATED &&
+    documentData.matchCheckResult?.isMatch;
+
   return (
     <>
       <Tour steps={tourSteps} storageKey={PREVIEW_TOUR_KEY} />
@@ -154,6 +160,13 @@ export function PreviewStep({ onPrevious, onReset }: PreviewStepProps) {
           previewButtonRef={refs.previewButton}
           showChangesButtonRef={refs.showChangesButton}
         />
+
+        {shouldShowMatchCheckSuccessCard && documentData.matchCheckResult && (
+          <MatchCheckCard
+            matchCheckResult={documentData.matchCheckResult}
+            variant="success"
+          />
+        )}
 
         <PreviewContent
           showDiff={showDiff}

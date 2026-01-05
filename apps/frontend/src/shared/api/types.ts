@@ -1,3 +1,11 @@
+export interface MatchCheckResult {
+  isMatch: boolean;
+  matchScore: number;
+  reasons?: string[];
+  missingSkills?: string[];
+  matchingSkills?: string[];
+}
+
 export interface Document {
   id: string;
   ownerId: string;
@@ -13,6 +21,12 @@ export interface Document {
   pdfResultPath: string | null;
   createdAt: string;
   error: string | null;
+  matchCheckResult?: MatchCheckResult | null;
+}
+
+export interface ResumeInputData {
+  file: File | null;
+  text: string;
 }
 
 export interface ResumeData {
@@ -57,6 +71,7 @@ export interface CreateDocumentRequest {
   file?: File;
   resumeText?: string;
   jobText?: string;
+  matchCheckResult?: MatchCheckResult | null;
 }
 
 export interface CreateDocumentResponse {
@@ -89,6 +104,21 @@ export interface ClassifyContentResponse {
   isJobDescriptionValid: boolean;
   resumeReason?: string;
   jobDescriptionReason?: string;
+  extractedResumeText?: string;
+}
+
+export interface MatchCheckRequest {
+  file?: File;
+  resumeText?: string;
+  jobText: string;
+}
+
+export interface MatchCheckResponse {
+  isMatch: boolean;
+  matchScore: number;
+  reasons?: string[];
+  missingSkills?: string[];
+  matchingSkills?: string[];
   extractedResumeText?: string;
 }
 

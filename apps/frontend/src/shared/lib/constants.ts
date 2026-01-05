@@ -61,6 +61,15 @@ export const CLASSIFICATION_CONSTANTS = {
   },
 } as const;
 
+export const MATCH_CONSTANTS = {
+  ENDPOINT: "/match",
+  FORM_DATA_FIELD_NAMES: {
+    FILE: "file",
+    JOB_TEXT: "jobText",
+    RESUME_TEXT: "resumeText",
+  },
+} as const;
+
 export const FILE_CONSTANTS = {
   MAX_SIZE_MB: 10,
   ACCEPTED_TYPES: ".pdf",
@@ -121,6 +130,8 @@ export const TOAST_MESSAGES = {
   PARSE_ORIGINAL_RESUME_FAILED: "Failed to parse original resume",
   CLASSIFYING_CONTENT: "Validating content...",
   CLASSIFICATION_FAILED: "Failed to validate content",
+  CHECKING_MATCH: "Checking compatibility...",
+  MATCH_CHECK_FAILED: "Failed to check compatibility",
   EDITING_RESUME: "Editing resume...",
   DOCUMENT_EXPIRED: "Document expired. Please create a new one.",
   DOCUMENT_ACCESS_DENIED: "This is not your document. Access denied.",
@@ -232,6 +243,9 @@ export const UI_TEXT = {
     "The provided text does not appear to be a resume. Please provide a valid resume with personal information, work experience, education, and skills.",
   JOB_DESCRIPTION_CLASSIFICATION_FAILED:
     "The provided text does not appear to be a job description. Please provide a valid job description with job title, responsibilities, and requirements.",
+  MATCH_CHECK_NO_MATCH: "Resume doesn't match job requirements",
+  MATCH_CHECK_ENABLED: "Check compatibility before generation",
+  MATCH_CHECK_DISABLED: "Generate without compatibility check",
   EDIT_RESUME_MODAL_TITLE: "Edit Resume",
   EDIT_RESUME_MODAL_DESCRIPTION:
     "Describe the changes you want to make to your resume. For example: 'Change phone number to +1*** *** ****' or 'Update email address'.",

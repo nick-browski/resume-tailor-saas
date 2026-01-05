@@ -15,19 +15,15 @@ import {
   TOAST_MESSAGES,
 } from "@/shared/lib/constants";
 import { formatServerError } from "@/shared/lib/errorFormatter";
-
-interface ResumeData {
-  file: File | null;
-  text: string;
-}
+import type { ResumeInputData } from "@/shared/api/types";
 
 interface UseEditAndTransformProps {
   uploadMode: "file" | "text";
-  resumeData: ResumeData | null;
+  resumeData: ResumeInputData | null;
   documentId: string | null;
   editPrompt: string;
   classifyContent: (
-    resumeData: ResumeData | null,
+    resumeData: ResumeInputData | null,
     jobDescriptionText: string,
     mode?: "edit" | "tailor"
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;

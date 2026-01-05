@@ -65,6 +65,7 @@ interface WizardState {
   jobDescriptionText: string;
   editPrompt: string | null;
   uploadMode: "file" | "text";
+  enableMatchCheck: boolean;
   generationToastId: string | null;
   parseToastId: string | null;
   setStep: (step: WizardStep) => void;
@@ -74,6 +75,7 @@ interface WizardState {
   setJobDescriptionText: (text: string) => void;
   setEditPrompt: (prompt: string | null) => void;
   setUploadMode: (mode: "file" | "text") => void;
+  setEnableMatchCheck: (enabled: boolean) => void;
   setMaxReachedStep: (step: WizardStep) => void;
   setGenerationToastId: (toastId: string | null) => void;
   setParseToastId: (toastId: string | null) => void;
@@ -99,6 +101,7 @@ export const useWizardStore = create<WizardState>((set) => {
     jobDescriptionText: "",
     editPrompt: null,
     uploadMode: "file",
+    enableMatchCheck: true,
     generationToastId: null,
     parseToastId: null,
     setStep: (step: WizardStep) => {
@@ -183,6 +186,9 @@ export const useWizardStore = create<WizardState>((set) => {
     setUploadMode: (mode: "file" | "text") => {
       set({ uploadMode: mode });
     },
+    setEnableMatchCheck: (enabled: boolean) => {
+      set({ enableMatchCheck: enabled });
+    },
     setMaxReachedStep: (step: WizardStep) => {
       if (
         step >= WIZARD_CONSTANTS.FIRST_STEP &&
@@ -254,6 +260,7 @@ export const useWizardStore = create<WizardState>((set) => {
         jobDescriptionText: "",
         editPrompt: null,
         uploadMode: "file",
+        enableMatchCheck: true,
         generationToastId: null,
         parseToastId: null,
       });

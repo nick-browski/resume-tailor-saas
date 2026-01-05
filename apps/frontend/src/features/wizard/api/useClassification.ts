@@ -6,12 +6,8 @@ import { TOAST_MESSAGES, UI_TEXT } from "@/shared/lib/constants";
 import type {
   ClassifyContentRequest,
   ClassifyContentResponse,
+  ResumeInputData,
 } from "@/shared/api/types";
-
-interface ResumeData {
-  file: File | null;
-  text: string;
-}
 
 interface ClassificationErrors {
   resumeError?: string;
@@ -22,7 +18,7 @@ interface UseClassifyContentResult {
   classificationErrors: ClassificationErrors;
   isClassifying: boolean;
   classifyContent: (
-    resumeData: ResumeData | null,
+    resumeData: ResumeInputData | null,
     jobDescriptionText: string,
     mode?: "edit" | "tailor"
   ) => Promise<{ extractedResumeText: string | null; isValid: boolean } | null>;
@@ -45,7 +41,7 @@ export function useClassifyContent(): UseClassifyContentResult {
 
   const classifyContent = useCallback(
     async (
-      resumeData: ResumeData | null,
+      resumeData: ResumeInputData | null,
       jobDescriptionText: string,
       mode?: "edit" | "tailor"
     ): Promise<{

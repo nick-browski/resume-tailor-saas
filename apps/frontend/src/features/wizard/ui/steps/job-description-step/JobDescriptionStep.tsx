@@ -9,6 +9,9 @@ import {
 import { useGenerateResume } from "../../../api/useGenerate";
 import { useCreateDocument } from "../../../api/useDocuments";
 import { useClassifyContent } from "../../../api/useClassification";
+import { useMatchCheck } from "../../../api/useMatchCheck";
+import { MatchCheckCard } from "../preview-step/MatchCheckCard";
+import type { MatchCheckResult } from "@/shared/api/types";
 import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
 import { Loader, Tour, TourTarget } from "@/shared/ui";
@@ -34,6 +37,10 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   );
   const resumeData = useWizardStore((state) => state.resumeData);
   const uploadMode = useWizardStore((state) => state.uploadMode);
+  const enableMatchCheck = useWizardStore((state) => state.enableMatchCheck);
+  const setEnableMatchCheck = useWizardStore(
+    (state) => state.setEnableMatchCheck
+  );
   const documentId = useWizardStore((state) => state.documentId);
   const setDocumentId = useWizardStore((state) => state.setDocumentId);
   const generationToastId = useWizardStore((state) => state.generationToastId);
@@ -59,6 +66,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
   );
   const { classificationErrors, isClassifying, classifyContent } =
     useClassifyContent();
+  const { matchErrors, isCheckingMatch, checkMatch } = useMatchCheck();
 
   // Create tour steps with refs
   const { refs, steps: tourSteps } = useTourSteps({
@@ -76,8 +84,18 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
     },
   });
 
-  // Generation is in progress if toast is visible (generation started after form submit)
-  const isGenerationInProgress = !!generationToastId;
+  // Check if any async operation is in progress
+  const isProcessing =
+    isCreatingDocument ||
+    isStartingGeneration ||
+    isClassifying ||
+    isCheckingMatch ||
+    !!generationToastId;
+
+  const shouldShowMatchCheckErrorCard =
+    matchErrors.matchError &&
+    matchErrors.matchResult &&
+    !matchErrors.matchResult.isMatch;
 
   const handleJobDescriptionTextChange = useCallback(
     (textAreaChangeEvent: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -125,6 +143,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       }
 
       try {
+        // First, classify content (validate resume and job description)
         const classificationResult = await classifyContent(
           resumeData,
           jobDescriptionText
@@ -134,6 +153,21 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           return;
         }
 
+        // Then, check match if enabled
+        let matchCheckResult: MatchCheckResult | null = null;
+        if (enableMatchCheck) {
+          const matchCheckResponse = await checkMatch(
+            resumeData,
+            jobDescriptionText
+          );
+
+          if (!matchCheckResponse?.isMatch || !matchCheckResponse.matchResult) {
+            return;
+          }
+
+          matchCheckResult = matchCheckResponse.matchResult;
+        }
+
         const createDocumentToastId = toast.showLoading(
           TOAST_MESSAGES.CREATING_DOCUMENT
         );
@@ -141,6 +175,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           file: resumeData.file || undefined,
           resumeText: classificationResult.extractedResumeText || undefined,
           jobText: jobDescriptionText,
+          matchCheckResult,
         });
         toast.dismissLoading(createDocumentToastId);
 
@@ -178,6 +213,8 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       jobDescriptionText,
       resumeData,
       generationToastId,
+      enableMatchCheck,
+      checkMatch,
       classifyContent,
       createDocument,
       generateResume,
@@ -206,7 +243,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
         </div>
 
         <ResumeUploadSection
-          isGenerationInProgress={isGenerationInProgress}
+          isGenerationInProgress={isProcessing}
           hasAttemptedSubmit={hasAttemptedSubmit}
           validationError={resumeValidationError}
           onValidationError={setResumeValidationError}
@@ -235,6 +272,13 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           />
         )}
 
+        {shouldShowMatchCheckErrorCard && matchErrors.matchResult && (
+          <MatchCheckCard
+            matchCheckResult={matchErrors.matchResult}
+            variant="error"
+          />
+        )}
+
         <div>
           <label className="block mb-2 text-sm font-medium text-gray-700">
             {UI_TEXT.JOB_DESCRIPTION_LABEL}
@@ -250,12 +294,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
                   : "border-gray-300"
               }`}
               placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
-              disabled={
-                isCreatingDocument ||
-                isStartingGeneration ||
-                isClassifying ||
-                !!generationToastId
-              }
+              disabled={isProcessing}
             />
           </TourTarget>
           <ValidationHint
@@ -272,11 +311,27 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           />
         </div>
 
+        <div className="flex items-center gap-3 pt-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={enableMatchCheck}
+              onChange={(e) => setEnableMatchCheck(e.target.checked)}
+              disabled={isProcessing}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <span className="text-sm text-gray-700">
+              {UI_TEXT.MATCH_CHECK_ENABLED}
+            </span>
+          </label>
+        </div>
+
         <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-0 pt-2">
           <button
             type="button"
             onClick={onPrevious}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
+            disabled={isProcessing}
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>
@@ -286,23 +341,12 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
               disabled={
                 !resumeData ||
                 !!(resumeValidationError || resumeValidationErrorFromHook) ||
-                isCreatingDocument ||
-                isStartingGeneration ||
-                isClassifying ||
-                !!generationToastId
+                isProcessing
               }
               className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation flex items-center justify-center gap-2"
             >
-              {(isCreatingDocument ||
-                isStartingGeneration ||
-                isClassifying ||
-                generationToastId) && (
-                <Loader size="sm" className="text-white" />
-              )}
-              {isCreatingDocument ||
-              isStartingGeneration ||
-              isClassifying ||
-              generationToastId
+              {isProcessing && <Loader size="sm" className="text-white" />}
+              {isProcessing
                 ? UI_TEXT.GENERATING_BUTTON
                 : UI_TEXT.GENERATE_TAILORED_RESUME_BUTTON}
             </button>
