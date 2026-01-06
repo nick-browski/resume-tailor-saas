@@ -155,6 +155,24 @@ export async function validateEditRequest(
     };
   }
 
+  // Basic guard against obvious prompt-injection patterns before calling the model
+  const lowerText = editRequestText.toLowerCase();
+  const injectionPatterns = [
+    "ignore previous instructions",
+    "forget previous instructions",
+    "system:",
+    "assistant:",
+    "you are now",
+    "forget everything",
+  ];
+
+  if (injectionPatterns.some((pattern) => lowerText.includes(pattern))) {
+    return {
+      isValid: false,
+      reason: "Request contains potentially harmful or prompt-injection-like instructions",
+    };
+  }
+
   const truncatedEditRequestText = editRequestText.substring(
     0,
     MISTRAL_CONFIG.CLASSIFICATION_MAX_TEXT_LENGTH
@@ -183,7 +201,7 @@ export async function validateEditRequest(
     const isEditRequestValid = Boolean(
       editRequestValidationResult.isValid &&
         editRequestValidationResult.confidence >
-          MISTRAL_CONFIG.MINIMUM_CONFIDENCE_THRESHOLD
+          MISTRAL_CONFIG.MINIMUM_CONFIDENCE_THRESHOLD * 0.7
     );
 
     return {
