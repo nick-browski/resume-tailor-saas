@@ -122,7 +122,7 @@ async function makeMistralApiRequest(
 
 export async function callMistralAPI(
   messages: MistralMessage[],
-  maxTokens: number = MISTRAL_CONFIG.MAX_TOKENS
+  maxTokens: number = MISTRAL_CONFIG.EDIT_MAX_TOKENS
 ): Promise<MistralResponse> {
   const requestBody: MistralRequest = {
     model: MISTRAL_MODEL,

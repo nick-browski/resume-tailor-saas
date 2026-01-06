@@ -48,10 +48,11 @@ export interface ResumeData {
 async function callMistralAPIWithErrorHandling(
   messages: MistralMessage[],
   operationName: string,
-  errorMessagePrefix: string
+  errorMessagePrefix: string,
+  maxTokens?: number
 ): Promise<ResumeData> {
   try {
-    const mistralApiResponse = await callMistralAPI(messages);
+    const mistralApiResponse = await callMistralAPI(messages, maxTokens);
     const responseContent = mistralApiResponse.choices[0].message.content;
     const extractedJsonString = extractJsonFromResponse(responseContent);
     return safeJsonParse<ResumeData>(
@@ -84,7 +85,8 @@ export async function generateTailoredResume(
   return callMistralAPIWithErrorHandling(
     mistralMessages,
     "calling Mistral API for resume generation",
-    ERROR_MESSAGES.FAILED_TO_GENERATE_RESUME
+    ERROR_MESSAGES.FAILED_TO_GENERATE_RESUME,
+    MISTRAL_CONFIG.EDIT_MAX_TOKENS
   );
 }
 
@@ -102,7 +104,8 @@ export async function parseResumeToStructure(
   return callMistralAPIWithErrorHandling(
     mistralMessages,
     "parsing resume",
-    "Failed to parse resume"
+    "Failed to parse resume",
+    MISTRAL_CONFIG.EDIT_MAX_TOKENS
   );
 }
 
