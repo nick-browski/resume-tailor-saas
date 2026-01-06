@@ -7,3 +7,4 @@ export { TourTarget } from "./TourTarget";
 export { UploadedFileCard } from "./UploadedFileCard";
 export { PdfSkeleton } from "./PdfSkeleton";
 export { DiffSkeleton } from "./DiffSkeleton";
+export { ClearableTextarea } from "./ClearableTextarea";

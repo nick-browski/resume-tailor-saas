@@ -10,6 +10,7 @@ import {
   UploadedFileCard,
   Tour,
   TourTarget,
+  ClearableTextarea,
 } from "@/shared/ui";
 import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
@@ -240,11 +241,12 @@ export function InitialStep({
             <label className="block mb-2 text-sm font-medium text-gray-700">
               {UI_TEXT.RESUME_TEXT_LABEL}
             </label>
-            <textarea
+            <ClearableTextarea
               value={resumeTextContent}
               onChange={handleResumeTextChange}
+              onClear={() => setResumeData({ file: null, text: "" })}
               rows={TEXTAREA_CONSTANTS.RESUME_ROWS}
-              className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none transition-colors ${
+              className={`px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none transition-colors ${
                 hasAttemptedValidation && validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                   : "border-gray-300"

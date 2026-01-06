@@ -14,7 +14,7 @@ import { MatchCheckCard } from "../preview-step/MatchCheckCard";
 import type { MatchCheckResult } from "@/shared/api/types";
 import { useWizardStore } from "../../../model/wizardStore";
 import { useToastContext } from "@/app/providers/ToastProvider";
-import { Loader, Tour, TourTarget } from "@/shared/ui";
+import { Loader, Tour, TourTarget, ClearableTextarea } from "@/shared/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { validateJobDescription } from "../../../schemas";
 import { ValidationHint, ValidationWarning } from "../../validation";
@@ -298,11 +298,12 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
             {UI_TEXT.JOB_DESCRIPTION_LABEL}
           </label>
           <TourTarget ref={refs.jobDescriptionTextarea}>
-            <textarea
+            <ClearableTextarea
               value={jobDescriptionText}
               onChange={handleJobDescriptionTextChange}
+              onClear={() => setJobDescriptionText("")}
               rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-              className={`w-full px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
+              className={`px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
                 !isProcessing && hasAttemptedSubmit && validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                   : "border-gray-300"

@@ -5,7 +5,7 @@ import {
   VALIDATION_CONSTANTS,
   ANIMATION_CONSTANTS,
 } from "@/shared/lib/constants";
-import { TourTarget } from "@/shared/ui";
+import { TourTarget, ClearableTextarea } from "@/shared/ui";
 import { validateEditPrompt } from "../../schemas";
 import { ValidationHint } from "../validation";
 
@@ -119,11 +119,12 @@ export const EditPromptSection = forwardRef<
         </div>
       </div>
       <TourTarget ref={ref}>
-        <textarea
+        <ClearableTextarea
           value={editPrompt}
           onChange={handleEditPromptChange}
+          onClear={() => onEditPromptChange("")}
           rows={TEXTAREA_CONSTANTS.JOB_DESCRIPTION_ROWS}
-          className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors touch-manipulation ${
+          className={`px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors touch-manipulation ${
             hasAttemptedSubmit && editPromptError
               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
               : "border-gray-300"
