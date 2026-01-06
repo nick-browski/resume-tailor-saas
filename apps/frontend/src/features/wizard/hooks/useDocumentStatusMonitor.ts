@@ -31,6 +31,7 @@ export function useDocumentStatusMonitor() {
   const maxReachedStep = useWizardStore((state) => state.maxReachedStep);
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
   const reset = useWizardStore((state) => state.reset);
+  const resumeData = useWizardStore((state) => state.resumeData);
 
   // Determine last step based on scenario
   const lastStep =
@@ -199,7 +200,11 @@ export function useDocumentStatusMonitor() {
             // Update store data and maxReachedStep for new documents
             if (isNewDocument) {
               if (documentData.resumeText) {
-                setResumeData({ file: null, text: documentData.resumeText });
+                const existingFile = resumeData?.file ?? null;
+                setResumeData({
+                  file: existingFile,
+                  text: documentData.resumeText,
+                });
               }
               if (documentData.jobText) {
                 setJobDescriptionText(documentData.jobText);
