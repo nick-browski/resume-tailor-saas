@@ -256,10 +256,11 @@ export const UI_TEXT = {
   EDIT_PROMPT_VALIDATION_HINT: (minLength: number, maxLength: number) =>
     `Edit instructions must be between ${minLength} and ${maxLength.toLocaleString()} characters`,
   EDIT_PROMPT_TEMPLATES: {
-    CHANGE_CONTACT_INFO: "Change phone number to +1*** *** ****",
-    ADD_CERTIFICATION:
-      "Add certification: AWS Certified Solutions Architect (2024)",
-    UPDATE_EXPERIENCE: "Update work experience: Add new project details",
+    TRANSLATE_TO_CHINESE: "Rewrite my resume in Chinese",
+    BOOST_TO_SENIOR_LEVEL: "Strengthen my resume to better reflect senior-level experience",
+    MAKE_RESULT_ORIENTED: "Make my resume more result-oriented with clear, quantified achievements",
+    OPTIMIZE_FOR_ATS: "Adapt my resume to pass ATS filters and improve keyword matching",
+    REMOVE_FLUFF_AND_REPETITION: "Remove fluff and repetitions to make the resume more concise",
   },
   APPLY_CHANGES_BUTTON: "Apply Changes",
   EDIT_AND_TRANSFORM_BUTTON: "Edit & Transform",

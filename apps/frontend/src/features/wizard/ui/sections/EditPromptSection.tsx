@@ -106,14 +106,24 @@ export const EditPromptSection = forwardRef<
             <option value="" className="text-gray-500">
               {UI_TEXT.EDIT_PROMPT_TEMPLATES_PLACEHOLDER}
             </option>
-            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.CHANGE_CONTACT_INFO}>
-              {UI_TEXT.EDIT_PROMPT_TEMPLATES.CHANGE_CONTACT_INFO}
+            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.TRANSLATE_TO_CHINESE}>
+              {UI_TEXT.EDIT_PROMPT_TEMPLATES.TRANSLATE_TO_CHINESE}
             </option>
-            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.ADD_CERTIFICATION}>
-              {UI_TEXT.EDIT_PROMPT_TEMPLATES.ADD_CERTIFICATION}
+            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.BOOST_TO_SENIOR_LEVEL}>
+              {UI_TEXT.EDIT_PROMPT_TEMPLATES.BOOST_TO_SENIOR_LEVEL}
             </option>
-            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.UPDATE_EXPERIENCE}>
-              {UI_TEXT.EDIT_PROMPT_TEMPLATES.UPDATE_EXPERIENCE}
+            <option
+              value={UI_TEXT.EDIT_PROMPT_TEMPLATES.MAKE_RESULT_ORIENTED}
+            >
+              {UI_TEXT.EDIT_PROMPT_TEMPLATES.MAKE_RESULT_ORIENTED}
+            </option>
+            <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.OPTIMIZE_FOR_ATS}>
+              {UI_TEXT.EDIT_PROMPT_TEMPLATES.OPTIMIZE_FOR_ATS}
+            </option>
+            <option
+              value={UI_TEXT.EDIT_PROMPT_TEMPLATES.REMOVE_FLUFF_AND_REPETITION}
+            >
+              {UI_TEXT.EDIT_PROMPT_TEMPLATES.REMOVE_FLUFF_AND_REPETITION}
             </option>
           </select>
         </div>
