@@ -123,6 +123,7 @@ export async function editResumeWithPrompt(
   return callMistralAPIWithErrorHandling(
     mistralMessages,
     "calling Mistral API for resume editing",
-    ERROR_MESSAGES.FAILED_TO_EDIT_RESUME
+    ERROR_MESSAGES.FAILED_TO_EDIT_RESUME,
+    MISTRAL_CONFIG.EDIT_MAX_TOKENS
   );
 }

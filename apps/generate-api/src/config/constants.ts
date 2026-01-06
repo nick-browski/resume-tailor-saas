@@ -84,6 +84,7 @@ export const MISTRAL_CONFIG = {
   API_URL: "https://api.mistral.ai/v1/chat/completions",
   DEFAULT_MODEL: "mistral-small-latest",
   MAX_TOKENS: 1024,
+  EDIT_MAX_TOKENS: 2048,
   MAX_RETRIES: 3,
   RETRY_DELAY_MS: 1000,
   REQUEST_TIMEOUT_MS: 60000,
