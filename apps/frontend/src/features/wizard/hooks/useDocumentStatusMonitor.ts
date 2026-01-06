@@ -32,37 +32,44 @@ export function useDocumentStatusMonitor() {
   const setMaxReachedStep = useWizardStore((state) => state.setMaxReachedStep);
   const reset = useWizardStore((state) => state.reset);
   const resumeData = useWizardStore((state) => state.resumeData);
+  const nextStep = useWizardStore((state) => state.nextStep);
 
-  // Determine last step based on scenario
   const lastStep =
     selectedScenario === "edit"
       ? WIZARD_CONSTANTS.LAST_STEP_EDIT_SCENARIO
       : WIZARD_CONSTANTS.LAST_STEP_TAILOR_SCENARIO;
-  const nextStep = useWizardStore((state) => state.nextStep);
 
   const toast = useToastContext();
-  const processedDocumentIdRef = useRef<string | null>(null);
-  const processedStatusRef = useRef<string | null>(null);
+  const previousStatusRef = useRef<string | null>(null);
+  const processedFinalStatusRef = useRef<string | null>(null);
   const unsubscribeRef = useRef<Unsubscribe | null>(null);
   const shownLoadErrorForDocIdRef = useRef<string | null>(null);
   const hasShownExpiredMessageRef = useRef<string | null>(null);
+
+  const dismissGenerationToast = () => {
+    if (generationToastId) {
+      toast.dismissLoading(generationToastId);
+      setGenerationToastId(null);
+    }
+  };
+
+  const getEffectiveScenario = () => {
+    return selectedScenario || getScenarioFromUrl();
+  };
 
   // Subscribe to Firestore document changes in real-time
   // Only subscribe after auth is ready to prevent permission-denied errors
   useEffect(() => {
     if (!documentId) {
-      processedDocumentIdRef.current = null;
-      processedStatusRef.current = null;
+      previousStatusRef.current = null;
+      processedFinalStatusRef.current = null;
       shownLoadErrorForDocIdRef.current = null;
       hasShownExpiredMessageRef.current = null;
       return;
     }
 
     // Reset tracking when documentId changes (new document loaded)
-    if (processedDocumentIdRef.current !== documentId) {
-      processedDocumentIdRef.current = null;
-      processedStatusRef.current = null;
-    }
+    // Note: We don't reset here because documentId might be the same across multiple edits
 
     if (!user || !isReady) {
       return;
@@ -82,18 +89,13 @@ export function useDocumentStatusMonitor() {
       documentRef,
       (snapshot) => {
         if (!snapshot.exists()) {
-          // Document expired (TTL) or deleted
           if (hasShownExpiredMessageRef.current !== documentId) {
-            if (generationToastId) {
-              toast.dismissLoading(generationToastId);
-              setGenerationToastId(null);
-            }
+            dismissGenerationToast();
             if (parseToastId) {
               toast.dismissLoading(parseToastId);
               setParseToastId(null);
             }
             toast.showError(TOAST_MESSAGES.DOCUMENT_EXPIRED);
-            // Reset wizard to initial state
             reset();
             hasShownExpiredMessageRef.current = documentId;
           }
@@ -110,47 +112,38 @@ export function useDocumentStatusMonitor() {
         // Handle original resume parsing status
         if (parseToastId) {
           const originalParseStatus = documentData.originalParseStatus;
+          const isParseComplete =
+            originalParseStatus === ORIGINAL_PARSE_STATUS.PARSED &&
+            documentData.originalResumeData?.trim();
 
           if (
-            originalParseStatus === ORIGINAL_PARSE_STATUS.PARSED &&
-            documentData.originalResumeData &&
-            documentData.originalResumeData.trim() !== ""
+            isParseComplete ||
+            originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED
           ) {
             toast.dismissLoading(parseToastId);
             setParseToastId(null);
-          }
 
-          if (originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
-            toast.dismissLoading(parseToastId);
-            setParseToastId(null);
-            toast.showError(TOAST_MESSAGES.PARSE_ORIGINAL_RESUME_FAILED);
+            if (originalParseStatus === ORIGINAL_PARSE_STATUS.FAILED) {
+              toast.showError(TOAST_MESSAGES.PARSE_ORIGINAL_RESUME_FAILED);
+            }
           }
         }
 
         const documentStatus = documentData.status;
-        const isNewDocument =
-          processedDocumentIdRef.current !== documentData.id;
-        const previousStatus = processedStatusRef.current;
-        const isFinalStatus =
-          documentStatus === DOCUMENT_STATUS.GENERATED ||
-          documentStatus === DOCUMENT_STATUS.FAILED;
+        const previousStatus = previousStatusRef.current;
+        const isStatusTransition = previousStatus !== documentStatus;
+        const isNewDocument = previousStatus === null;
 
-        // Initialize status tracking on first snapshot
-        if (processedStatusRef.current === null) {
-          processedStatusRef.current = documentStatus;
-        }
-
-        // Show toast only when status changes to "generating" (not on initial mount or other statuses)
+        // Handle status transition to "generating"
         if (
           documentStatus === DOCUMENT_STATUS.GENERATING &&
-          previousStatus !== DOCUMENT_STATUS.GENERATING &&
-          previousStatus !== null &&
-          !generationToastId
+          isStatusTransition &&
+          !isNewDocument
         ) {
-          // Determine scenario from URL if not set in store (fallback)
-          const scenarioFromUrl = getScenarioFromUrl();
-          const effectiveScenario = selectedScenario || scenarioFromUrl;
+          processedFinalStatusRef.current = null;
+          dismissGenerationToast();
 
+          const effectiveScenario = getEffectiveScenario();
           const loadingMessage =
             effectiveScenario === "edit"
               ? TOAST_MESSAGES.STARTING_RESUME_EDIT
@@ -159,89 +152,79 @@ export function useDocumentStatusMonitor() {
           setGenerationToastId(loadingToastId);
         }
 
-        const shouldDismissToast =
-          isFinalStatus &&
-          (documentStatus === DOCUMENT_STATUS.FAILED ||
-            (documentStatus === DOCUMENT_STATUS.GENERATED &&
-              !!documentData.pdfResultPath));
+        // Handle final status transitions
+        const isFinalStatus =
+          documentStatus === DOCUMENT_STATUS.GENERATED ||
+          documentStatus === DOCUMENT_STATUS.FAILED;
 
-        if (shouldDismissToast) {
-          if (
-            processedDocumentIdRef.current === documentData.id &&
-            processedStatusRef.current === documentStatus
-          ) {
-            return;
-          }
-
-          processedDocumentIdRef.current = documentData.id;
-          processedStatusRef.current = documentStatus;
-
-          if (generationToastId) {
-            toast.dismissLoading(generationToastId);
-            setGenerationToastId(null);
-          }
-
-          if (documentStatus === DOCUMENT_STATUS.GENERATED) {
-            // Show success toast only when status changed from non-GENERATED to GENERATED
-            const statusChangedToGenerated =
-              previousStatus !== null &&
-              previousStatus !== DOCUMENT_STATUS.GENERATED;
-
-            if (statusChangedToGenerated) {
-              const scenarioFromUrl = getScenarioFromUrl();
-              const effectiveScenario = selectedScenario || scenarioFromUrl;
-              const successMessage =
-                effectiveScenario === "edit"
-                  ? TOAST_MESSAGES.RESUME_EDITED_SUCCESS
-                  : TOAST_MESSAGES.RESUME_GENERATED_SUCCESS;
-              toast.showSuccess(successMessage);
-            }
-
-            // Update store data and maxReachedStep for new documents
-            if (isNewDocument) {
-              if (documentData.resumeText) {
-                const existingFile = resumeData?.file ?? null;
-                setResumeData({
-                  file: existingFile,
-                  text: documentData.resumeText,
-                });
-              }
-              if (documentData.jobText) {
-                setJobDescriptionText(documentData.jobText);
-              }
-              if (maxReachedStep < lastStep) {
-                setMaxReachedStep(lastStep);
-              }
-            } else if (maxReachedStep < lastStep) {
-              setMaxReachedStep(lastStep);
-            }
-
-            // Auto-advance to Preview if document is ready and not already on Preview
-            const isOnPreviewStep = currentStep === lastStep;
-            const hasPdfReady = !!documentData.pdfResultPath;
-            const isNewDocumentAlreadyReady =
-              isNewDocument && previousStatus === null;
-            const shouldAutoAdvance =
-              hasPdfReady &&
-              !isOnPreviewStep &&
-              (statusChangedToGenerated || isNewDocumentAlreadyReady);
-
-            if (shouldAutoAdvance) {
-              nextStep();
-            }
-          } else if (documentStatus === DOCUMENT_STATUS.FAILED) {
-            if (generationToastId) {
-              toast.dismissLoading(generationToastId);
-              setGenerationToastId(null);
-            }
-
-            const errorMessage = formatServerError(
-              documentData.error ? new Error(documentData.error) : null
-            );
-            toast.showError(errorMessage);
-            reset();
-          }
+        if (!isFinalStatus || !isStatusTransition) {
+          previousStatusRef.current = documentStatus;
+          return;
         }
+
+        // Check if PDF is ready for generated status
+        const hasPdfReady =
+          documentStatus === DOCUMENT_STATUS.GENERATED &&
+          !!documentData.pdfResultPath;
+
+        if (documentStatus === DOCUMENT_STATUS.GENERATED && !hasPdfReady) {
+          previousStatusRef.current = documentStatus;
+          return;
+        }
+
+        // Prevent duplicate processing
+        const finalStatusKey = `${documentData.id}-${documentStatus}`;
+        if (processedFinalStatusRef.current === finalStatusKey) {
+          previousStatusRef.current = documentStatus;
+          return;
+        }
+        processedFinalStatusRef.current = finalStatusKey;
+
+        dismissGenerationToast();
+
+        // Handle success case
+        if (documentStatus === DOCUMENT_STATUS.GENERATED) {
+          const effectiveScenario = getEffectiveScenario();
+          const successMessage =
+            effectiveScenario === "edit"
+              ? TOAST_MESSAGES.RESUME_EDITED_SUCCESS
+              : TOAST_MESSAGES.RESUME_GENERATED_SUCCESS;
+          toast.showSuccess(successMessage);
+
+          // Update store for new documents
+          if (isNewDocument && documentData.resumeText) {
+            setResumeData({
+              file: resumeData?.file ?? null,
+              text: documentData.resumeText,
+            });
+          }
+          if (isNewDocument && documentData.jobText) {
+            setJobDescriptionText(documentData.jobText);
+          }
+
+          // Update max reached step
+          if (maxReachedStep < lastStep) {
+            setMaxReachedStep(lastStep);
+          }
+
+          // Auto-advance to Preview
+          if (
+            hasPdfReady &&
+            currentStep !== lastStep &&
+            previousStatus !== DOCUMENT_STATUS.GENERATED
+          ) {
+            nextStep();
+          }
+        } else {
+          // Handle failure case
+          const errorMessage = formatServerError(
+            documentData.error ? new Error(documentData.error) : null
+          );
+          toast.showError(errorMessage);
+          reset();
+        }
+
+        previousStatusRef.current = documentStatus;
       },
       (error) => {
         const code = error?.code;
