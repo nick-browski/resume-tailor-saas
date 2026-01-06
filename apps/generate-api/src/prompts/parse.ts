@@ -7,6 +7,7 @@ IMPORTANT RULES:
 2. DO NOT invent or add any information
 3. If information is missing, use empty strings or empty arrays
 4. Return ONLY valid JSON, no markdown, no explanations
+5. The resume may be in ANY language (English, Chinese, Spanish, French, etc.) - extract information regardless of the language used
 
 REQUIRED JSON STRUCTURE:
 ${RESUME_JSON_STRUCTURE}

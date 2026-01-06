@@ -42,7 +42,7 @@ function generateResumeCSS(scale: number = 1.0): string {
       box-sizing: border-box;
     }
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'WenQuanYi Zen Hei', 'WenQuanYi Micro Hei', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS', 'Arial', sans-serif;
       max-width: 800px;
       margin: 0 auto;
       padding: ${sizes.padding}px;
