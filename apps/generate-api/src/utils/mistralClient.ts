@@ -51,14 +51,36 @@ async function makeMistralApiRequest(
 
   const authorizationHeader = `${REQUEST_HEADERS.AUTHORIZATION_PREFIX}${MISTRAL_API_KEY}`;
 
-  const apiResponse = await fetch(MISTRAL_API_URL, {
-    method: HTTP_METHODS.POST,
-    headers: {
-      Authorization: authorizationHeader,
-      "Content-Type": REQUEST_HEADERS.CONTENT_TYPE_JSON,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    MISTRAL_CONFIG.REQUEST_TIMEOUT_MS
+  );
+
+  let apiResponse: Response;
+  try {
+    apiResponse = await fetch(MISTRAL_API_URL, {
+      method: HTTP_METHODS.POST,
+      headers: {
+        Authorization: authorizationHeader,
+        "Content-Type": REQUEST_HEADERS.CONTENT_TYPE_JSON,
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+  } catch (fetchError) {
+    const isTimeoutError =
+      fetchError instanceof Error && fetchError.name === "AbortError";
+    const errorMessage = isTimeoutError
+      ? `Request timeout after ${MISTRAL_CONFIG.REQUEST_TIMEOUT_MS / 1000}s`
+      : fetchError instanceof Error
+      ? fetchError.message
+      : "Network request failed";
+
+    throw new Error(`Mistral API request failed: ${errorMessage}`);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (apiResponse.ok) {
     return apiResponse;
@@ -109,7 +131,23 @@ export async function callMistralAPI(
   };
 
   const apiResponse = await makeMistralApiRequest(requestBody);
-  const mistralResponse = (await apiResponse.json()) as MistralResponse;
+  const responseText = await apiResponse.text();
+
+  if (!responseText) {
+    throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_MISTRAL);
+  }
+
+  let mistralResponse: MistralResponse;
+  try {
+    mistralResponse = JSON.parse(responseText) as MistralResponse;
+  } catch (parseError) {
+    const parseErrorMessage =
+      parseError instanceof Error ? parseError.message : "Invalid JSON";
+    const responsePreview = responseText.substring(0, 200);
+    throw new Error(
+      `Failed to parse Mistral API response as JSON: ${parseErrorMessage}. Response preview: ${responsePreview}`
+    );
+  }
 
   if (!mistralResponse.choices?.[0]?.message?.content) {
     throw new Error(ERROR_MESSAGES.EMPTY_RESPONSE_FROM_MISTRAL);
