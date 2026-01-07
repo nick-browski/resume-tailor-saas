@@ -24,6 +24,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     fonts-liberation \
+    fonts-noto \
+    fonts-noto-core \
+    fonts-noto-extra \
     fonts-noto-cjk \
     fonts-wqy-zenhei \
     fonts-wqy-microhei \

@@ -42,7 +42,8 @@ function generateResumeCSS(scale: number = 1.0): string {
       box-sizing: border-box;
     }
     body {
-      font-family: 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'WenQuanYi Zen Hei', 'WenQuanYi Micro Hei', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS', 'Arial', sans-serif;
+      font-family: 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans Arabic', 'Noto Sans Devanagari', 'Noto Sans Thai', 'Noto Sans Hebrew', 'WenQuanYi Zen Hei', 'WenQuanYi Micro Hei', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS', 'Arial', sans-serif;
+      unicode-bidi: embed;
       max-width: 800px;
       margin: 0 auto;
       padding: ${sizes.padding}px;
@@ -292,14 +293,14 @@ function generateResumeHTML(
   ].filter((section) => section.trim() !== "");
 
   return `<!DOCTYPE html>
-<html lang="${PDF_CONFIG.HTML_LANG}">
+<html lang="${PDF_CONFIG.HTML_LANG}" dir="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${PDF_CONFIG.HTML_TITLE}</title>
   <style>${generateResumeCSS(scale)}</style>
 </head>
-<body>
+<body dir="auto">
 ${sections.join("\n")}
 </body>
 </html>`.trim();
