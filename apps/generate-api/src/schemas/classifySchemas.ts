@@ -1,13 +1,9 @@
 import { z } from "zod";
-import { resumeTextSchema, jobTextSchema } from "./common.js";
-
-const editPromptSchema = z
-  .string()
-  .min(1, "Edit prompt cannot be empty")
-  .max(1000, "Edit prompt must not exceed 1000 characters")
-  .refine((text) => text.trim().length > 0, {
-    message: "Edit prompt cannot be empty or only whitespace",
-  });
+import {
+  resumeTextSchema,
+  jobTextSchema,
+  editPromptSchema,
+} from "./common.js";
 
 // Schema for TAILOR mode - jobText is required
 export const classifyMultipartBodySchemaForTailor = z.object({

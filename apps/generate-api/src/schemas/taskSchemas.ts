@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { resumeTextSchema, jobTextSchema, firestoreIdSchema } from "./common.js";
+import {
+  resumeTextSchema,
+  jobTextSchema,
+  editPromptSchema,
+  firestoreIdSchema,
+} from "./common.js";
 
 export const processGenerationTaskSchema = z.object({
   documentId: firestoreIdSchema,
@@ -16,7 +21,7 @@ export const processParseOriginalTaskSchema = z.object({
 
 export const processEditResumeTaskSchema = z.object({
   documentId: firestoreIdSchema,
-  editPrompt: z.string().min(1),
+  editPrompt: editPromptSchema,
   ownerId: firestoreIdSchema,
 });
 

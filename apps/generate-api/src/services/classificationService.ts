@@ -3,6 +3,7 @@ import {
   MISTRAL_CONFIG,
   MISTRAL_MESSAGE_ROLES,
 } from "../config/constants.js";
+import { VALIDATION_LIMITS } from "../schemas/common.js";
 import { callMistralAPI, type MistralMessage } from "../utils/mistralClient.js";
 import { extractJsonFromResponse } from "../utils/jsonUtils.js";
 import { safeJsonParse } from "../utils/jsonUtils.js";
@@ -175,7 +176,7 @@ export async function validateEditRequest(
 
   const truncatedEditRequestText = editRequestText.substring(
     0,
-    MISTRAL_CONFIG.CLASSIFICATION_MAX_TEXT_LENGTH
+    VALIDATION_LIMITS.EDIT_PROMPT_MAX_LENGTH
   );
   const formattedValidationPrompt = EDIT_REQUEST_VALIDATION_PROMPT.replace(
     CLASSIFICATION_PROMPT_PLACEHOLDERS.TEXT,

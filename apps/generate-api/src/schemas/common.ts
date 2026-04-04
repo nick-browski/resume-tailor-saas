@@ -5,6 +5,8 @@ export const VALIDATION_LIMITS = {
   RESUME_TEXT_MAX_LENGTH: 10000,
   JOB_TEXT_MIN_LENGTH: 10,
   JOB_TEXT_MAX_LENGTH: 10000,
+  EDIT_PROMPT_MIN_LENGTH: 10,
+  EDIT_PROMPT_MAX_LENGTH: 10000,
   FILE_MAX_SIZE_MB: 10,
   FILE_MAX_SIZE_BYTES: 10 * 1024 * 1024,
 } as const;
@@ -46,5 +48,19 @@ export const jobTextSchema = z
   )
   .refine((text) => text.trim().length > 0, {
     message: "Job description cannot be empty or only whitespace",
+  });
+
+export const editPromptSchema = z
+  .string()
+  .min(
+    VALIDATION_LIMITS.EDIT_PROMPT_MIN_LENGTH,
+    `Edit prompt must be at least ${VALIDATION_LIMITS.EDIT_PROMPT_MIN_LENGTH} characters`
+  )
+  .max(
+    VALIDATION_LIMITS.EDIT_PROMPT_MAX_LENGTH,
+    `Edit prompt must not exceed ${VALIDATION_LIMITS.EDIT_PROMPT_MAX_LENGTH.toLocaleString()} characters`
+  )
+  .refine((text) => text.trim().length > 0, {
+    message: "Edit prompt cannot be empty or only whitespace",
   });
 
