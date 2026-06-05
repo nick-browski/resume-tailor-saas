@@ -40,14 +40,14 @@ export const PreviewActions = forwardRef<HTMLDivElement, PreviewActionsProps>(
           <button
             type="button"
             onClick={onPrevious}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>
           <button
             type="button"
             onClick={onReset}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.START_OVER_BUTTON}
           </button>

@@ -245,10 +245,10 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
       <Tour steps={tourSteps} storageKey={JOB_DESCRIPTION_TOUR_KEY} />
       <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-200 mb-1 sm:mb-2">
             {UI_TEXT.JOB_DESCRIPTION_STEP_TITLE}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             {UI_TEXT.JOB_DESCRIPTION_STEP_DESCRIPTION}
           </p>
         </div>
@@ -294,7 +294,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
           )}
 
         <div>
-          <label className="block mb-2 text-sm font-medium text-gray-700">
+          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
             {UI_TEXT.JOB_DESCRIPTION_LABEL}
           </label>
           <TourTarget ref={refs.jobDescriptionTextarea}>
@@ -306,7 +306,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
               className={`px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors ${
                 !isProcessing && hasAttemptedSubmit && validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                  : "border-gray-300"
+                  : "border-gray-300 dark:border-gray-600"
               }`}
               placeholder={UI_TEXT.JOB_DESCRIPTION_PLACEHOLDER}
               disabled={isProcessing}
@@ -334,9 +334,9 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
               checked={enableMatchCheck}
               onChange={(e) => setEnableMatchCheck(e.target.checked)}
               disabled={isProcessing}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
               {UI_TEXT.MATCH_CHECK_ENABLED}
             </span>
           </label>
@@ -347,7 +347,7 @@ export function JobDescriptionStep({ onPrevious }: JobDescriptionStepProps) {
             type="button"
             onClick={onPrevious}
             disabled={isProcessing}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>

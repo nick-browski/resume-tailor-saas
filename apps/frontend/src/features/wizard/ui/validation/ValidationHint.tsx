@@ -21,17 +21,17 @@ export function ValidationHint({
     <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
       <div className="flex-1 min-w-0 pr-2 sm:pr-0">
         {!isProcessing && hasAttemptedSubmit && validationError ? (
-          <p className="text-xs sm:text-sm text-red-600 break-words leading-relaxed">
+          <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 break-words leading-relaxed">
             {validationError}
           </p>
         ) : (
-          <p className="text-xs sm:text-sm text-gray-500 break-words leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 break-words leading-relaxed">
             {hintText}
           </p>
         )}
       </div>
       {currentLength !== undefined && maxLength !== undefined && (
-        <p className="text-xs sm:text-sm text-gray-500 flex-shrink-0 sm:ml-2 whitespace-nowrap">
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 sm:ml-2 whitespace-nowrap">
           <span className="sm:hidden">
             {currentLength.toLocaleString()}/{maxLength.toLocaleString()}
           </span>

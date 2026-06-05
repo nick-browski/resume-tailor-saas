@@ -25,7 +25,7 @@ export function PreviewToggleButtons({
   const isDisabled = !isDocumentReady;
 
   return (
-    <div className="flex gap-2 sm:gap-3 border-b pb-3 sm:pb-4">
+    <div className="flex gap-2 sm:gap-3 border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <TourTarget ref={previewButtonRef}>
         <button
           type="button"
@@ -36,7 +36,7 @@ export function PreviewToggleButtons({
               ? "bg-blue-600 text-white opacity-50 cursor-not-allowed"
               : !showDiff
               ? "bg-blue-600 text-white hover:scale-[1.02] active:scale-[0.98]"
-              : "bg-gray-100 text-gray-700 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98]"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98]"
           }`}
         >
           Preview
@@ -49,10 +49,10 @@ export function PreviewToggleButtons({
           disabled={isDisabled}
           className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition duration-150 touch-manipulation ${
             isDisabled
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed"
               : showDiff
               ? "bg-blue-600 text-white hover:scale-[1.02] active:scale-[0.98]"
-              : "bg-gray-100 text-gray-700 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98]"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 active:bg-gray-200 hover:scale-[1.02] active:scale-[0.98]"
           }`}
         >
           Show Changes

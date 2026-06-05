@@ -36,7 +36,7 @@ const LABELS = {
 const renderChangedValue = (originalValue: string, updatedValue: string) => {
   if (originalValue !== updatedValue) {
     return (
-      <span className="bg-yellow-100 break-words">
+      <span className="bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-200 rounded px-0.5 break-words">
         {originalValue || PLACEHOLDERS.empty} → {updatedValue || PLACEHOLDERS.empty}
       </span>
     );
@@ -55,7 +55,7 @@ const renderWordDiff = (originalText: string, updatedText: string) => {
     return (
       <span
         key={index}
-        className={`${isNewWord ? "bg-green-200 font-medium" : ""} break-words`}
+        className={`${isNewWord ? "bg-green-100 text-green-900 dark:bg-green-900/40 dark:text-green-200 rounded px-0.5 font-medium" : ""} break-words`}
       >
         {word}{" "}
       </span>
@@ -129,7 +129,7 @@ const getCertificationKey = (certificationEntry: CertificationEntry) =>
 
 function PersonalInfoDiffSection({ original, tailored }: ResumeDiffProps) {
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.personalInfo}
       </h3>
@@ -187,7 +187,7 @@ function PersonalInfoDiffSection({ original, tailored }: ResumeDiffProps) {
 
 function SummaryDiffSection({ original, tailored }: ResumeDiffProps) {
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.summary}
       </h3>
@@ -204,7 +204,7 @@ function ExperienceDiffSection({
   experiencePairs: PairedItems<ExperienceEntry>;
 }) {
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.experience}
       </h3>
@@ -220,7 +220,7 @@ function ExperienceDiffSection({
           return (
             <div
               key={`matched-${pairIndex}`}
-              className="border-l-2 border-gray-200 pl-3 sm:pl-4"
+              className="border-l-2 border-gray-200 dark:border-gray-700 pl-3 sm:pl-4"
             >
               <div className="font-medium text-sm sm:text-base break-words">
                 {originalExperience ? (
@@ -229,12 +229,12 @@ function ExperienceDiffSection({
                     updatedExperience.position
                   )
                 ) : (
-                  <span className="bg-green-50 rounded px-1.5 py-0.5">
+                  <span className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200 rounded px-1.5 py-0.5">
                     {updatedExperience.position}
                   </span>
                 )}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600 break-words mt-1">
+              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 break-words mt-1">
                 <span className="block sm:inline">
                   {originalExperience ? (
                     renderChangedValue(
@@ -242,7 +242,7 @@ function ExperienceDiffSection({
                       updatedExperience.company
                     )
                   ) : (
-                    <span className="bg-green-50 rounded px-1.5 py-0.5">
+                    <span className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200 rounded px-1.5 py-0.5">
                       {updatedExperience.company}
                     </span>
                   )}
@@ -255,7 +255,7 @@ function ExperienceDiffSection({
                       `${updatedExperience.startDate} - ${updatedExperience.endDate}`
                     )
                   ) : (
-                    <span className="bg-green-50 rounded px-1.5 py-0.5">
+                    <span className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200 rounded px-1.5 py-0.5">
                       {updatedExperience.startDate} - {updatedExperience.endDate}
                     </span>
                   )}
@@ -283,9 +283,9 @@ function ExperienceDiffSection({
                 {bulletDiff.added.map((bulletText, bulletIndex) => (
                   <li
                     key={`added-${bulletIndex}`}
-                    className="flex items-start break-words bg-green-50 rounded px-2 py-1"
+                    className="flex items-start break-words bg-green-50 dark:bg-green-900/20 dark:text-green-200 rounded px-2 py-1"
                   >
-                    <span className="mr-1.5 sm:mr-2 flex-shrink-0 text-green-600">
+                    <span className="mr-1.5 sm:mr-2 flex-shrink-0 text-green-600 dark:text-green-400">
                       +
                     </span>
                     <span className="break-words">{renderWordDiff("", bulletText)}</span>
@@ -294,7 +294,7 @@ function ExperienceDiffSection({
                 {bulletDiff.removed.map((bulletText, bulletIndex) => (
                   <li
                     key={`removed-${bulletIndex}`}
-                    className="flex items-start break-words text-gray-400 line-through"
+                    className="flex items-start break-words text-gray-400 dark:text-gray-400 line-through"
                   >
                     <span className="mr-1.5 sm:mr-2 flex-shrink-0">•</span>
                     <span className="break-words">{bulletText}</span>
@@ -308,12 +308,12 @@ function ExperienceDiffSection({
         {experiencePairs.removed.map((removedExperience, removedIndex) => (
           <div
             key={`removed-${removedIndex}`}
-            className="border-l-2 border-red-200 pl-3 sm:pl-4 opacity-60"
+            className="border-l-2 border-red-200 dark:border-red-800 pl-3 sm:pl-4 opacity-60"
           >
-            <div className="font-medium text-sm sm:text-base break-words text-gray-400 line-through">
+            <div className="font-medium text-sm sm:text-base break-words text-gray-400 dark:text-gray-400 line-through">
               {removedExperience.position}
             </div>
-            <div className="text-xs sm:text-sm text-gray-400 break-words mt-1">
+            <div className="text-xs sm:text-sm text-gray-400 dark:text-gray-400 break-words mt-1">
               <span className="block sm:inline">{removedExperience.company}</span>
               <span className="hidden sm:inline"> | </span>
               <span className="block sm:inline sm:ml-1">
@@ -324,7 +324,7 @@ function ExperienceDiffSection({
               {removedExperience.description.map((bulletText, bulletIndex) => (
                 <li
                   key={bulletIndex}
-                  className="flex items-start break-words text-gray-400 line-through"
+                  className="flex items-start break-words text-gray-400 dark:text-gray-500 line-through"
                 >
                   <span className="mr-1.5 sm:mr-2 flex-shrink-0">•</span>
                   <span className="break-words">{bulletText}</span>
@@ -344,7 +344,7 @@ function EducationDiffSection({
   educationPairs: PairedItems<EducationEntry>;
 }) {
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.education}
       </h3>
@@ -358,7 +358,7 @@ function EducationDiffSection({
             <div
               key={`matched-${pairIndex}`}
               className={`break-words ${
-                isNewEducation ? "bg-green-50 rounded px-2 py-1.5" : ""
+                isNewEducation ? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-200 rounded px-2 py-1.5" : ""
               }`}
             >
               <span className="font-medium">
@@ -378,7 +378,7 @@ function EducationDiffSection({
                     : updatedEducation.field || PLACEHOLDERS.empty}
                 </span>
               )}
-              <span className="text-gray-600 block sm:inline sm:ml-1">
+              <span className="text-gray-600 dark:text-gray-300 block sm:inline sm:ml-1">
                 {" "}
                 -{" "}
                 {originalEducation
@@ -403,11 +403,11 @@ function EducationDiffSection({
         {educationPairs.removed.map((removedEducation, removedIndex) => (
           <div
             key={`removed-${removedIndex}`}
-            className="break-words text-gray-400 line-through"
+            className="break-words text-gray-400 dark:text-gray-400 line-through"
           >
             <span className="font-medium">{removedEducation.degree}</span>
             {removedEducation.field && <span> in {removedEducation.field}</span>}
-            <span className="text-gray-400 block sm:inline sm:ml-1">
+            <span className="text-gray-400 dark:text-gray-400 block sm:inline sm:ml-1">
               {" "}
               - {removedEducation.institution} ({removedEducation.graduationDate})
             </span>
@@ -425,7 +425,7 @@ function SkillsDiffSection({ original, tailored }: ResumeDiffProps) {
   );
 
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.skills}
       </h3>
@@ -433,7 +433,7 @@ function SkillsDiffSection({ original, tailored }: ResumeDiffProps) {
         {skillDiff.unchanged.map((skillName, skillIndex) => (
           <span
             key={skillIndex}
-            className="px-2 sm:px-3 py-1 bg-gray-100 rounded-md text-xs sm:text-sm break-words"
+            className="px-2 sm:px-3 py-1 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 rounded-md text-xs sm:text-sm break-words"
           >
             {skillName}
           </span>
@@ -441,7 +441,7 @@ function SkillsDiffSection({ original, tailored }: ResumeDiffProps) {
         {skillDiff.added.map((skillName, skillIndex) => (
           <span
             key={`added-${skillIndex}`}
-            className="px-2 sm:px-3 py-1 bg-green-200 rounded-md text-xs sm:text-sm font-medium break-words"
+            className="px-2 sm:px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200 rounded-md text-xs sm:text-sm font-medium break-words"
           >
             {skillName} <span className="hidden sm:inline">(new)</span>
             <span className="sm:hidden">+</span>
@@ -450,7 +450,7 @@ function SkillsDiffSection({ original, tailored }: ResumeDiffProps) {
         {skillDiff.removed.map((skillName, skillIndex) => (
           <span
             key={`removed-${skillIndex}`}
-            className="px-2 sm:px-3 py-1 bg-red-50 text-red-500 rounded-md text-xs sm:text-sm line-through break-words"
+            className="px-2 sm:px-3 py-1 bg-red-50 text-red-500 dark:bg-red-900/20 dark:text-red-300 rounded-md text-xs sm:text-sm line-through break-words"
           >
             {skillName}
           </span>
@@ -473,7 +473,7 @@ function CertificationsDiffSection({
   }
 
   return (
-    <div className="border-b pb-3 sm:pb-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
       <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">
         {LABELS.certifications}
       </h3>
@@ -486,30 +486,30 @@ function CertificationsDiffSection({
             return (
               <div
                 key={`added-${pairIndex}`}
-                className="break-words bg-green-200 rounded px-2 py-1.5 sm:px-2 sm:py-1"
+                className="break-words bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200 rounded px-2 py-1.5 sm:px-2 sm:py-1"
               >
                 <div className="flex flex-row flex-wrap sm:items-baseline sm:justify-between items-baseline gap-0.5 sm:gap-1">
                   <div className="flex flex-row flex-wrap items-baseline gap-0.5 sm:gap-1">
                     <span className="font-medium text-xs sm:text-sm">
                       {updatedCertification.name}
                     </span>
-                    <span className="text-gray-600 text-xs sm:text-sm">
+                    <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                       - {updatedCertification.issuer}
                     </span>
                     {updatedCertification.date ? (
-                      <span className="text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+                      <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm whitespace-nowrap">
                         ({updatedCertification.date})
-                        <span className="text-green-700 font-medium ml-1 sm:hidden">
+                        <span className="text-green-700 dark:text-green-400 font-medium ml-1 sm:hidden">
                           +
                         </span>
                       </span>
                     ) : (
-                      <span className="text-green-700 font-medium text-xs sm:text-sm sm:hidden whitespace-nowrap ml-1">
+                      <span className="text-green-700 dark:text-green-400 font-medium text-xs sm:text-sm sm:hidden whitespace-nowrap ml-1">
                         +
                       </span>
                     )}
                   </div>
-                  <span className="text-green-700 font-medium text-xs sm:text-sm sm:ml-auto hidden sm:inline whitespace-nowrap">
+                  <span className="text-green-700 dark:text-green-400 font-medium text-xs sm:text-sm sm:ml-auto hidden sm:inline whitespace-nowrap">
                     (new)
                   </span>
                 </div>
@@ -525,16 +525,16 @@ function CertificationsDiffSection({
                 <span className="font-medium text-xs sm:text-sm">
                   {updatedCertification.name}
                 </span>
-                <span className="text-gray-600 text-xs sm:text-sm">
+                <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                   - {updatedCertification.issuer}
                 </span>
                 {dateChanged ? (
-                  <span className="bg-yellow-100 text-xs sm:text-sm">
+                  <span className="bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-200 rounded px-0.5 text-xs sm:text-sm">
                     ({originalCertification.date || PLACEHOLDERS.empty} → {updatedCertification.date || PLACEHOLDERS.empty})
                   </span>
                 ) : (
                   updatedCertification.date && (
-                    <span className="text-gray-600 text-xs sm:text-sm">
+                    <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                       ({updatedCertification.date})
                     </span>
                   )
@@ -547,7 +547,7 @@ function CertificationsDiffSection({
         {certificationPairs.removed.map((removedCertification, removedIndex) => (
           <div
             key={`removed-${removedIndex}`}
-            className="break-words text-gray-400 line-through"
+            className="break-words text-gray-400 dark:text-gray-400 line-through"
           >
             <div className="flex flex-row flex-wrap items-baseline gap-0.5 sm:gap-1">
               <span className="font-medium text-xs sm:text-sm">

@@ -1,7 +1,7 @@
 // Skeleton component for ResumeDiff loading state
 export function DiffSkeleton() {
   return (
-    <div className="border border-gray-300 rounded-md p-3 sm:p-4 md:p-6 bg-white overflow-x-hidden">
+    <div className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 md:p-6 bg-white dark:bg-gray-800 overflow-x-hidden">
       <div className="space-y-4 sm:space-y-6">
         {/* Personal Info skeleton */}
         <div className="border-b pb-3 sm:pb-4">

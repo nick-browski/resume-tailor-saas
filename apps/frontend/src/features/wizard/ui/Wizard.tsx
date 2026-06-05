@@ -98,7 +98,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
   if (currentStep === 0) {
     return (
       <div className="w-full">
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
           {children}
         </div>
       </div>
@@ -152,7 +152,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
                         ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-300"
                         : isStepAccessible
                         ? "bg-blue-400 text-white hover:bg-blue-500 cursor-pointer hover:scale-110 active:scale-105"
-                        : "bg-gray-200 text-gray-600 cursor-not-allowed"
+                        : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 cursor-not-allowed"
                     }`}
                   >
                     {stepNumber}
@@ -162,7 +162,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
                       className={`w-16 sm:w-32 h-1 mx-1 sm:mx-2 transition-colors ${
                         stepNumber < maxAccessibleStep
                           ? "bg-blue-600"
-                          : "bg-gray-200"
+                          : "bg-gray-200 dark:bg-gray-700"
                       }`}
                     />
                   )}
@@ -173,7 +173,7 @@ export function Wizard({ currentStep, totalSteps, children }: WizardProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 relative overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 relative overflow-hidden">
         {shouldShowAnimation ? (
           <div
             key={currentStep}

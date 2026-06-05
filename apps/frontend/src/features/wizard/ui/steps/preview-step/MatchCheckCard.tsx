@@ -16,23 +16,23 @@ export function MatchCheckCard({
 
   // Clean, casual modern design
   const borderColorClassName = isSuccessVariant
-    ? "border-green-200"
-    : "border-red-200";
+    ? "border-green-200 dark:border-green-800/50"
+    : "border-red-200 dark:border-red-800/50";
   const backgroundColorClassName = isSuccessVariant
-    ? "bg-green-50/50"
-    : "bg-red-50/50";
+    ? "bg-green-50/50 dark:bg-green-900/15"
+    : "bg-red-50/50 dark:bg-red-900/15";
   const iconBackgroundColorClassName = isSuccessVariant
-    ? "bg-green-100"
-    : "bg-red-100";
+    ? "bg-green-100 dark:bg-green-900/30"
+    : "bg-red-100 dark:bg-red-900/30";
   const iconColorClassName = isSuccessVariant
-    ? "text-green-600"
-    : "text-red-600";
+    ? "text-green-600 dark:text-green-400"
+    : "text-red-600 dark:text-red-400";
   const percentageColorClassName = isSuccessVariant
-    ? "text-green-600"
-    : "text-red-600";
+    ? "text-green-600 dark:text-green-400"
+    : "text-red-600 dark:text-red-400";
   const bulletColorClassName = isSuccessVariant
-    ? "text-green-500"
-    : "text-red-500";
+    ? "text-green-500 dark:text-green-400"
+    : "text-red-500 dark:text-red-400";
 
   const cardTitle = isSuccessVariant
     ? "Compatibility Match"
@@ -43,7 +43,7 @@ export function MatchCheckCard({
 
   return (
     <div
-      className={`border ${borderColorClassName} rounded-lg p-4 sm:p-5 md:p-6 ${backgroundColorClassName} bg-white/50 shadow-sm`}
+      className={`border ${borderColorClassName} rounded-lg p-4 sm:p-5 md:p-6 ${backgroundColorClassName} shadow-sm`}
     >
       <MatchCheckCardHeader
         title={cardTitle}
@@ -150,7 +150,7 @@ function MatchCheckCardHeader({
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-2">
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 break-words leading-snug">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-200 break-words leading-snug">
                 {title}
               </h3>
             </div>
@@ -162,7 +162,7 @@ function MatchCheckCardHeader({
               </div>
             </div>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 break-words leading-relaxed">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 break-words leading-relaxed">
             {description}
           </p>
         </div>
@@ -179,9 +179,9 @@ interface SkillsListProps {
 
 function SkillsList({ skills, title, variant }: SkillsListProps) {
   const bgColorMap = {
-    success: "bg-green-100 text-green-700",
-    warning: "bg-yellow-100 text-yellow-700",
-    error: "bg-red-100 text-red-700",
+    success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200",
+    warning: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-200",
+    error: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200",
   };
 
   // Determine if skills should be displayed as tags (short) or list items (long)
@@ -191,7 +191,7 @@ function SkillsList({ skills, title, variant }: SkillsListProps) {
     // Display long skills as a bulleted list
     return (
       <div className="mt-4 sm:mt-5 md:mt-6">
-        <h4 className="text-sm sm:text-base font-semibold text-gray-800 mb-2.5 sm:mb-3">
+        <h4 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200 mb-2.5 sm:mb-3">
           {title}
         </h4>
         <ul className="space-y-2 sm:space-y-2.5">
@@ -200,19 +200,19 @@ function SkillsList({ skills, title, variant }: SkillsListProps) {
               key={`${skill}-${index}`}
               className={`text-sm sm:text-base flex items-start ${
                 variant === "success"
-                  ? "text-green-700"
+                  ? "text-green-700 dark:text-green-300"
                   : variant === "warning"
-                    ? "text-yellow-700"
-                    : "text-red-700"
+                    ? "text-yellow-700 dark:text-yellow-300"
+                    : "text-red-700 dark:text-red-300"
               }`}
             >
               <span
                 className={`mr-2.5 flex-shrink-0 mt-0.5 ${
                   variant === "success"
-                    ? "text-green-500"
+                    ? "text-green-500 dark:text-green-400"
                     : variant === "warning"
-                      ? "text-yellow-500"
-                      : "text-red-500"
+                      ? "text-yellow-500 dark:text-yellow-400"
+                      : "text-red-500 dark:text-red-400"
                 }`}
               >
                 •
@@ -228,7 +228,7 @@ function SkillsList({ skills, title, variant }: SkillsListProps) {
   // Display short skills as simple tags
   return (
     <div className="mt-4 sm:mt-5 md:mt-6">
-      <h4 className="text-sm sm:text-base font-semibold text-gray-800 mb-2.5 sm:mb-3">
+      <h4 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200 mb-2.5 sm:mb-3">
         {title}
       </h4>
       <div className="flex flex-wrap gap-2 sm:gap-2.5">
@@ -261,21 +261,21 @@ function ReasonsList({
   onToggle,
 }: ReasonsListProps) {
   return (
-    <div className="mt-4 sm:mt-5 md:mt-6 border-t border-gray-100 pt-3 sm:pt-3.5">
+    <div className="mt-4 sm:mt-5 md:mt-6 border-t border-gray-100 dark:border-gray-700 pt-3 sm:pt-3.5">
       <button
         type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-2 text-left group"
       >
         <div className="flex flex-col items-start">
-          <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+          <h4 className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200">
             {title}
           </h4>
-          <span className="mt-0.5 text-xs sm:text-[13px] text-gray-500">
+          <span className="mt-0.5 text-xs sm:text-[13px] text-gray-500 dark:text-gray-400">
             {isOpen ? "Hide explanation" : "Show explanation"}
           </span>
         </div>
-        <span className="text-gray-400 group-hover:text-gray-500">
+        <span className="text-gray-400 dark:text-gray-400 group-hover:text-gray-500">
           <svg
             className={`w-4 h-4 transform transition-transform duration-200 ${
               isOpen ? "rotate-180" : "rotate-0"
@@ -297,7 +297,7 @@ function ReasonsList({
           {reasons.map((reason, index) => (
             <li
               key={`${reason}-${index}`}
-              className="text-sm sm:text-base text-gray-700 flex items-start"
+              className="text-sm sm:text-base text-gray-700 dark:text-gray-300 flex items-start"
             >
               <span
                 className={`mr-2.5 flex-shrink-0 mt-0.5 ${bulletColor} text-lg leading-none`}

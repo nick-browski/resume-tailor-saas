@@ -55,16 +55,16 @@ export function FileUploadArea({
       onDrop={handleDrop}
       className={`mt-1 flex justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-6 sm:pb-10 border-2 border-dashed rounded-lg transition-colors ${
         disabled
-          ? "border-gray-200 bg-gray-50 cursor-not-allowed pointer-events-none"
+          ? "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 cursor-not-allowed pointer-events-none"
           : hasError
-          ? "border-red-300 bg-red-50 hover:border-red-400"
-          : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
+          ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 hover:border-red-400"
+          : "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 hover:border-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
       }`}
     >
       <div className="space-y-3 sm:space-y-4 text-center w-full max-w-md">
         <svg
           className={`mx-auto h-10 w-10 sm:h-12 sm:w-12 transition-colors ${
-            hasError ? "text-red-400" : "text-gray-400"
+            hasError ? "text-red-400" : "text-gray-400 dark:text-gray-400"
           }`}
           stroke="currentColor"
           fill="none"
@@ -80,7 +80,7 @@ export function FileUploadArea({
         </svg>
         <div className="space-y-2 sm:space-y-1">
           <label className="relative inline-block w-full sm:w-auto">
-            <span className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 sm:px-4 sm:py-2 text-sm font-medium text-blue-600 bg-white border-2 border-blue-600 rounded-md cursor-pointer hover:bg-blue-50 hover:scale-[1.02] active:bg-blue-100 active:scale-[0.98] transition duration-150 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100">
+            <span className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 sm:px-4 sm:py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 border-2 border-blue-600 dark:border-blue-500 rounded-md cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 hover:scale-[1.02] active:bg-blue-100 dark:active:bg-gray-600 active:scale-[0.98] transition duration-150 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100">
               {UI_TEXT.UPLOAD_FILE_TEXT}
             </span>
             <input
@@ -91,11 +91,11 @@ export function FileUploadArea({
               disabled={disabled}
             />
           </label>
-          <p className="text-xs sm:text-sm text-gray-500 px-2">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 px-2">
             {UI_TEXT.DRAG_AND_DROP_TEXT}
           </p>
         </div>
-        <p className="text-xs text-gray-400 px-2">
+        <p className="text-xs text-gray-400 dark:text-gray-400 px-2">
           {UI_TEXT.PDF_SIZE_LIMIT_TEXT} {maxSizeMB} {UI_TEXT.FILE_SIZE_UNIT}
         </p>
       </div>

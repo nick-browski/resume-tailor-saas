@@ -165,22 +165,22 @@ export function InitialStep({
       <Tour steps={tourSteps} storageKey={INITIAL_TOUR_KEY} />
       <div className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-200 mb-1 sm:mb-2">
             {UI_TEXT.INITIAL_STEP_TITLE}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             {UI_TEXT.INITIAL_STEP_DESCRIPTION}
           </p>
         </div>
 
-        <div className="flex gap-2 sm:gap-4 border-b border-gray-200 pb-3 sm:pb-4">
+        <div className="flex gap-2 sm:gap-4 border-b border-gray-200 dark:border-gray-700 pb-3 sm:pb-4">
           <button
             type="button"
             onClick={() => setUploadMode(UPLOAD_MODE.FILE)}
             className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
               uploadMode === UPLOAD_MODE.FILE
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             }`}
           >
             {UI_TEXT.UPLOAD_PDF_BUTTON}
@@ -191,7 +191,7 @@ export function InitialStep({
             className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
               uploadMode === UPLOAD_MODE.TEXT
                 ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             }`}
           >
             {UI_TEXT.PASTE_TEXT_BUTTON}
@@ -200,7 +200,7 @@ export function InitialStep({
 
         {uploadMode === UPLOAD_MODE.FILE && (
           <div className="animate-in fade-in duration-300">
-            <label className="block mb-3 text-sm font-semibold text-gray-900">
+            <label className="block mb-3 text-sm font-semibold text-gray-900 dark:text-gray-200">
               {UI_TEXT.RESUME_PDF_LABEL}
             </label>
 
@@ -238,7 +238,7 @@ export function InitialStep({
 
         {uploadMode === UPLOAD_MODE.TEXT && (
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
+            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               {UI_TEXT.RESUME_TEXT_LABEL}
             </label>
             <ClearableTextarea
@@ -249,7 +249,7 @@ export function InitialStep({
               className={`px-3 py-2 text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none transition-colors ${
                 hasAttemptedValidation && validationError
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                  : "border-gray-300"
+                  : "border-gray-300 dark:border-gray-600"
               }`}
               placeholder={UI_TEXT.RESUME_TEXT_PLACEHOLDER}
             />
@@ -271,7 +271,7 @@ export function InitialStep({
               type="button"
               onClick={() => handleScenarioSelect(onSelectEdit)}
               disabled={!isResumeValid}
-              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
+              className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 transition duration-150 touch-manipulation"
             >
               {UI_TEXT.EDIT_RESUME_BUTTON}
             </button>

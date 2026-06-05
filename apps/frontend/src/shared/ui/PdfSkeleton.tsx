@@ -5,7 +5,7 @@ const SKILL_TAG_WIDTHS = [18, 22, 20, 19, 25, 18, 20, 24, 19, 21]; // Skill tags
 
 export function PdfSkeleton() {
   return (
-    <div className="w-full h-full bg-gray-100">
+    <div className="w-full h-full bg-gray-100 dark:bg-gray-800">
       <div className="h-full flex flex-col gap-4 sm:gap-5 p-4 sm:p-6">
         {/* Header: Name, Email, Phone */}
         <div className="flex flex-col gap-2 sm:gap-2.5">

@@ -34,7 +34,7 @@ export function UploadedFileCard({
 
   return (
     <div
-      className={`bg-white border border-gray-200 rounded-lg overflow-hidden transition ${
+      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition ${
         isVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 -translate-y-2"
@@ -45,10 +45,10 @@ export function UploadedFileCard({
         willChange: "opacity, transform",
       }}
     >
-      <div className="flex items-start gap-3 p-3 sm:p-4 border-l-4 border-green-500 bg-green-50/30">
+      <div className="flex items-start gap-3 p-3 sm:p-4 border-l-4 border-green-500 bg-green-50/30 dark:bg-green-900/15">
         <div className="flex-shrink-0 mt-0.5">
           <svg
-            className="w-5 h-5 text-green-600"
+            className="w-5 h-5 text-green-600 dark:text-green-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -62,19 +62,19 @@ export function UploadedFileCard({
           </svg>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900 break-words">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-200 break-words">
             {fileName}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {fileSizeMB} {UI_TEXT.FILE_SIZE_UNIT}
           </p>
         </div>
       </div>
-      <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 flex items-center gap-3 border-t border-gray-100">
+      <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 flex items-center gap-3 border-t border-gray-100 dark:border-gray-700">
         <label
           className={`text-sm font-medium transition duration-150 ${
             disabled
-              ? "text-gray-400 cursor-not-allowed"
+              ? "text-gray-400 dark:text-gray-400 cursor-not-allowed"
               : "text-blue-600 hover:text-blue-700 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           }`}
         >
@@ -97,7 +97,7 @@ export function UploadedFileCard({
           type="button"
           onClick={onRemove}
           disabled={disabled}
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 hover:scale-[1.02] active:scale-[0.98] transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+          className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:scale-[1.02] active:scale-[0.98] transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
         >
           {UI_TEXT.REMOVE_FILE_TEXT}
         </button>

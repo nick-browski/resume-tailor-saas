@@ -9,10 +9,21 @@
     <title>The Imposter</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+    <script>
+      // Apply theme before paint to avoid flash (dark is the default)
+      try {
+        if ((localStorage.getItem("theme") || "dark") === "dark") {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    </script>
     <style>
       body {
         margin: 0;
         padding: 0;
+        background-color: #111827;
+      }
+      html:not(.dark) body {
         background-color: #f9fafb;
       }
       #root {
@@ -27,8 +38,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #f9fafb;
+        background-color: #111827;
         z-index: 9999;
+      }
+      html:not(.dark) #initial-loader {
+        background-color: #f9fafb;
       }
       #initial-loader.hidden {
         display: none;

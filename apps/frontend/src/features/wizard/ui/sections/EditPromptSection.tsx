@@ -79,7 +79,7 @@ export const EditPromptSection = forwardRef<
   return (
     <div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3">
-        <label className="block text-sm font-semibold text-gray-900">
+        <label className="block text-sm font-semibold text-gray-900 dark:text-gray-200">
           {UI_TEXT.EDIT_INSTRUCTIONS_LABEL}
           <span className="ml-1.5 text-red-500 font-normal">*</span>
         </label>
@@ -91,7 +91,7 @@ export const EditPromptSection = forwardRef<
               }
               templateSelectEvent.target.value = "";
             }}
-            className={`w-full sm:w-auto text-sm px-3 py-1.5 border border-gray-200 rounded-md bg-white text-gray-600 hover:text-gray-900 hover:border-gray-300 hover:scale-[1.01] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:focus:scale-100 ${
+            className={`w-full sm:w-auto text-sm px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 hover:scale-[1.01] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:scale-[1.02] transition touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:focus:scale-100 ${
               isSelectVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 -translate-y-1"
@@ -103,7 +103,7 @@ export const EditPromptSection = forwardRef<
             }}
             disabled={isEditing}
           >
-            <option value="" className="text-gray-500">
+            <option value="" className="text-gray-500 dark:text-gray-400">
               {UI_TEXT.EDIT_PROMPT_TEMPLATES_PLACEHOLDER}
             </option>
             <option value={UI_TEXT.EDIT_PROMPT_TEMPLATES.TRANSLATE_TO_CHINESE}>
@@ -137,7 +137,7 @@ export const EditPromptSection = forwardRef<
           className={`px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto resize-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 transition-colors touch-manipulation ${
             hasAttemptedSubmit && editPromptError
               ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-              : "border-gray-300"
+              : "border-gray-300 dark:border-gray-600"
           }`}
           placeholder={UI_TEXT.EDIT_PROMPT_PLACEHOLDER}
           disabled={isEditing}

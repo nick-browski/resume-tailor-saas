@@ -45,10 +45,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
     return (
       <div className="flex justify-center -mx-4 sm:mx-0">
         <div className="w-full max-w-4xl">
-          <div className="bg-gray-100 p-2 sm:p-4 md:p-6 rounded-lg shadow-sm">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-              <div className="relative bg-white">
-                <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+          <div className="bg-gray-100 dark:bg-gray-900 p-2 sm:p-4 md:p-6 rounded-lg shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <div className="relative bg-white dark:bg-gray-800">
+                <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700" />
                 <div
                   className="relative overflow-auto"
                   style={{
@@ -59,9 +59,9 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
                   }}
                 >
                   <PdfSkeleton />
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
                 </div>
-                <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+                <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700" />
               </div>
             </div>
           </div>
@@ -73,10 +73,10 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
   return (
     <div className="flex justify-center -mx-4 sm:mx-0">
       <div className="w-full max-w-4xl">
-        <div className="bg-gray-100 p-2 sm:p-4 md:p-6 rounded-lg shadow-sm">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-            <div className="relative bg-white">
-              <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+        <div className="bg-gray-100 dark:bg-gray-800 p-2 sm:p-4 md:p-6 rounded-lg shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div className="relative bg-white dark:bg-gray-800">
+              <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700" />
               <div
                 className="relative"
                 style={{
@@ -157,16 +157,16 @@ export function PdfPreview({ pdfPreviewUrl }: PdfPreviewProps) {
 
                 {/* Error state */}
                 {hasError && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                    <p className="text-sm text-gray-600">
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       Failed to load PDF preview
                     </p>
                   </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-800 to-transparent pointer-events-none" />
               </div>
-              <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50" />
+              <div className="h-1 bg-gradient-to-r from-blue-50 via-gray-50 to-blue-50 dark:from-gray-700 dark:via-gray-800 dark:to-gray-700" />
             </div>
           </div>
         </div>

@@ -36,7 +36,7 @@ export function PreviewContent({
       return (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Resume Changes
             </label>
           </div>
@@ -47,7 +47,7 @@ export function PreviewContent({
 
     if (originalResumeData && tailoredResumeData) {
       return (
-        <div className="border border-gray-300 rounded-md p-3 sm:p-4 md:p-6 bg-white overflow-x-hidden">
+        <div className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 md:p-6 bg-white dark:bg-gray-800 overflow-x-hidden">
           <ResumeDiff
             original={originalResumeData}
             tailored={tailoredResumeData}
@@ -57,8 +57,8 @@ export function PreviewContent({
     }
 
     return (
-      <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50">
-        <p className="text-sm text-gray-600">
+      <div className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 bg-gray-50 dark:bg-gray-900">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           No data available for comparison
         </p>
       </div>
@@ -70,13 +70,13 @@ export function PreviewContent({
     return (
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {showDiff
               ? "Resume Changes"
               : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
           </label>
         </div>
-        <div className="border border-gray-300 rounded-md p-4 sm:p-6 bg-gray-50 min-h-[30vh] sm:min-h-[20vh] relative overflow-hidden">
+        <div className="border border-gray-300 dark:border-gray-600 rounded-md p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 min-h-[30vh] sm:min-h-[20vh] relative overflow-hidden">
           <PdfSkeleton />
         </div>
       </div>
@@ -89,8 +89,8 @@ export function PreviewContent({
       documentData.error ? new Error(documentData.error) : null
     );
     return (
-      <div className="border border-red-300 rounded-md p-3 sm:p-4 bg-red-50">
-        <p className="text-sm text-red-600">
+      <div className="border border-red-300 dark:border-red-700 rounded-md p-3 sm:p-4 bg-red-50 dark:bg-red-900/20">
+        <p className="text-sm text-red-600 dark:text-red-300">
           {UI_TEXT.GENERATION_FAILED_PREFIX} {errorMessage}
         </p>
       </div>
@@ -105,7 +105,7 @@ export function PreviewContent({
     return (
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {showDiff
               ? "Resume Changes"
               : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
@@ -114,7 +114,7 @@ export function PreviewContent({
             <button
               type="button"
               onClick={onToggleFullscreen}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors touch-manipulation"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors touch-manipulation"
               aria-label="Fullscreen"
             >
               <svg
@@ -144,7 +144,7 @@ export function PreviewContent({
     return (
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {showDiff
               ? "Resume Changes"
               : UI_TEXT.TAILORED_RESUME_PREVIEW_LABEL}
@@ -157,8 +157,8 @@ export function PreviewContent({
 
   // Default empty state
   return (
-    <div className="border border-gray-300 rounded-md p-3 sm:p-4 bg-gray-50">
-      <p className="text-sm text-gray-600">
+    <div className="border border-gray-300 dark:border-gray-600 rounded-md p-3 sm:p-4 bg-gray-50 dark:bg-gray-900">
+      <p className="text-sm text-gray-600 dark:text-gray-300">
         {UI_TEXT.NO_RESUME_AVAILABLE_TEXT}
       </p>
     </div>

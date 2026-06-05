@@ -684,7 +684,7 @@ export function Tour({
       {/* Tooltip */}
       {tooltipStyle && targetElement && isTooltipReady && (
         <div
-          className={`fixed bg-white rounded-lg shadow-xl pointer-events-auto ${
+          className={`fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl pointer-events-auto ${
             isMobile ? "p-4 left-4 right-4 max-w-none" : "p-4 sm:p-6 max-w-sm"
           }`}
           style={{
@@ -708,7 +708,7 @@ export function Tour({
             }`}
           >
             <h3
-              className={`font-semibold text-gray-900 flex-1 ${
+              className={`font-semibold text-gray-900 dark:text-gray-200 flex-1 ${
                 isMobile ? "text-base pr-2" : "text-lg"
               }`}
             >
@@ -721,7 +721,7 @@ export function Tour({
             >
               <button
                 onClick={handleSkipAll}
-                className={`text-gray-500 hover:text-gray-700 hover:scale-[1.02] active:scale-[0.98] transition duration-150 rounded hover:bg-gray-100 touch-manipulation ${
+                className={`text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:scale-[1.02] active:scale-[0.98] transition duration-150 rounded hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation ${
                   isMobile
                     ? "text-xs px-2 py-1.5 min-w-[60px]"
                     : "text-xs px-2 py-1"
@@ -732,7 +732,7 @@ export function Tour({
               </button>
               <button
                 onClick={handleSkip}
-                className="text-gray-400 hover:text-gray-600 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation p-1"
+                className="text-gray-400 dark:text-gray-400 hover:text-gray-600 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation p-1"
                 aria-label="Skip tour"
               >
                 <svg
@@ -752,7 +752,7 @@ export function Tour({
             </div>
           </div>
           <p
-            className={`text-gray-600 mb-4 ${
+            className={`text-gray-600 dark:text-gray-300 mb-4 ${
               isMobile ? "text-sm leading-relaxed break-words" : "text-sm"
             }`}
           >
@@ -764,7 +764,7 @@ export function Tour({
             }`}
           >
             <div
-              className={`text-gray-500 ${
+              className={`text-gray-500 dark:text-gray-400 ${
                 isMobile ? "text-xs self-start order-2 w-full" : "text-xs"
               }`}
             >
@@ -774,7 +774,7 @@ export function Tour({
               {currentStep > 0 && (
                 <button
                   onClick={handlePrevious}
-                  className={`font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation ${
+                  className={`font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation ${
                     isMobile
                       ? "px-4 py-2.5 text-sm flex-1"
                       : "px-4 py-2 text-sm"

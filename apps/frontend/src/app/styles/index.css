@@ -18,6 +18,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
+  /* Theme-aware default text color so any element without an explicit
+     text-* class stays readable (no black-on-dark in dark mode). */
+  color: #111827; /* gray-900 */
+}
+
+.dark body {
+  color: #e5e7eb; /* gray-200 */
 }
 
 #root {
@@ -103,4 +110,16 @@ body {
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
   will-change: background-position;
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #374151 0%,
+    #374151 30%,
+    #4b5563 50%,
+    #374151 70%,
+    #374151 100%
+  );
+  background-size: 200% 100%;
 }

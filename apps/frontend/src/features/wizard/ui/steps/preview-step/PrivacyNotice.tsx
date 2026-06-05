@@ -22,11 +22,11 @@ export function PrivacyNotice() {
   }
 
   return (
-    <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5 sm:p-4">
+    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-md p-2.5 sm:p-4">
       <div className="flex items-start gap-2 sm:gap-3">
         <div className="flex-shrink-0 mt-0.5 sm:mt-0.5">
           <svg
-            className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600"
+            className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -40,7 +40,7 @@ export function PrivacyNotice() {
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm text-blue-900 leading-relaxed break-words">
+          <p className="text-xs sm:text-sm text-blue-900 dark:text-blue-200 leading-relaxed break-words">
             <span className="font-medium">Your privacy matters.</span>{" "}
             <span className="hidden sm:inline">
               Unlike others, we delete your data in 2 hours. Anonymous
@@ -55,7 +55,7 @@ export function PrivacyNotice() {
         <button
           type="button"
           onClick={handleDismiss}
-          className="flex-shrink-0 text-blue-600 hover:text-blue-800 transition-colors touch-manipulation p-0.5 sm:p-0"
+          className="flex-shrink-0 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors touch-manipulation p-0.5 sm:p-0"
           aria-label="Close"
         >
           <svg

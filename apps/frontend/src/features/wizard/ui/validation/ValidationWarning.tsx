@@ -5,10 +5,10 @@ interface ValidationWarningProps {
 
 export function ValidationWarning({ title, message }: ValidationWarningProps) {
   return (
-    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded-lg">
       <div className="flex items-start gap-3">
         <svg
-          className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
+          className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -21,8 +21,8 @@ export function ValidationWarning({ title, message }: ValidationWarningProps) {
           />
         </svg>
         <div className="flex-1">
-          <p className="text-sm font-medium text-yellow-800">{title}</p>
-          <p className="text-sm text-yellow-700 mt-1">{message}</p>
+          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{title}</p>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">{message}</p>
         </div>
       </div>
     </div>

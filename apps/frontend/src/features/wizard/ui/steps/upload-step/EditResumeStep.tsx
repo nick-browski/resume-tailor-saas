@@ -90,10 +90,10 @@ export function EditResumeStep({ onNext, onPrevious }: EditResumeStepProps) {
       <Tour steps={tourSteps} storageKey={EDIT_UPLOAD_TOUR_KEY} />
       <div className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-200 mb-1 sm:mb-2">
             {UI_TEXT.UPLOAD_RESUME_STEP_TITLE}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             {UI_TEXT.UPLOAD_RESUME_EDIT_STEP_DESCRIPTION}
           </p>
         </div>
@@ -134,7 +134,7 @@ export function EditResumeStep({ onNext, onPrevious }: EditResumeStepProps) {
           <button
             type="button"
             onClick={onPrevious}
-            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md font-medium hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:scale-[1.02] active:scale-[0.98] transition duration-150 touch-manipulation"
           >
             {UI_TEXT.BACK_BUTTON}
           </button>

@@ -276,6 +276,8 @@ export const QUERY_KEYS = {
   DOCUMENT: "document",
 } as const;
 
+export const THEME_STORAGE_KEY = "theme";
+
 export const MOBILE_CONSTANTS = {
   BREAKPOINT_WIDTH_PX: 768,
   MOBILE_USER_AGENT_PATTERN: /iPhone|iPad|iPod|Android/i,

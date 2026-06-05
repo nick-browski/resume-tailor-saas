@@ -41,15 +41,15 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   const getStyles = () => {
     switch (toast.type) {
       case "success":
-        return "bg-white border border-gray-200 border-l-4 border-l-green-500 text-gray-900 shadow-sm";
+        return "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-l-4 border-l-green-500 text-gray-900 dark:text-gray-200 shadow-sm";
       case "error":
-        return "bg-white border border-gray-200 border-l-4 border-l-red-500 text-gray-900 shadow-sm";
+        return "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 text-gray-900 dark:text-gray-200 shadow-sm";
       case "info":
-        return "bg-white border border-gray-200 border-l-4 border-l-blue-500 text-gray-900 shadow-sm";
+        return "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-l-4 border-l-blue-500 text-gray-900 dark:text-gray-200 shadow-sm";
       case "loading":
-        return "bg-white border border-gray-200 border-l-4 border-l-blue-500 text-gray-900 shadow-sm";
+        return "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-l-4 border-l-blue-500 text-gray-900 dark:text-gray-200 shadow-sm";
       default:
-        return "bg-white border border-gray-200 border-l-4 border-l-gray-500 text-gray-900 shadow-sm";
+        return "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-l-4 border-l-gray-500 text-gray-900 dark:text-gray-200 shadow-sm";
     }
   };
 
@@ -151,7 +151,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       {toast.type !== "loading" && (
         <button
           onClick={handleRemove}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors touch-manipulation"
+          className="flex-shrink-0 text-gray-400 dark:text-gray-400 hover:text-gray-600 transition-colors touch-manipulation"
           aria-label="Close"
         >
           <svg
