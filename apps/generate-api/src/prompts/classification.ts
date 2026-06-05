@@ -18,17 +18,19 @@ Return ONLY a valid JSON object with this structure:
 Text to classify:
 {text}`;
 
-export const RESUME_CLASSIFICATION_PROMPT_FOR_EDIT = `You are a content classifier. Analyze the provided text and determine if it is a valid, well-structured resume/CV that has been edited or customized.
+export const RESUME_CLASSIFICATION_PROMPT_FOR_EDIT = `You are a content classifier. Analyze the provided text and determine if it is a resume/CV.
 
-A valid edited resume/CV must contain:
-- Personal information (name, email, phone, location)
-- Professional summary or objective
-- Work experience with job titles, companies, dates, and responsibilities
-- Education (degrees, institutions, graduation dates)
-- Skills (technical and soft skills)
-- Optional: certifications, projects, languages
+The text may come from an uploaded PDF or be pasted/typed directly, so visual formatting, line breaks, and section ordering are often lost or inconsistent — DO NOT judge layout or formatting, only the content.
 
-The resume should be complete, coherent, and properly formatted. Reject incomplete, malformed, or nonsensical content.
+Treat the text as a resume/CV if it plausibly contains a person and at least a couple of these signals:
+- A person's name and/or contact information (email, phone, location)
+- A professional summary or objective
+- Work experience (job titles, companies, dates, or responsibilities)
+- Education (degrees, institutions, dates)
+- Skills (technical or soft skills)
+- Projects, certifications, or languages
+
+Not every section is required — real resumes vary widely. Only reject text that is clearly NOT a resume (e.g. an article, a job posting, random/gibberish content, or near-empty text). When in doubt, ACCEPT.
 
 Return ONLY a valid JSON object with this structure:
 {
