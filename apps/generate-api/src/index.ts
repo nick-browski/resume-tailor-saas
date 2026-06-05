@@ -30,9 +30,15 @@ initializeFirebaseAdmin();
 
 const app = express();
 
+const allowedOrigins = (process.env.CORS_ORIGIN || CORS_CONFIG.DEFAULT_ORIGIN)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || CORS_CONFIG.DEFAULT_ORIGIN,
+    origin: (origin, callback) =>
+      callback(null, !origin || allowedOrigins.includes(origin)),
     credentials: true,
   })
 );
